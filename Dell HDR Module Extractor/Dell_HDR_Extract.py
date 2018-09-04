@@ -7,7 +7,7 @@ Copyright (C) 2018 Plato Mavropoulos
 Inspired from https://forums.mydigitallife.net/threads/i-present-you-a-tool-to-decompress-dell-uefi-bios.44785/ by JimboBobB
 """
 
-print('Dell HDR Module Extractor v1.0\n')
+print('Dell HDR Module Extractor v1.1\n')
 
 import os
 import re
@@ -22,6 +22,7 @@ else :
 	# Folder path
 	hdr_exec = []
 	in_path = input('\nEnter the full folder path: ')
+	print('\nWorking...')
 	for root, dirs, files in os.walk(in_path):
 		for name in files :
 			hdr_exec.append(os.path.join(root, name))
@@ -63,15 +64,16 @@ for input_file in hdr_exec :
 		
 		print('\n      Decompressed %s%s via Python' % (input_name, input_extension))
 		
-		# Call LongSoft's PFSExtractor RS to extract the Dell HDR container
+		# Call LongSoft's PFSExtractor-RS to extract the Dell HDR container
 		try :
 			subprocess.run(['PFSExtractor', output_name], check = True, stdout = subprocess.DEVNULL)
 			
 			if os.path.isfile(output_name) : os.remove(output_name)
 			
-			print('      Extracted %s via PFSExtractor' % output_name)
+			print('      Extracted %s via PFSExtractor-RS' % output_name)
 		except :
-			print('      Error: Could not extract %s via PFSExtractor!' % output_name)
+			print('      Error: Could not extract %s via PFSExtractor-RS!' % output_name)
+			print('             Make sure that "PFSExtractor" executable exists!')
 
 else :
 	input('\nDone!')

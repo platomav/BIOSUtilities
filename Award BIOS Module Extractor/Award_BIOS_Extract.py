@@ -9,7 +9,7 @@ https://ist.uwaterloo.ca/~schepers/formats/LHA.TXT
 https://sites.google.com/site/pinczakko/pinczakko-s-guide-to-award-bios-reverse-engineering
 """
 
-print('Award BIOS Module Extractor v1.0\n')
+print('Award BIOS Module Extractor v1.1\n')
 
 import os
 import re
@@ -23,6 +23,7 @@ else :
 	# Folder path
 	awd_images = []
 	in_path = input('\nEnter the full folder path: ')
+	print('\nWorking...')
 	for root, dirs, files in os.walk(in_path):
 		for name in files :
 			awd_images.append(os.path.join(root, name))
@@ -51,8 +52,11 @@ for in_file in awd_images :
 		
 		with open('mod_temp.bin', 'wb') as lzh_img : lzh_img.write(mod_data)
 		
-		try : decomp = subprocess.run(['7z', 'x', '-bso0', '-bse0', '-bsp0', '-o%s' % os.path.join(extr_path, file_name), 'mod_temp.bin']) # 7-Zip
-		except : print('Error: Could not decompress LZH image at %s!\n' % file_name)
+		try :
+			decomp = subprocess.run(['7z', 'x', '-bso0', '-bse0', '-bsp0', '-o%s' % os.path.join(extr_path, file_name), 'mod_temp.bin']) # 7-Zip
+		except :
+			print('Error: Could not decompress LZH image at %s!' % file_name)
+			print('       Make sure that "7z" executable exists!\n')
 			
 		os.remove('mod_temp.bin') # Remove temporary LZH image
 			

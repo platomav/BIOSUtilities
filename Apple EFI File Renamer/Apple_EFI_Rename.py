@@ -6,7 +6,7 @@ Apple EFI File Renamer
 Copyright (C) 2018 Plato Mavropoulos
 """
 
-print('Apple EFI File Renamer v1.0\n')
+print('Apple EFI File Renamer v1.1\n')
 
 import os
 import re
@@ -24,6 +24,7 @@ else :
 	# Folder path
 	apple_efi = []
 	in_path = input('\nEnter the full folder path: ')
+	print('\nWorking...')
 	for root, dirs, files in os.walk(in_path):
 		for name in files :
 			apple_efi.append(os.path.join(root, name))
@@ -73,11 +74,12 @@ for input_file in apple_efi :
 		
 		file_chk = zlib.adler32(buffer) & 0xFFFFFFFF # Checksum for EFI with same $IBIOSI$ but different PRD/PRE status
 		
-		file_path_new = os.path.join(file_dir, '%s_%s_%s_20%s-%s-%s_%s-%s_%s%s' % (model, version, build, year, month, day, hour, minute, file_chk, file_ext))
+		file_path_new = os.path.join(file_dir, '%s_%s_%s_20%s-%s-%s_%s-%s_%0.8X%s' % (model, version, build, year, month, day, hour, minute, file_chk, file_ext))
 		
 		if not os.path.isfile(file_path_new) : os.replace(file_path, file_path_new) # Rename input EFI with proper name
 		
 	else :
-		print('Error: Could not find $IBIOSI$ pattern at %s!\n' % file_name)
+		print('Error: Could not find $IBIOSI$ pattern at %s!' % file_name)
+		print('       Make sure that "UEFIFind" and "UEFIExtract" executables exist!\n')
 		
 input('Done!')

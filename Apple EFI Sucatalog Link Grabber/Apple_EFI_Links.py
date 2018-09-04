@@ -6,7 +6,7 @@ Apple EFI Sucatalog Link Grabber
 Copyright (C) 2018 Plato Mavropoulos
 """
 
-print('Apple EFI Sucatalog Link Grabber v1.0\n')
+print('Apple EFI Sucatalog Link Grabber v1.1\n')
 
 import os
 import sys
@@ -27,6 +27,8 @@ else :
 			if name.endswith('.sucatalog') :
 				catalogs.append(os.path.join(root, name))
 
+print('Working...')
+				
 # Parse each input xml file
 for input_file in catalogs :
 	with open(input_file, 'r') as in_file :
@@ -56,4 +58,4 @@ if os.path.isfile('OUT.txt') :
 		
 	os.remove('OUT.txt') # Remove temporary output file
 	
-input('Done!')
+input('\nDone!')

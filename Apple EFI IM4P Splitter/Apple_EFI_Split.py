@@ -6,7 +6,7 @@ Apple EFI IM4P Splitter
 Copyright (C) 2018 Plato Mavropoulos
 """
 
-print('Apple EFI IM4P Splitter v1.0\n')
+print('Apple EFI IM4P Splitter v1.1\n')
 
 import os
 import re
@@ -22,6 +22,7 @@ else :
 	# Folder path
 	apple_im4p = []
 	in_path = input('\nEnter the full folder path: ')
+	print('\nWorking...')
 	for root, dirs, files in os.walk(in_path):
 		for name in files :
 			apple_im4p.append(os.path.join(root, name))

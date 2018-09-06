@@ -19,23 +19,17 @@ You can either Drag & Drop or manually enter the full path of a folder containin
 
 #### **Download**
 
-An already built/frozen/compiled binary is provided by me for Windows only. Thus, **you don't need to manually build/freeze/compile it under Windows**. Instead, download the latest version from the [Releases](https://github.com/platomav/BIOSUtilities/releases) tab. To extract the already built/frozen/compiled archive, you need to use programs which support RAR5 compression. For Linux and macOS or courageous Windows users, the build/freeze/compile instructions for all three OS can be found below.
+An already built/frozen/compiled binary is provided by me for Windows only. Thus, **you don't need to manually build/freeze/compile it under Windows**. Instead, download the latest version from the [Releases](https://github.com/platomav/BIOSUtilities/releases) tab. To extract the already built/frozen/compiled archive, you need to use programs which support RAR5 compression. Note that you need to manually apply any prerequisites.
 
 #### **Compatibility**
 
 Should work at all Windows, Linux or macOS operating systems which have Python 3.6 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
 
-#### **Code Prerequisites**
+#### **Prerequisites**
 
-To run the utility, you need to have the following 3rd party tool at the same directory:
+To run the python script or its built/frozen/compiled binary, you need to have the following 3rd party tool at the same directory:
 
-* [PFSExtractor-RS](https://github.com/LongSoft/PFSExtractor-RS)
-
-To build/freeze/compile the python script, you can use whatever you like. The following are verified to work:
-
-* [Py2exe](https://pypi.python.org/pypi/py2exe/) (Windows)
-* [Py2app](https://pypi.python.org/pypi/py2app/) (macOS)
-* [PyInstaller](https://pypi.org/project/PyInstaller/) (Windows/Linux/macOS)
+* [PFSExtractor-RS](https://github.com/LongSoft/PFSExtractor-RS) (i.e. PFSExtractor.exe)
 
 #### **Build/Freeze/Compile with PyInstaller**
 
@@ -45,7 +39,7 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 
 > python --version
 
-2. Use pip to install PyInstaller (PyPi):
+2. Use pip to install PyInstaller:
 
 > pip3 install pyinstaller
 
@@ -67,19 +61,15 @@ You can either Drag & Drop or let it automatically parse any .sucatalog files wi
 
 #### **Download**
 
-An already built/frozen/compiled binary is provided by me for Windows only. Thus, **you don't need to manually build/freeze/compile it under Windows**. Instead, download the latest version from the [Releases](https://github.com/platomav/BIOSUtilities/releases) tab. To extract the already built/frozen/compiled archive, you need to use programs which support RAR5 compression. For Linux and macOS or courageous Windows users, the build/freeze/compile instructions for all three OS can be found below.
+An already built/frozen/compiled binary is provided by me for Windows only. Thus, **you don't need to manually build/freeze/compile it under Windows**. Instead, download the latest version from the [Releases](https://github.com/platomav/BIOSUtilities/releases) tab. To extract the already built/frozen/compiled archive, you need to use programs which support RAR5 compression. Note that you need to manually apply any prerequisites.
 
 #### **Compatibility**
 
 Should work at all Windows, Linux or macOS operating systems which have Python 3.6 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
 
-#### **Code Prerequisites**
+#### **Prerequisites**
 
-To run the utility, you only need to have Python installed. To build/freeze/compile the python script, you can use whatever you like. The following are verified to work:
-
-* [Py2exe](https://pypi.python.org/pypi/py2exe/) (Windows)
-* [Py2app](https://pypi.python.org/pypi/py2app/) (macOS)
-* [PyInstaller](https://pypi.org/project/PyInstaller/) (Windows/Linux/macOS)
+To run the utility, you do not need any 3rd party tool.
 
 #### **Build/Freeze/Compile with PyInstaller**
 
@@ -89,7 +79,7 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 
 > python --version
 
-2. Use pip to install PyInstaller (PyPi):
+2. Use pip to install PyInstaller:
 
 > pip3 install pyinstaller
 
@@ -111,24 +101,18 @@ You can either Drag & Drop or manually enter the full path of a folder containin
 
 #### **Download**
 
-An already built/frozen/compiled binary is provided by me for Windows only. Thus, **you don't need to manually build/freeze/compile it under Windows**. Instead, download the latest version from the [Releases](https://github.com/platomav/BIOSUtilities/releases) tab. To extract the already built/frozen/compiled archive, you need to use programs which support RAR5 compression. For Linux and macOS or courageous Windows users, the build/freeze/compile instructions for all three OS can be found below.
+An already built/frozen/compiled binary is provided by me for Windows only. Thus, **you don't need to manually build/freeze/compile it under Windows**. Instead, download the latest version from the [Releases](https://github.com/platomav/BIOSUtilities/releases) tab. To extract the already built/frozen/compiled archive, you need to use programs which support RAR5 compression. Note that you need to manually apply any prerequisites.
 
 #### **Compatibility**
 
 Should work at all Windows, Linux or macOS operating systems which have Python 3.6 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
 
-#### **Code Prerequisites**
+#### **Prerequisites**
 
-To run the utility, you may need to have the following 3rd party tools at the same directory:
+To run the python script or its built/frozen/compiled binary, you need to have the following 3rd party tools at the same directory:
 
-* [UEFIFind](https://github.com/LongSoft/UEFITool)
-* [UEFIExtract](https://github.com/LongSoft/UEFITool)
-
-To build/freeze/compile the python script, you can use whatever you like. The following are verified to work:
-
-* [Py2exe](https://pypi.python.org/pypi/py2exe/) (Windows)
-* [Py2app](https://pypi.python.org/pypi/py2app/) (macOS)
-* [PyInstaller](https://pypi.org/project/PyInstaller/) (Windows/Linux/macOS)
+* [UEFIFind](https://github.com/LongSoft/UEFITool) (i.e. UEFIFind.exe)
+* [UEFIExtract](https://github.com/LongSoft/UEFITool) (i.e. UEFIExtract.exe)
 
 #### **Build/Freeze/Compile with PyInstaller**
 
@@ -138,7 +122,7 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 
 > python --version
 
-2. Use pip to install PyInstaller (PyPi):
+2. Use pip to install PyInstaller:
 
 > pip3 install pyinstaller
 
@@ -160,19 +144,15 @@ You can either Drag & Drop or manually enter the full path of a folder containin
 
 #### **Download**
 
-An already built/frozen/compiled binary is provided by me for Windows only. Thus, **you don't need to manually build/freeze/compile it under Windows**. Instead, download the latest version from the [Releases](https://github.com/platomav/BIOSUtilities/releases) tab. To extract the already built/frozen/compiled archive, you need to use programs which support RAR5 compression. For Linux and macOS or courageous Windows users, the build/freeze/compile instructions for all three OS can be found below.
+An already built/frozen/compiled binary is provided by me for Windows only. Thus, **you don't need to manually build/freeze/compile it under Windows**. Instead, download the latest version from the [Releases](https://github.com/platomav/BIOSUtilities/releases) tab. To extract the already built/frozen/compiled archive, you need to use programs which support RAR5 compression. Note that you need to manually apply any prerequisites.
 
 #### **Compatibility**
 
 Should work at all Windows, Linux or macOS operating systems which have Python 3.6 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
 
-#### **Code Prerequisites**
+#### **Prerequisites**
 
-To run the utility, you only need to have Python installed. To build/freeze/compile the python script, you can use whatever you like. The following are verified to work:
-
-* [Py2exe](https://pypi.python.org/pypi/py2exe/) (Windows)
-* [Py2app](https://pypi.python.org/pypi/py2app/) (macOS)
-* [PyInstaller](https://pypi.org/project/PyInstaller/) (Windows/Linux/macOS)
+To run the utility, you do not need any 3rd party tool.
 
 #### **Build/Freeze/Compile with PyInstaller**
 
@@ -182,7 +162,7 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 
 > python --version
 
-2. Use pip to install PyInstaller (PyPi):
+2. Use pip to install PyInstaller:
 
 > pip3 install pyinstaller
 
@@ -204,23 +184,17 @@ You can either Drag & Drop or manually enter the full path of a folder containin
 
 #### **Download**
 
-An already built/frozen/compiled binary is provided by me for Windows only. Thus, **you don't need to manually build/freeze/compile it under Windows**. Instead, download the latest version from the [Releases](https://github.com/platomav/BIOSUtilities/releases) tab. To extract the already built/frozen/compiled archive, you need to use programs which support RAR5 compression. For Linux and macOS or courageous Windows users, the build/freeze/compile instructions for all three OS can be found below.
+An already built/frozen/compiled binary is provided by me for Windows only. Thus, **you don't need to manually build/freeze/compile it under Windows**. Instead, download the latest version from the [Releases](https://github.com/platomav/BIOSUtilities/releases) tab. To extract the already built/frozen/compiled archive, you need to use programs which support RAR5 compression. Note that you need to manually apply any prerequisites.
 
 #### **Compatibility**
 
 Should work at all Windows, Linux or macOS operating systems which have Python 3.6 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
 
-#### **Code Prerequisites**
+#### **Prerequisites**
 
-To run the utility, you need to have the following 3rd party tool at the same directory:
+To run the python script or its built/frozen/compiled binary, you need to have the following 3rd party tool at the same directory:
 
 * [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe)
-
-To build/freeze/compile the python script, you can use whatever you like. The following are verified to work:
-
-* [Py2exe](https://pypi.python.org/pypi/py2exe/) (Windows)
-* [Py2app](https://pypi.python.org/pypi/py2app/) (macOS)
-* [PyInstaller](https://pypi.org/project/PyInstaller/) (Windows/Linux/macOS)
 
 #### **Build/Freeze/Compile with PyInstaller**
 
@@ -230,7 +204,7 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 
 > python --version
 
-2. Use pip to install PyInstaller (PyPi):
+2. Use pip to install PyInstaller:
 
 > pip3 install pyinstaller
 

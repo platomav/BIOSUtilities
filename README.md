@@ -172,6 +172,56 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 
 At dist folder you should find the final utility executable
 
+## **Panasonic BIOS Update Extractor**
+
+#### **Description**
+
+Parses Panasonic BIOS Update executables and extracts their SPI/BIOS image. The utility automatically uses [Rustam Abdullaev's unpack_lznt1](https://github.com/rustyx/unpack_lznt1) tool in order to decompress the initially Microsoft LZNT1 compressed resource data.
+
+#### **Usage**
+
+You can either Drag & Drop or manually enter the full path of a folder containing Panasonic BIOS Update executables.
+
+#### **Download**
+
+An already built/frozen/compiled Windows binary is provided by me. Thus, **you don't need to manually build/freeze/compile it**. Instead, download the latest version from the [Releases](https://github.com/platomav/BIOSUtilities/releases) tab. To extract the already built/frozen/compiled archive, you need to use programs which support RAR5 compression. Note that you need to manually apply any prerequisites.
+
+#### **Compatibility**
+
+Should work at all Windows operating systems which have Python 3.6 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
+
+#### **Prerequisites**
+
+To run the python script, you need to have the following 3rd party Python modules installed:
+
+* [PEfile](https://pypi.python.org/pypi/pefile/)
+
+To run the python script or its built/frozen/compiled binary, you need to additionally have the following 3rd party tool at the same directory:
+
+* [unpack_lznt1](https://github.com/rustyx/unpack_lznt1) (i.e. unpack_lznt1.exe)
+
+#### **Build/Freeze/Compile with PyInstaller**
+
+PyInstaller can build/freeze/compile the utility at Windows, it is simple to run and gets updated often.
+
+1. Make sure Python 3.6.0 or newer is installed:
+
+> python --version
+
+2. Use pip to install PyInstaller:
+
+> pip3 install pyinstaller
+
+3. Use pip to install PEfile:
+
+> pip3 install pefile
+
+4. Build/Freeze/Compile:
+
+> pyinstaller --noupx --onefile Panasonic_BIOS_Extract.py
+
+At dist folder you should find the final utility executable
+
 ## **Award BIOS Module Extractor**
 
 #### **Description**

@@ -11,7 +11,7 @@ Various BIOS Utilities for Modding/Research
 
 #### **Description**
 
-Extracts and unpacks the SPI/BIOS modules from Dell HDR executables. It can extract HDR images which are compressed both once or multiple times. After extraction, the HDR image is automatically unpacked into individual SPI/BIOS modules via [LongSoft's PFSExtractor-RS](https://github.com/LongSoft/PFSExtractor-RS) tool.
+Extracts and unpacks the SPI/BIOS modules from Dell HDR executables. After extraction, the HDR image is automatically unpacked into individual SPI/BIOS modules via [LongSoft's PFSExtractor-RS](https://github.com/LongSoft/PFSExtractor-RS) tool.
 
 #### **Usage**
 
@@ -195,6 +195,8 @@ Should work at all Windows operating systems which have Python 3.6 support. Wind
 To run the python script, you need to have the following 3rd party Python modules installed:
 
 * [PEfile](https://pypi.python.org/pypi/pefile/)
+
+> pip3 install pefile
 
 To run the python script or its built/frozen/compiled binary, you need to additionally have the following 3rd party tool at the same directory:
 

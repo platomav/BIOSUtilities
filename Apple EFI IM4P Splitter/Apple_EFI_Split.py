@@ -6,7 +6,7 @@ Apple EFI IM4P Splitter
 Copyright (C) 2018 Plato Mavropoulos
 """
 
-print('Apple EFI IM4P Splitter v1.1\n')
+print('Apple EFI IM4P Splitter v1.2')
 
 import os
 import re
@@ -33,9 +33,11 @@ for input_file in apple_im4p :
 	file_dir = os.path.dirname(file_path)
 	file_ext = os.path.splitext(file_path)[1]
 	
+	print('\nFile: %s%s' % (file_name, file_ext))
+	
 	# Must be IM4P file because its size is 0x0 dependent
 	if file_ext not in ('.im4p','.IM4P') :
-		print('Error: Could not find IM4P file extension at %s!\n' % file_name)
+		print('\n      Error: Could not find IM4P file extension at %s!' % file_name)
 		continue
 	
 	with open(input_file, 'rb') as in_file : buffer = in_file.read()
@@ -43,17 +45,17 @@ for input_file in apple_im4p :
 	is_im4p = im4p.search(buffer) # Detect IM4P pattern
 	
 	if not is_im4p :
-		print('Error: Could not find IM4P pattern at %s!\n' % file_name)
+		print('\n      Error: Could not find IM4P pattern at %s!' % file_name)
 		continue
 	
 	im4p_size = int.from_bytes(buffer[2:is_im4p.start()], 'big') # Variable, from 0x2 - IM4P
 	im4p_type = buffer[is_im4p.end():is_im4p.end() + 0x4].decode('utf-8') # mefi
 	
 	if im4p_type != 'mefi' :
-		print('Error: Could not find "mefi" IM4P Type at %s!\n' % file_name)
+		print('\n      Error: Could not find "mefi" IM4P Type at %s!' % file_name)
 		continue
 	
-	payload_start = is_im4p.start() + 0x15
+	payload_start = is_im4p.start() + buffer[is_im4p.start() - 0x1]
 	payload_size = int.from_bytes(buffer[is_im4p.end() + 0x9:is_im4p.end() + 0xD], 'big')
 	
 	ifd_count = list(ifd.finditer(buffer)) # Count the Intel FD(s) to determine each SPI size and offset
@@ -71,4 +73,4 @@ for input_file in apple_im4p :
 		
 		spi_start += spi_size
 		
-input('Done!')
+input('\nDone!')

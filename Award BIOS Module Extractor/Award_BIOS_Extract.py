@@ -3,13 +3,13 @@
 """
 Award BIOS Extract
 Award BIOS Module Extractor
-Copyright (C) 2018 Plato Mavropoulos
+Copyright (C) 2018-2019 Plato Mavropoulos
 http://www.onicos.com/staff/iz/formats/lzh.html
 https://ist.uwaterloo.ca/~schepers/formats/LHA.TXT
 https://sites.google.com/site/pinczakko/pinczakko-s-guide-to-award-bios-reverse-engineering
 """
 
-print('Award BIOS Module Extractor v1.1\n')
+print('Award BIOS Module Extractor v1.2\n')
 
 import os
 import re
@@ -40,11 +40,13 @@ for in_file in awd_images :
 	file_dir = os.path.dirname(file_path)
 	file_ext = os.path.splitext(file_path)[1]
 	match_lzh_list = []
-
+	
+	print('\nFile: %s%s' % (file_name, file_ext))
+	
 	with open(in_file, 'rb') as awd_img : buffer = awd_img.read()
 	
 	match_lzh_list += pat_lzh.finditer(buffer) # Detect LZH patterns
-			
+	
 	for match_lzh in match_lzh_list :
 		hdr_size = buffer[match_lzh.start() - 0x2] # From LZH Tag (0x2+)
 		comp_size = int.from_bytes(buffer[match_lzh.end():match_lzh.end() + 0x4], 'little') # From LZH Header end
@@ -53,11 +55,11 @@ for in_file in awd_images :
 		with open('mod_temp.bin', 'wb') as lzh_img : lzh_img.write(mod_data)
 		
 		try :
-			decomp = subprocess.run(['7z', 'x', '-bso0', '-bse0', '-bsp0', '-o%s' % os.path.join(extr_path, file_name), 'mod_temp.bin']) # 7-Zip
+			decomp = subprocess.run(['7z', 'x', '-aou', '-bso0', '-bse0', '-bsp0', '-o%s' % os.path.join(extr_path, file_name), 'mod_temp.bin']) # 7-Zip
 		except :
 			print('Error: Could not decompress LZH image at %s!' % file_name)
 			print('       Make sure that "7z" executable exists!\n')
 			
 		os.remove('mod_temp.bin') # Remove temporary LZH image
 			
-input('Done!')
+input('\nDone!')

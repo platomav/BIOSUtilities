@@ -3,10 +3,10 @@
 """
 AMI PFAT Extract
 AMI BIOS Guard Extractor
-Copyright (C) 2018 Plato Mavropoulos
+Copyright (C) 2018-2019 Plato Mavropoulos
 """
 
-print('AMI BIOS Guard Extractor v1.0')
+print('AMI BIOS Guard Extractor v2.0')
 
 import os
 import sys
@@ -178,6 +178,8 @@ for input_file in pfat :
 		
 		block_name = blocks[i][0]
 		block_start = block_data_end + block_rsa_size
+		
+	final_image += buffer[block_start:] # Append any data after the end of PFAT
 		
 	with open('%s_unpacked.bin' % os.path.basename(input_file), 'wb') as final : final.write(final_image)
 		

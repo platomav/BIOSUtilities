@@ -11,7 +11,7 @@ Various BIOS Utilities for Modding/Research
 
 #### **Description**
 
-Extracts and unpacks the SPI/BIOS modules from Dell HDR executables. After extraction, the HDR image is automatically unpacked into individual SPI/BIOS modules via [LongSoft's PFSExtractor-RS](https://github.com/LongSoft/PFSExtractor-RS) tool.
+Parses modern icon-less Dell BIOS HDR executables and extracts their SPI/BIOS modules. After extraction, the HDR image is automatically unpacked into individual SPI/BIOS modules via [LongSoft's PFSExtractor-RS](https://github.com/LongSoft/PFSExtractor-RS) tool.
 
 #### **Usage**
 
@@ -261,6 +261,48 @@ PyInstaller can build/freeze/compile the utility at Windows, it is simple to run
 4. Build/Freeze/Compile:
 
 > pyinstaller --noupx --onefile Panasonic_BIOS_Extract.py
+
+At dist folder you should find the final utility executable
+
+## **VAIO Packaging Manager Extractor**
+
+#### **Description**
+
+Parses VAIO Packaging Manager executables and extracts their contents. If direct extraction fails, it unlocks the executable in order to run at all systems and allow the user to choose the extraction location. The utility automatically uses [Igor Pavlov's 7-Zip](https://www.7-zip.org/) tool in order to decompress the initially obfuscated Microsoft CAB compressed contents.
+
+#### **Usage**
+
+You can either Drag & Drop or manually enter the full path of a folder containing VAIO Packaging Manager executables.
+
+#### **Download**
+
+An already built/frozen/compiled binary is provided by me for Windows only. Thus, **you don't need to manually build/freeze/compile it under Windows**. Instead, download the latest version from the [Releases](https://github.com/platomav/BIOSUtilities/releases) tab. To extract the already built/frozen/compiled archive, you need to use programs which support RAR5 compression. Note that you need to manually apply any prerequisites.
+
+#### **Compatibility**
+
+Should work at all Windows, Linux or macOS operating systems which have Python 3.6 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
+
+#### **Prerequisites**
+
+To run the python script or its built/frozen/compiled binary, you need to have the following 3rd party tool at the same directory:
+
+* [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe)
+
+#### **Build/Freeze/Compile with PyInstaller**
+
+PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
+
+1. Make sure Python 3.6.0 or newer is installed:
+
+> python --version
+
+2. Use pip to install PyInstaller:
+
+> pip3 install pyinstaller
+
+3. Build/Freeze/Compile:
+
+> pyinstaller --noupx --onefile VAIO_Package_Extract.py
 
 At dist folder you should find the final utility executable
 

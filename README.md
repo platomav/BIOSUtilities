@@ -214,6 +214,9 @@ At dist folder you should find the final utility executable
 
 ## **Panasonic BIOS Update Extractor**
 
+![](https://i.imgur.com/uZAoMGR.png)
+<sub><sup>*Icon owned by Panasonic*</sup></sub>
+
 #### **Description**
 
 Parses Panasonic BIOS Update executables and extracts their SPI/BIOS image. The utility automatically uses [Rustam Abdullaev's unpack_lznt1](https://github.com/rustyx/unpack_lznt1) tool in order to decompress the initially Microsoft LZNT1 compressed resource data.
@@ -266,6 +269,9 @@ At dist folder you should find the final utility executable
 
 ## **VAIO Packaging Manager Extractor**
 
+![](https://i.imgur.com/rg4xrxJ.png)
+<sub><sup>*Icon owned by VAIO*</sup></sub>
+
 #### **Description**
 
 Parses VAIO Packaging Manager executables and extracts their contents. If direct extraction fails, it unlocks the executable in order to run at all systems and allow the user to choose the extraction location. The utility automatically uses [Igor Pavlov's 7-Zip](https://www.7-zip.org/) tool in order to decompress the initially obfuscated Microsoft CAB compressed contents.
@@ -303,6 +309,51 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 3. Build/Freeze/Compile:
 
 > pyinstaller --noupx --onefile VAIO_Package_Extract.py
+
+At dist folder you should find the final utility executable
+
+## **Fujitsu SFX Packager Extractor**
+
+![](https://i.imgur.com/NlZGBsy.png)
+<sub><sup>*Icon owned by FUJITSU*</sup></sub>
+
+#### **Description**
+
+Parses Fujitsu SFX Packager executables and extracts their contents. The utility automatically uses [Igor Pavlov's 7-Zip](https://www.7-zip.org/) tool in order to decompress the initially obfuscated Microsoft CAB compressed contents.
+
+#### **Usage**
+
+You can either Drag & Drop or manually enter the full path of a folder containing Fujitsu SFX Packager executables.
+
+#### **Download**
+
+An already built/frozen/compiled binary is provided by me for Windows only. Thus, **you don't need to manually build/freeze/compile it under Windows**. Instead, download the latest version from the [Releases](https://github.com/platomav/BIOSUtilities/releases) tab. To extract the already built/frozen/compiled archive, you need to use programs which support RAR5 compression. Note that you need to manually apply any prerequisites.
+
+#### **Compatibility**
+
+Should work at all Windows, Linux or macOS operating systems which have Python 3.6 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
+
+#### **Prerequisites**
+
+To run the python script or its built/frozen/compiled binary, you need to have the following 3rd party tool at the same directory:
+
+* [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe)
+
+#### **Build/Freeze/Compile with PyInstaller**
+
+PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
+
+1. Make sure Python 3.6.0 or newer is installed:
+
+> python --version
+
+2. Use pip to install PyInstaller:
+
+> pip3 install pyinstaller
+
+3. Build/Freeze/Compile:
+
+> pyinstaller --noupx --onefile Fujitsu_Package_Extract.py
 
 At dist folder you should find the final utility executable
 

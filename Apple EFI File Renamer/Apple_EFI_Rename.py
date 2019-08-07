@@ -3,11 +3,11 @@
 """
 Apple EFI Rename
 Apple EFI File Renamer
-Copyright (C) 2018 Plato Mavropoulos
+Copyright (C) 2018-2019 Plato Mavropoulos
 https://github.com/tianocore/edk2/blob/master/Vlv2TbltDevicePkg/Include/Library/BiosIdLib.h
 """
 
-print('Apple EFI File Renamer v1.2\n')
+print('Apple EFI File Renamer v1.3\n')
 
 import os
 import re
@@ -18,12 +18,18 @@ import subprocess
 
 pattern = re.compile(br'\x24\x49\x42\x49\x4F\x53\x49\x24') # Intel $IBIOSI$
 
-if len(sys.argv) >= 2 :
+if len(sys.argv) >= 3 and sys.argv[1] == '-skip' :
+	# Called via Apple_EFI_Package
+	apple_efi = sys.argv[2:]
+	skip_pause = True
+elif len(sys.argv) >= 2 :
 	# Drag & Drop or CLI
 	apple_efi = sys.argv[1:]
+	skip_pause = False
 else :
 	# Folder path
 	apple_efi = []
+	skip_pause = False
 	in_path = input('\nEnter the full folder path: ')
 	print('\nWorking...\n')
 	for root, dirs, files in os.walk(in_path):
@@ -95,4 +101,4 @@ for input_file in apple_efi :
 		print('\nError: Could not find $IBIOSI$ pattern at %s!' % file_name)
 		print('       Make sure that "UEFIFind" and "UEFIExtract" executables exist!\n')
 		
-input('Done!')
+if not skip_pause : input('Done!')

@@ -5,17 +5,20 @@ Various BIOS Utilities for Modding/Research
 
 [![BIOS Utilities Donation](https://img.shields.io/badge/Donate-PayPal-green.svg)](https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=DJDZD3PRGCSCL)
 
-![](https://i.imgur.com/ci3H4Y3.png)
+## **Dell PFS BIOS Extractor**
 
-## **Dell HDR Module Extractor**
+![](https://i.imgur.com/kN9aKCm.png)
 
 #### **Description**
 
-Parses modern icon-less Dell BIOS HDR executables and extracts their SPI/BIOS modules. After extraction, the HDR image is automatically unpacked into individual SPI/BIOS modules via [LongSoft's PFSExtractor-RS](https://github.com/LongSoft/PFSExtractor-RS) tool.
+Parses modern icon-less Dell PFS BIOS executables and extracts their SPI/BIOS/UEFI firmware components. It supports all Dell PFS formats, including those which are originally compressed or split in chunks. The output comprises only final firmware components which are directly usable by end users. An optional Advanced user mode is available as well, which additionally extracts firmware Signatures and more Metadata.
 
 #### **Usage**
 
-You can either Drag & Drop or manually enter the full path of a folder containing Dell HDR executables.
+You can either Drag & Drop or manually enter the full path of a folder containing icon-less Dell PFS BIOS executables. Optional arguments:
+  
+* -h or --help : show help message and exit
+* -a or --advanced : extract in advanced user mode
 
 #### **Download**
 
@@ -23,49 +26,7 @@ An already built/frozen/compiled binary is provided by me for Windows only. Thus
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.6 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
-
-#### **Prerequisites**
-
-To run the python script or its built/frozen/compiled binary, you need to have the following 3rd party tool at the same directory:
-
-* [PFSExtractor-RS](https://github.com/LongSoft/PFSExtractor-RS) (i.e. PFSExtractor.exe)
-
-#### **Build/Freeze/Compile with PyInstaller**
-
-PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
-
-1. Make sure Python 3.6.0 or newer is installed:
-
-> python --version
-
-2. Use pip to install PyInstaller:
-
-> pip3 install pyinstaller
-
-3. Build/Freeze/Compile:
-
-> pyinstaller --noupx --onefile Dell_HDR_Extract.py
-
-At dist folder you should find the final utility executable
-
-## **AMI BIOS Guard Extractor**
-
-#### **Description**
-
-Parses AMI BIOS Guard (a.k.a. PFAT) images and extracts a proper SPI/BIOS image.
-
-#### **Usage**
-
-You can either Drag & Drop or manually enter the full path of a folder containing AMI PFAT images.
-
-#### **Download**
-
-An already built/frozen/compiled binary is provided by me for Windows only. Thus, **you don't need to manually build/freeze/compile it under Windows**. Instead, download the latest version from the [Releases](https://github.com/platomav/BIOSUtilities/releases) tab. To extract the already built/frozen/compiled archive, you need to use programs which support RAR5 compression. Note that you need to manually apply any prerequisites.
-
-#### **Compatibility**
-
-Should work at all Windows, Linux or macOS operating systems which have Python 3.6 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.7 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
 
 #### **Prerequisites**
 
@@ -75,7 +36,53 @@ To run the utility, you do not need any 3rd party tool.
 
 PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
 
-1. Make sure Python 3.6.0 or newer is installed:
+1. Make sure Python 3.7.0 or newer is installed:
+
+> python --version
+
+2. Use pip to install PyInstaller:
+
+> pip3 install pyinstaller
+
+3. Build/Freeze/Compile:
+
+> pyinstaller --noupx --onefile Dell_PFS_Extract.py
+
+At dist folder you should find the final utility executable
+
+#### **Pictures**
+
+![](https://i.imgur.com/LCsUknA.png)
+
+## **AMI BIOS Guard Extractor**
+
+![](https://i.imgur.com/ci3H4Y3.png)
+
+#### **Description**
+
+Parses AMI BIOS Guard (a.k.a. PFAT) images and extracts a proper SPI/BIOS/UEFI firmware.
+
+#### **Usage**
+
+You can either Drag & Drop or manually enter the full path of a folder containing AMI BIOS Guard (PFAT) images.
+
+#### **Download**
+
+An already built/frozen/compiled binary is provided by me for Windows only. Thus, **you don't need to manually build/freeze/compile it under Windows**. Instead, download the latest version from the [Releases](https://github.com/platomav/BIOSUtilities/releases) tab. To extract the already built/frozen/compiled archive, you need to use programs which support RAR5 compression. Note that you need to manually apply any prerequisites.
+
+#### **Compatibility**
+
+Should work at all Windows, Linux or macOS operating systems which have Python 3.7 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
+
+#### **Prerequisites**
+
+To run the utility, you do not need any 3rd party tool.
+
+#### **Build/Freeze/Compile with PyInstaller**
+
+PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
+
+1. Make sure Python 3.7.0 or newer is installed:
 
 > python --version
 
@@ -91,6 +98,8 @@ At dist folder you should find the final utility executable
 
 ## **Apple EFI Sucatalog Link Grabber**
 
+![](https://i.imgur.com/zTVFs4I.png)
+
 #### **Description**
 
 Parses Apple Software Update CatalogURL .sucatalog files and saves all EFI firmware package links into a text file. It removes any xml formatting, ignores false positives, removes duplicate links and sorts them in alphabetical order for easy comparison afterwards.
@@ -105,7 +114,7 @@ An already built/frozen/compiled binary is provided by me for Windows only. Thus
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.6 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.7 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
 
 #### **Prerequisites**
 
@@ -115,7 +124,7 @@ To run the utility, you do not need any 3rd party tool.
 
 PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
 
-1. Make sure Python 3.6.0 or newer is installed:
+1. Make sure Python 3.7.0 or newer is installed:
 
 > python --version
 
@@ -131,6 +140,8 @@ At dist folder you should find the final utility executable
 
 ## **Apple EFI File Renamer**
 
+![](https://i.imgur.com/mWGhWja.png)
+
 #### **Description**
 
 Parses Apple EFI files and renames them based on Intel's official $IBIOSI$ tag as follows: Model_Version_Build_Year_Month_Day_Hour_Minute_Checksum. The checksum is calculated and added by the utility in order to differentiate any EFI files with the same $IBIOSI$ tag. In rare cases in which the $IBIOSI$ tag is compressed, the utility automatically first uses [LongSoft's UEFIFind and UEFIExtract](https://github.com/LongSoft/UEFITool) tools.
@@ -145,7 +156,7 @@ An already built/frozen/compiled binary is provided by me for Windows only. Thus
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.6 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.7 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
 
 #### **Prerequisites**
 
@@ -158,7 +169,7 @@ To run the python script or its built/frozen/compiled binary, you need to have t
 
 PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
 
-1. Make sure Python 3.6.0 or newer is installed:
+1. Make sure Python 3.7.0 or newer is installed:
 
 > python --version
 
@@ -174,6 +185,8 @@ At dist folder you should find the final utility executable
 
 ## **Apple EFI IM4P Splitter**
 
+![](https://i.imgur.com/G5RkXQk.png)
+
 #### **Description**
 
 Parses Apple multiple EFI firmware .im4p files and splits all detected EFI firmware into separate SPI/BIOS images.
@@ -188,7 +201,7 @@ An already built/frozen/compiled binary is provided by me for Windows only. Thus
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.6 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.7 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
 
 #### **Prerequisites**
 
@@ -198,7 +211,7 @@ To run the utility, you do not need any 3rd party tool.
 
 PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
 
-1. Make sure Python 3.6.0 or newer is installed:
+1. Make sure Python 3.7.0 or newer is installed:
 
 > python --version
 
@@ -209,6 +222,52 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 3. Build/Freeze/Compile:
 
 > pyinstaller --noupx --onefile Apple_EFI_Split.py
+
+At dist folder you should find the final utility executable
+
+## **Apple EFI Package Extractor**
+
+![](https://i.imgur.com/pufGuZ4.png)
+
+#### **Description**
+
+Parses Apple EFI firmware packages (i.e. FirmwareUpdate.pkg, BridgeOSUpdateCustomer.pkg), extracts their EFI images, splits those in IM4P format and renames the final SPI/BIOS images accordingly. The utility automatically uses the free version of [AnyToISO](https://www.crystalidea.com/anytoiso) to extract the EFI .pkg files. The subsequent IM4P splitting and EFI renaming requires the presence of "Apple EFI IM4P Splitter" and "Apple EFI File Renamer" utilities.
+
+#### **Usage**
+
+You can either Drag & Drop or manually enter the full path of a folder containing Apple EFI firmware package (.pkg) files. Depending on where AnyToISO is installed on your system, you must change the "anytoiso_path" variable accordingly.
+
+#### **Download**
+
+An already built/frozen/compiled binary is **not** provided because the script requires the user to set the AnyToISO executable path variable. Remember that you need to include prerequisites such as AnyToISO, Apple EFI IM4P Splitter and Apple EFI File Renamer for the utility to work.
+
+#### **Compatibility**
+
+Should work at all Windows & macOS operating systems which have Python 3.7 and AnyToISO support.
+
+#### **Prerequisites**
+
+To run the python script, you need to have the following 3rd party tools installed or placed at the same directory:
+
+* [AnyToISO](https://www.crystalidea.com/anytoiso) (i.e. anytoiso.exe)
+* [UEFIFind](https://github.com/LongSoft/UEFITool) (i.e. UEFIFind.exe)
+* [UEFIExtract](https://github.com/LongSoft/UEFITool) (i.e. UEFIExtract.exe)
+
+#### **Build/Freeze/Compile with PyInstaller**
+
+PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often. Note that, due to this utility's nature, you may need to perform some small script changes for a built/frozen/compiled binary to work.
+
+1. Make sure Python 3.7.0 or newer is installed:
+
+> python --version
+
+2. Use pip to install PyInstaller:
+
+> pip3 install pyinstaller
+
+3. Build/Freeze/Compile:
+
+> pyinstaller --noupx --onefile Apple_EFI_Package.py
 
 At dist folder you should find the final utility executable
 
@@ -231,7 +290,7 @@ An already built/frozen/compiled Windows binary is provided by me. Thus, **you d
 
 #### **Compatibility**
 
-Should work at all Windows operating systems which have Python 3.6 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
+Should work at all Windows operating systems which have Python 3.7 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
 
 #### **Prerequisites**
 
@@ -249,7 +308,7 @@ To run the python script or its built/frozen/compiled binary, you need to additi
 
 PyInstaller can build/freeze/compile the utility at Windows, it is simple to run and gets updated often.
 
-1. Make sure Python 3.6.0 or newer is installed:
+1. Make sure Python 3.7.0 or newer is installed:
 
 > python --version
 
@@ -286,7 +345,7 @@ An already built/frozen/compiled binary is provided by me for Windows only. Thus
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.6 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.7 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
 
 #### **Prerequisites**
 
@@ -298,7 +357,7 @@ To run the python script or its built/frozen/compiled binary, you need to have t
 
 PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
 
-1. Make sure Python 3.6.0 or newer is installed:
+1. Make sure Python 3.7.0 or newer is installed:
 
 > python --version
 
@@ -331,7 +390,7 @@ An already built/frozen/compiled binary is provided by me for Windows only. Thus
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.6 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.7 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
 
 #### **Prerequisites**
 
@@ -343,7 +402,7 @@ To run the python script or its built/frozen/compiled binary, you need to have t
 
 PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
 
-1. Make sure Python 3.6.0 or newer is installed:
+1. Make sure Python 3.7.0 or newer is installed:
 
 > python --version
 
@@ -373,7 +432,7 @@ An already built/frozen/compiled binary is provided by me for Windows only. Thus
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.6 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.7 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
 
 #### **Prerequisites**
 
@@ -385,7 +444,7 @@ To run the python script or its built/frozen/compiled binary, you need to have t
 
 PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
 
-1. Make sure Python 3.6.0 or newer is installed:
+1. Make sure Python 3.7.0 or newer is installed:
 
 > python --version
 

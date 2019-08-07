@@ -3,17 +3,17 @@
 """
 Apple EFI Links
 Apple EFI Sucatalog Link Grabber
-Copyright (C) 2018 Plato Mavropoulos
+Copyright (C) 2018-2019 Plato Mavropoulos
 """
 
-print('Apple EFI Sucatalog Link Grabber v1.1\n')
+print('Apple EFI Sucatalog Link Grabber v1.2\n')
 
 import os
 import sys
+import datetime
 
 # Remove previous output files
 if os.path.isfile('OUT.txt') : os.remove('OUT.txt')
-if os.path.isfile('EFI.txt') : os.remove('EFI.txt')
 
 # Get input catalog file paths
 if len(sys.argv) >= 2 :
@@ -31,6 +31,10 @@ print('Working...')
 				
 # Parse each input xml file
 for input_file in catalogs :
+	input_name,input_extension = os.path.splitext(os.path.basename(input_file))
+	
+	print('\n%s%s' % (input_name, input_extension))
+	
 	with open(input_file, 'r') as in_file :
 		for line in in_file :
 			# Find EFI Firmware package links
@@ -54,7 +58,13 @@ if os.path.isfile('OUT.txt') :
 		
 		final_lines = ''.join(map(str, sorted(final_lines)))
 		
-		with open('EFI.txt', 'w') as efi_file : efi_file.write(final_lines) # Save final output file
+		current_datetime = datetime.datetime.utcnow().isoformat(timespec='seconds').replace('-','').replace('T','').replace(':','')
+		
+		output_file = 'EFI %s.txt' % current_datetime
+		
+		with open(output_file, 'w') as efi_file : efi_file.write(final_lines) # Save final output file
+		
+		print('\nStored %s!' % output_file)
 		
 	os.remove('OUT.txt') # Remove temporary output file
 	

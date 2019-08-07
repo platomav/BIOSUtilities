@@ -3,10 +3,10 @@
 """
 Apple EFI Split
 Apple EFI IM4P Splitter
-Copyright (C) 2018 Plato Mavropoulos
+Copyright (C) 2018-2019 Plato Mavropoulos
 """
 
-print('Apple EFI IM4P Splitter v1.2')
+print('Apple EFI IM4P Splitter v1.3')
 
 import os
 import re
@@ -15,12 +15,19 @@ import sys
 im4p = re.compile(br'\x16\x04\x49\x4D\x34\x50\x16\x04') # Apple IM4P
 ifd = re.compile(br'\x5A\xA5\xF0\x0F.{172}\xFF{16}', re.DOTALL) # Intel Flash Descriptor
 
-if len(sys.argv) >= 2 :
+# Get input catalog file paths
+if len(sys.argv) >= 3 and sys.argv[1] == '-skip' :
+	# Called via Apple_EFI_Package
+	apple_im4p = sys.argv[2:]
+	skip_pause = True
+elif len(sys.argv) >= 2 :
 	# Drag & Drop or CLI
 	apple_im4p = sys.argv[1:]
+	skip_pause = False
 else :
 	# Folder path
 	apple_im4p = []
+	skip_pause = False
 	in_path = input('\nEnter the full folder path: ')
 	print('\nWorking...')
 	for root, dirs, files in os.walk(in_path):
@@ -73,4 +80,6 @@ for input_file in apple_im4p :
 		
 		spi_start += spi_size
 		
-input('\nDone!')
+	print('\n    Split IM4P file into %d SPI/BIOS image(s)!' % len(ifd_count))
+		
+if not skip_pause : input('\nDone!')

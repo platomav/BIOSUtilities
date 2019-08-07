@@ -7,7 +7,7 @@ Copyright (C) 2019 Plato Mavropoulos
 Inspired from https://github.com/LongSoft/PFSExtractor-RS by Nikolaj Schlej
 """
 
-title = 'Dell PFS BIOS Extractor v3.0'
+title = 'Dell PFS BIOS Extractor v3.1'
 
 import os
 import re
@@ -304,7 +304,7 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 				# The sub PFS Payload Entries/Chunks are not in proper order by default
 				# Each Chunk includes a 0x248 sized Header followed by the Chunk Data but
 				# we are only interested in byte 0x86 which holds the Chunk Order Number
-				chunk_entry_number = chunks_payload[0x86]
+				chunk_entry_number = chunks_payload[chunk_entry_start + 0x86]
 				
 				# Sub PFS Entry Data starts after the sub PFS Entry Structure
 				chunk_entry_data_start = chunk_entry_start + pfs_entry_size

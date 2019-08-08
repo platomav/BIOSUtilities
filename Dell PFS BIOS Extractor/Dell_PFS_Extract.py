@@ -7,7 +7,7 @@ Copyright (C) 2019 Plato Mavropoulos
 Inspired from https://github.com/LongSoft/PFSExtractor-RS by Nikolaj Schlej
 """
 
-title = 'Dell PFS BIOS Extractor v3.1'
+title = 'Dell PFS BIOS Extractor v3.2'
 
 import os
 import re
@@ -243,12 +243,15 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 		entry_data = entries_all[index][4] # Get PFS Entry Data
 		entry_type = entries_all[index][3] # Get PFS Entry Type (OTHER initially)
 		
+		# Very small PFS Entry Data cannot be of special type
+		if len(entry_data) < pfs_header_size : continue
+		
 		# Get possible PFS Header Structure values
 		entry_hdr = get_struct(entry_data, 0, PFS_HDR)
 		
 		# Check for possibly zlib-compressed (0x4 Compressed Size + Compressed Data) PFS Entry Data
 		# The 0xE sized zlib "BIOS" section pattern (0xAA type) should be found after the Compressed Size
-		zlib_bios_match = zlib_bios_pattern.search(entry_data[0x4:0x12])
+		zlib_bios_match = zlib_bios_pattern.search(entry_data)
 		
 		# Check if a sub PFS Header with Payload in Chunked Entries was encountered
 		# Chunk Entries can be determined via the "Dell" string at offset 0x5C
@@ -344,8 +347,8 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 		# Check if the PFS Entry Data are zlib-compressed in a BIOS pattern (0xAA type). A zlib-compressed
 		# PFS Entry Data contains a full PFS structure, like the original Dell icon-less BIOS executable
 		elif zlib_bios_match :
-			compressed_size = int.from_bytes(entry_data[zlib_bios_match.start():zlib_bios_match.start() + 0x4], 'little')
-			entry_data = zlib.decompress(entry_data[zlib_bios_match.start() + 0x10:zlib_bios_match.start() + 0x10 + compressed_size])
+			compressed_size = int.from_bytes(entry_data[zlib_bios_match.start() - 0x4:zlib_bios_match.start()], 'little')
+			entry_data = zlib.decompress(entry_data[zlib_bios_match.start() + 0xC:zlib_bios_match.start() + 0xC + compressed_size])
 			
 			entry_type = 'ZLIB' # Re-set PFS Entry Type from OTHER to ZLIB, in case such info is needed afterwards
 			
@@ -495,7 +498,9 @@ def get_struct(buffer, start_offset, class_name, param_list = None) :
 	fit_len = min(len(struct_data), struct_len)
 	
 	if (start_offset >= len(buffer)) or (fit_len < struct_len) :
-		print('    Error: Offset 0x%X out of bounds at %s, possibly incomplete image!' % (start_offset, class_name))
+		print('\n    Error: Offset 0x%X out of bounds at %s, possibly incomplete image!' % (start_offset, class_name))
+		
+		input('\nPress enter to exit')
 		
 		sys.exit(1)
 	

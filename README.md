@@ -50,6 +50,10 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 
 At dist folder you should find the final utility executable
 
+#### **Anti-Virus False Positives**
+
+Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
+
 #### **Pictures**
 
 ![](https://i.imgur.com/LCsUknA.png)
@@ -96,6 +100,10 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 
 At dist folder you should find the final utility executable
 
+#### **Anti-Virus False Positives**
+
+Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
+
 ## **Apple EFI Sucatalog Link Grabber**
 
 ![](https://i.imgur.com/zTVFs4I.png)
@@ -137,6 +145,10 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 > pyinstaller --noupx --onefile Apple_EFI_Links.py
 
 At dist folder you should find the final utility executable
+
+#### **Anti-Virus False Positives**
+
+Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
 
 ## **Apple EFI File Renamer**
 
@@ -183,6 +195,10 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 
 At dist folder you should find the final utility executable
 
+#### **Anti-Virus False Positives**
+
+Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
+
 ## **Apple EFI IM4P Splitter**
 
 ![](https://i.imgur.com/G5RkXQk.png)
@@ -224,6 +240,10 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 > pyinstaller --noupx --onefile Apple_EFI_Split.py
 
 At dist folder you should find the final utility executable
+
+#### **Anti-Virus False Positives**
+
+Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
 
 ## **Apple EFI Package Extractor**
 
@@ -270,6 +290,10 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 > pyinstaller --noupx --onefile Apple_EFI_Package.py
 
 At dist folder you should find the final utility executable
+
+#### **Anti-Virus False Positives**
+
+Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
 
 ## **Panasonic BIOS Update Extractor**
 
@@ -326,6 +350,10 @@ PyInstaller can build/freeze/compile the utility at Windows, it is simple to run
 
 At dist folder you should find the final utility executable
 
+#### **Anti-Virus False Positives**
+
+Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
+
 ## **VAIO Packaging Manager Extractor**
 
 ![](https://i.imgur.com/rg4xrxJ.png)
@@ -370,6 +398,10 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 > pyinstaller --noupx --onefile VAIO_Package_Extract.py
 
 At dist folder you should find the final utility executable
+
+#### **Anti-Virus False Positives**
+
+Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
 
 ## **Fujitsu SFX Packager Extractor**
 
@@ -416,6 +448,10 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 
 At dist folder you should find the final utility executable
 
+#### **Anti-Virus False Positives**
+
+Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
+
 ## **Award BIOS Module Extractor**
 
 #### **Description**
@@ -457,3 +493,7 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 > pyinstaller --noupx --onefile Award_BIOS_Extract.py
 
 At dist folder you should find the final utility executable
+
+#### **Anti-Virus False Positives**
+
+Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.

@@ -7,7 +7,7 @@ Copyright (C) 2019 Plato Mavropoulos
 Inspired from https://github.com/LongSoft/PFSExtractor-RS by Nikolaj Schlej
 """
 
-title = 'Dell PFS BIOS Extractor v3.2'
+title = 'Dell PFS BIOS Extractor v3.5'
 
 import os
 import re
@@ -116,6 +116,37 @@ class PFS_INFO(ctypes.LittleEndianStructure) :
 		print('Version        : %s' % Version)
 		print('VersionType    : %s' % VersionType)
 		print('CharacterCount : %d' % (self.CharacterCount * 2))
+		
+# noinspection PyTypeChecker
+class METADATA_INFO(ctypes.LittleEndianStructure) :
+	_pack_ = 1
+	_fields_ = [
+		('ModelIDs',			char*501),		# 0x000
+		('FileName',			char*100),		# 0x1F5
+		('FileVersion',			char*33),		# 0x259
+		('Date',				char*33),		# 0x27A
+		('Brand',				char*80),		# 0x29B
+		('ModelFile',			char*80),		# 0x2EB
+		('ModelName',			char*100),		# 0x33B
+		('ModelVersion',		char*33),		# 0x39F
+		# 0x3C0
+	]
+	
+	def pfs_print(self) :
+		print('\nMetadata Information:\n')
+		print('Model IDs      : %s' % self.ModelIDs.decode('utf-8').strip(',END'))
+		print('File Name      : %s' % self.FileName.decode('utf-8'))
+		print('File Version   : %s' % self.FileVersion.decode('utf-8'))
+		print('Date           : %s' % self.Date.decode('utf-8'))
+		print('Brand          : %s' % self.Brand.decode('utf-8'))
+		print('Model File     : %s' % self.ModelFile.decode('utf-8'))
+		print('Model Name     : %s' % self.ModelName.decode('utf-8'))
+		print('Model Version  : %s' % self.ModelVersion.decode('utf-8'))
+		
+	def pfs_write(self) :
+		return '%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s' % (self.ModelIDs.decode('utf-8').strip(',END'), self.FileName.decode('utf-8'),
+				self.FileVersion.decode('utf-8'), self.Date.decode('utf-8'), self.Brand.decode('utf-8'), self.ModelFile.decode('utf-8'),
+				self.ModelName.decode('utf-8'), self.ModelVersion.decode('utf-8'))
 
 # Dell PFS.HDR. Extractor
 # noinspection PyUnusedLocal
@@ -160,6 +191,7 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 	entry_index = 1 # Index number of each PFS Entry
 	entry_start = 0 # Increasing PFS Entry starting offset
 	entries_all = [] # Storage for each PFS Entry details
+	pfs_info = [] # Buffer for PFS Information Entry Data
 	while len(payload[entry_start:entry_start + pfs_entry_size]) == pfs_entry_size :
 		# Get PFS Entry Structure values
 		pfs_entry = get_struct(payload, entry_start, PFS_ENTRY)
@@ -199,19 +231,30 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 		entry_met = payload[entry_met_start:entry_met_end] # Store PFS Entry Metadata
 		entry_met_sig = payload[entry_met_sig_start:entry_met_sig_end] # Store PFS Entry Metadata Signature
 		
-		entry_type = 'OTHER' # Placeholder, will be adjusted later if PFS Entry Data is zlib-compressed or split in Chunks
+		entry_type = 'OTHER' # Adjusted later if PFS Entry is Zlib, Chunks, PFS Info, Model Info
+		
+		# Get PFS Information from the PFS Entry with GUID E0717CE3A9BB25824B9F0DC8FD041960
+		if entry_guid == 'E0717CE3A9BB25824B9F0DC8FD041960' :
+			pfs_info = entry_data
+			entry_type = 'PFS_INFO'
+		
+		# Get Model Information from the PFS Entry with GUID 6F1D619A22A6CB924FD4DA68233AE3FB
+		elif entry_guid == '6F1D619A22A6CB924FD4DA68233AE3FB' :
+			entry_type = 'MODEL_INFO'
+			
+		# Get Nested PFS from the PFS Entry with GUID 900FAE60437F3AB14055F456AC9FDA84
+		elif entry_guid == '900FAE60437F3AB14055F456AC9FDA84' :
+			entry_type = 'NESTED_PFS' # Nested PFS are usually zlib-compressed so it might change to 'ZLIB' later
 		
 		# Store all relevant PFS Entry details
 		entries_all.append([entry_index, entry_guid, entry_version, entry_type, entry_data, entry_data_sig, entry_met, entry_met_sig])
 		
 		entry_index += 1 # Increase PFS Entry Index number for user-friendly output and name duplicates
 		entry_start = entry_met_sig_end # Next PFS Entry starts after PFS Entry Metadata Signature
-		
-	pfs_info = entries_all[-1][4] # Get the last PFS Entry's Data, which is always PFS Information
 	
 	# Parse all PFS Information Entries/Descriptors
-	info_all = [] # Storage for each PFS Information Entry details
 	info_start = 0 # Increasing PFS Information Entry starting offset
+	info_all = [] # Storage for each PFS Information Entry details
 	while len(pfs_info[info_start:info_start + pfs_info_size]) == pfs_info_size :
 		# Get PFS Information Structure values
 		entry_info = get_struct(pfs_info, info_start, PFS_INFO)
@@ -219,6 +262,7 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 		# Validate that a known PFS Information Header Version was encountered
 		if entry_info.HeaderVersion != 1 :
 			print('\n    Error: Unknown PFS Information Header Version %d!' % entry_info.HeaderVersion)
+			break # Skip PFS Information Entries/Descriptors in case of assertion error
 		
 		# Get PFS Information GUID in Big Endian format to match each Info to the equivalent stored PFS Entry details
 		entry_guid = ''.join('%0.8X' % int.from_bytes(struct.pack('<I', val), 'little') for val in reversed(entry_info.GUID))
@@ -238,10 +282,34 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 		# Two space/null characters seem to always exist after the Entry Name
 		info_start += (pfs_info_size + entry_info.CharacterCount * 2 + 0x2)
 		
+	# Parse Nested PFS Metadata when its PFS Information Entry is missing
+	for index in range(len(entries_all)) :
+		if entries_all[index][3] == 'NESTED_PFS' and not pfs_info :
+			entry_guid = entries_all[index][1] # Nested PFS Entry GUID in Big Endian format
+			entry_metadata = entries_all[index][6] # Use Metadata as PFS Information Entry
+			
+			# When PFS Information Entry exists, Nested PFS Metadata contains only Model IDs
+			# When it's missing, the Metadata structure is large and contains equivalent info
+			if len(entry_metadata) >= met_info_size :
+				# Get Nested PFS Metadata Structure values
+				entry_info = get_struct(entry_metadata, 0, METADATA_INFO)
+				
+				# As Nested PFS Entry Name, we'll use the actual PFS File Name
+				entry_name = entry_info.FileName.decode('utf-8').strip('.exe')
+				
+				# As Nested PFS Entry Version, we'll use the actual PFS File Version
+				entry_version = entry_info.FileVersion.decode('utf-8')
+				
+				# Store all relevant Nested PFS Metadata/Information details
+				info_all.append([entry_guid, entry_name, entry_version])
+				
+				# Re-set Nested PFS Entry Version from Metadata
+				entries_all[index][2] = entry_version
+		
 	# Parse each PFS Entry Data for special types (zlib or Chunks)
 	for index in range(len(entries_all)) :
 		entry_data = entries_all[index][4] # Get PFS Entry Data
-		entry_type = entries_all[index][3] # Get PFS Entry Type (OTHER initially)
+		entry_type = entries_all[index][3] # Get PFS Entry Type
 		
 		# Very small PFS Entry Data cannot be of special type
 		if len(entry_data) < pfs_header_size : continue
@@ -345,7 +413,7 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 			entry_type = 'CHUNKS' # Re-set PFS Entry Type from OTHER to CHUNKS, in case such info is needed afterwards
 		
 		# Check if the PFS Entry Data are zlib-compressed in a BIOS pattern (0xAA type). A zlib-compressed
-		# PFS Entry Data contains a full PFS structure, like the original Dell icon-less BIOS executable
+		# PFS Entry Data contains a full PFS structure, like the original Dell PFS BIOS executable
 		elif zlib_bios_match :
 			compressed_size = int.from_bytes(entry_data[zlib_bios_match.start() - 0x4:zlib_bios_match.start()], 'little')
 			entry_data = zlib.decompress(entry_data[zlib_bios_match.start() + 0xC:zlib_bios_match.start() + 0xC + compressed_size])
@@ -360,7 +428,7 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 			# its PFS Information should contain their names (CombineBiosNameX). Since the main/first
 			# full PFS structure has count/index 1, the rest start at 2+ and thus, their PFS Information
 			# names can be retrieved in order by subtracting 2 from the main/first PFS Information values
-			sub_pfs_name = ' %s v%s' % (info_all[pfs_count - 2][1], info_all[pfs_count - 2][2])
+			sub_pfs_name = ' %s v%s' % (info_all[pfs_count - 2][1], info_all[pfs_count - 2][2]) if info_all else ' UNKNOWN'
 			
 			# Recursively call the Dell PFS.HDR. Extractor function for each zlib-compressed full PFS structure
 			pfs_extract(entry_data, pfs_count, sub_pfs_name, pfs_count) # For recursive calls, pfs_index = pfs_count
@@ -380,9 +448,9 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 		file_meta_sig = entries_all[entry_index][7]
 		
 		# Give Names to special PFS Entries, not covered by PFS Information
-		if entry_index == len(entries_all) - 2 : # The second last PFS Entry is always Model Information
+		if file_type == 'MODEL_INFO' :
 			file_name = 'Model Information'
-		elif entry_index == len(entries_all) - 1 : # The last PFS Entry is always PFS Information
+		elif file_type == 'PFS_INFO' :
 			file_name = 'PFS Information'
 			if not is_advanced : continue # Don't store PFS Information in non-advanced user mode
 		else :
@@ -413,7 +481,7 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 		# so empty or intermediate files such as sub-PFS, PFS w/ Chunks or zlib-PFS are skipped
 		if file_data and not is_zlib : # Store Data (advanced & non-advanced users)
 			# Some Data may be Text or XML files with useful information for non-advanced users
-			is_text, final_data, file_ext, write_mode = bin_is_text(file_data, is_advanced)
+			is_text, final_data, file_ext, write_mode = bin_is_text(file_data, file_type, False, is_advanced)
 			
 			final_name = '%s%s' % (full_name, data_ext[:-4] + file_ext if is_text else data_ext)
 			final_path = os.path.join(output_path, final_name)
@@ -430,7 +498,7 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 		# All users should check these files in order to choose the correct CombineBiosNameX modules
 		if file_meta and (is_zlib or is_advanced) : # Store Metadata (advanced & maybe non-advanced users)
 			# Some Data may be Text or XML files with useful information for non-advanced users
-			is_text, final_data, file_ext, write_mode = bin_is_text(file_meta, is_advanced)
+			is_text, final_data, file_ext, write_mode = bin_is_text(file_meta, file_type, True, is_advanced)
 			
 			final_name = '%s%s' % (full_name, meta_ext[:-4] + file_ext if is_text else meta_ext)
 			final_path = os.path.join(output_path, final_name)
@@ -444,7 +512,7 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 			with open(final_path, 'wb') as o : o.write(file_meta_sig) # Write final Data Metadata Signature
 			
 # Check if file is Text/XML and Convert
-def bin_is_text(buffer, is_advanced) :
+def bin_is_text(buffer, file_type, is_metadata, is_advanced) :
 	is_text = False
 	write_mode = 'wb'
 	extension = '.bin'
@@ -467,6 +535,11 @@ def bin_is_text(buffer, is_advanced) :
 			write_mode = 'w'
 			extension = '.xml'
 			buffer = buffer.decode('utf-8')
+		elif file_type in ('NESTED_PFS','ZLIB') and is_metadata and len(buffer) == met_info_size : # Text Type 3
+			is_text = True
+			write_mode = 'w'
+			extension = '.txt'
+			buffer = get_struct(buffer, 0, METADATA_INFO).pfs_write()
 	
 	return is_text, buffer, extension, write_mode
 	
@@ -541,6 +614,7 @@ pfs_header_size = ctypes.sizeof(PFS_HDR)
 pfs_footer_size = ctypes.sizeof(PFS_FTR)
 pfs_entry_size = ctypes.sizeof(PFS_ENTRY)
 pfs_info_size = ctypes.sizeof(PFS_INFO)
+met_info_size = ctypes.sizeof(METADATA_INFO)
 
 if len(sys.argv) >= 2 :
 	# Drag & Drop or CLI
@@ -556,7 +630,7 @@ else :
 		for name in files :
 			pfs_exec.append(os.path.join(root, name))
 
-# Process each input Dell icon-less PFS BIOS executable
+# Process each input Dell PFS BIOS executable
 for input_file in pfs_exec :
 	input_name,input_extension = os.path.splitext(os.path.basename(input_file))
 	input_dir = os.path.dirname(os.path.abspath(input_file))
@@ -570,7 +644,7 @@ for input_file in pfs_exec :
 	
 	with open(input_file, 'rb') as in_file : input_data = in_file.read()
 	
-	# The Dell icon-less BIOS executables may contain more than one section. Each section is zlib-compressed
+	# The Dell PFS BIOS executables may contain more than one section. Each section is zlib-compressed
 	# with header pattern ++EEAA761BECBB20F1E651--789C where ++ is the section type and -- a random number
 	# The "BIOS" section has type 0xAA and its files are stored in PFS format. The "Utility" section has
 	# type 0xBB and its files are stored in PFS, BIN or 7-Zip formats. There could be more section types
@@ -581,7 +655,7 @@ for input_file in pfs_exec :
 	
 	# Check if zlib-compressed "BIOS" section with type 0xAA was found in the executable
 	if not zlib_bios_match :
-		print('\n    Error: This is not a Dell icon-less PFS BIOS executable!')
+		print('\n    Error: This is not a Dell PFS BIOS executable!')
 		continue # Next input file
 	
 	# Store the compressed zlib data size from the preceding 4 bytes of the "BIOS" section header pattern
@@ -603,7 +677,7 @@ for input_file in pfs_exec :
 	
 	pfs_extract(input_data, pfs_index, pfs_name, pfs_count) # Call the Dell PFS.HDR. Extractor function
 	
-	print('\n    Extracted Dell icon-less PFS BIOS executable!')
+	print('\n    Extracted Dell PFS BIOS executable!')
 
 else :
 	input('\nDone!')

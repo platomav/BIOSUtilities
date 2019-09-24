@@ -7,7 +7,7 @@ Copyright (C) 2019 Plato Mavropoulos
 Inspired from https://github.com/LongSoft/PFSExtractor-RS by Nikolaj Schlej
 """
 
-title = 'Dell PFS BIOS Extractor v3.5'
+title = 'Dell PFS BIOS Extractor v3.6'
 
 import os
 import re
@@ -233,8 +233,8 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 		
 		entry_type = 'OTHER' # Adjusted later if PFS Entry is Zlib, Chunks, PFS Info, Model Info
 		
-		# Get PFS Information from the PFS Entry with GUID E0717CE3A9BB25824B9F0DC8FD041960
-		if entry_guid == 'E0717CE3A9BB25824B9F0DC8FD041960' :
+		# Get PFS Information from the PFS Entry with GUID E0717CE3A9BB25824B9F0DC8FD041960 or B033CB16EC9B45A14055F80E4D583FD3
+		if entry_guid in ['E0717CE3A9BB25824B9F0DC8FD041960','B033CB16EC9B45A14055F80E4D583FD3'] :
 			pfs_info = entry_data
 			entry_type = 'PFS_INFO'
 		

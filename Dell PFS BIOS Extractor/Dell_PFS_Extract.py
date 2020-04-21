@@ -3,11 +3,11 @@
 """
 Dell PFS Extract
 Dell PFS BIOS Extractor
-Copyright (C) 2019 Plato Mavropoulos
+Copyright (C) 2019-2020 Plato Mavropoulos
 Inspired from https://github.com/LongSoft/PFSExtractor-RS by Nikolaj Schlej
 """
 
-title = 'Dell PFS BIOS Extractor v3.6'
+title = 'Dell PFS BIOS Extractor v4.0'
 
 import os
 import re
@@ -26,7 +26,6 @@ uint16_t = ctypes.c_ushort
 uint32_t = ctypes.c_uint
 uint64_t = ctypes.c_uint64
 
-# noinspection PyTypeChecker
 class PFS_HDR(ctypes.LittleEndianStructure) :
 	_pack_ = 1
 	_fields_ = [
@@ -42,7 +41,6 @@ class PFS_HDR(ctypes.LittleEndianStructure) :
 		print('HeaderVersion  : %d' % self.HeaderVersion)
 		print('PayloadSize    : 0x%X' % self.PayloadSize)
 		
-# noinspection PyTypeChecker
 class PFS_FTR(ctypes.LittleEndianStructure) :
 	_pack_ = 1
 	_fields_ = [
@@ -58,12 +56,11 @@ class PFS_FTR(ctypes.LittleEndianStructure) :
 		print('Checksum       : 0x%0.8X' % self.Checksum)
 		print('Tag            : %s' % self.Tag.decode('utf-8'))
 
-# noinspection PyTypeChecker
 class PFS_ENTRY(ctypes.LittleEndianStructure) :
 	_pack_ = 1
 	_fields_ = [
 		('GUID',				uint32_t*4),	# 0x00 Little Endian
-		('HeaderVersion',		uint32_t),		# 0x10
+		('HeaderVersion',		uint32_t),		# 0x10 1
 		('VersionType',			uint8_t*4),		# 0x14
 		('Version',				uint16_t*4),	# 0x18
 		('Reserved',			uint64_t),		# 0x20
@@ -93,7 +90,40 @@ class PFS_ENTRY(ctypes.LittleEndianStructure) :
 		print('DataMetSigSize : 0x%X' % self.DataMetSigSize)
 		print('Unknown        : %s' % Unknown)
 		
-# noinspection PyTypeChecker
+class PFS_ENTRY_R2(ctypes.LittleEndianStructure) :
+	_pack_ = 1
+	_fields_ = [
+		('GUID',				uint32_t*4),	# 0x00 Little Endian
+		('HeaderVersion',		uint32_t),		# 0x10 2
+		('VersionType',			uint8_t*4),		# 0x14
+		('Version',				uint16_t*4),	# 0x18
+		('Reserved',			uint64_t),		# 0x20
+		('DataSize',			uint32_t),		# 0x28
+		('DataSigSize',			uint32_t),		# 0x2C
+		('DataMetSize',			uint32_t),		# 0x30
+		('DataMetSigSize',		uint32_t),		# 0x34
+		('Unknown',				uint32_t*8),	# 0x38
+		# 0x58
+	]
+	
+	def pfs_print(self) :
+		GUID = ''.join('%0.8X' % int.from_bytes(struct.pack('<I', val), 'little') for val in reversed(self.GUID))
+		VersionType = ''.join('%0.4X' % int.from_bytes(struct.pack('<I', val), 'little') for val in reversed(self.VersionType))
+		Version = ''.join('%0.4X' % int.from_bytes(struct.pack('<I', val), 'little') for val in reversed(self.Version))
+		Unknown = ''.join('%0.8X' % int.from_bytes(struct.pack('<I', val), 'little') for val in reversed(self.Unknown))
+		
+		print('\nPFS Entry:\n')
+		print('GUID           : %s' % GUID)
+		print('HeaderVersion  : %d' % self.HeaderVersion)
+		print('VersionType    : %s' % VersionType)
+		print('Version        : %s' % Version)
+		print('Reserved       : 0x%X' % self.Reserved)
+		print('DataSize       : 0x%X' % self.DataSize)
+		print('DataSigSize    : 0x%X' % self.DataSigSize)
+		print('DataMetSize    : 0x%X' % self.DataMetSize)
+		print('DataMetSigSize : 0x%X' % self.DataMetSigSize)
+		print('Unknown        : %s' % Unknown)
+		
 class PFS_INFO(ctypes.LittleEndianStructure) :
 	_pack_ = 1
 	_fields_ = [
@@ -117,7 +147,6 @@ class PFS_INFO(ctypes.LittleEndianStructure) :
 		print('VersionType    : %s' % VersionType)
 		print('CharacterCount : %d' % (self.CharacterCount * 2))
 		
-# noinspection PyTypeChecker
 class METADATA_INFO(ctypes.LittleEndianStructure) :
 	_pack_ = 1
 	_fields_ = [
@@ -160,7 +189,7 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 		return # Critical error, abort
 		
 	# Validate that a known PFS Header Version was encountered
-	if pfs_hdr.HeaderVersion != 1 :
+	if pfs_hdr.HeaderVersion not in (1,2) :
 		print('\n    Error: Unknown PFS Header Version %d!' % pfs_hdr.HeaderVersion)
 	
 	# Get PFS Footer Data after PFS Header Payload
@@ -192,12 +221,13 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 	entry_start = 0 # Increasing PFS Entry starting offset
 	entries_all = [] # Storage for each PFS Entry details
 	pfs_info = [] # Buffer for PFS Information Entry Data
+	pfs_entry_struct, pfs_entry_size = get_pfs_entry(payload, entry_start)
 	while len(payload[entry_start:entry_start + pfs_entry_size]) == pfs_entry_size :
 		# Get PFS Entry Structure values
-		pfs_entry = get_struct(payload, entry_start, PFS_ENTRY)
+		pfs_entry = get_struct(payload, entry_start, pfs_entry_struct)
 		
 		# Validate that a known PFS Entry Header Version was encountered
-		if pfs_entry.HeaderVersion != 1 :
+		if pfs_entry.HeaderVersion not in (1,2) :
 			print('\n    Error: Unknown PFS Entry Header Version %d!' % pfs_entry.HeaderVersion)
 		
 		# Validate that the PFS Entry Reserved field is empty
@@ -321,12 +351,23 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 		# The 0xE sized zlib "BIOS" section pattern (0xAA type) should be found after the Compressed Size
 		zlib_bios_match = zlib_bios_pattern.search(entry_data)
 		
-		# Check if a sub PFS Header with Payload in Chunked Entries was encountered
-		# Chunk Entries can be determined via the "Dell" string at offset 0x5C
-		if entry_hdr.Tag == b'PFS.HDR.' and entry_data[0x5C:0x60] == b'Dell' :
-			
+		# Check if a sub PFS Header with Payload has Chunked Entries
+		# Chunked Entries can be determined via the "DellX" string
+		pfs_entry_struct, pfs_entry_size = get_pfs_entry(entry_data, pfs_header_size)
+		chunk_tag_off = pfs_header_size + pfs_entry_size + 0x4 # Chunk Tag starts at 0x4 and is probably 0x10 sized
+		chunk_tag = entry_data[chunk_tag_off:chunk_tag_off + 0x10].replace(b'\x00',b'\x20').decode('utf-8','ignore').strip()
+		
+		if chunk_tag in ('DellX7','DellX11') :
+			is_chunk = True
+		elif chunk_tag.startswith('Dell') :
+			is_chunk = True
+			print('\n    Error: Unknown sub PFS Entry Chunk Tag %s!' % chunk_tag)
+		else :
+			is_chunk = False
+		
+		if entry_hdr.Tag == b'PFS.HDR.' and is_chunk :
 			# Validate that a known sub PFS Header Version was encountered
-			if entry_hdr.HeaderVersion != 1 :
+			if entry_hdr.HeaderVersion not in (1,2) :
 				print('\n    Error: Unknown sub PFS Entry Header Version %d!' % entry_hdr.HeaderVersion)
 			
 			# Get sub PFS Footer Data after sub PFS Header Payload
@@ -356,12 +397,13 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 			# Parse all sub PFS Payload Entries/Chunks
 			chunk_data_all = [] # Storage for each sub PFS Entry/Chunk Order + Data
 			chunk_entry_start = 0 # Increasing sub PFS Entry/Chunk starting offset
+			pfs_entry_struct, pfs_entry_size = get_pfs_entry(chunks_payload, chunk_entry_start) # Get PFS_HDR Info
 			while len(chunks_payload[chunk_entry_start:chunk_entry_start + pfs_entry_size]) == pfs_entry_size :
 				# Get sub PFS Entry Structure values
-				pfs_chunk_entry = get_struct(chunks_payload, chunk_entry_start, PFS_ENTRY)
+				pfs_chunk_entry = get_struct(chunks_payload, chunk_entry_start, pfs_entry_struct)
 				
 				# Validate that a known sub PFS Entry Header Version was encountered
-				if pfs_chunk_entry.HeaderVersion != 1 :
+				if pfs_chunk_entry.HeaderVersion not in (1,2) :
 					print('\n    Error: Unknown sub PFS Chunk Entry Header Version %d!' % pfs_chunk_entry.HeaderVersion)
 				
 				# Validate that the sub PFS Entry Reserved field is empty
@@ -372,10 +414,16 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 				# This is not useful as the Version of each Chunk does not matter at all
 				chunk_entry_version = get_version(pfs_chunk_entry.Version, pfs_chunk_entry.VersionType)
 				
+				# Each sub PFS Payload Entry/Chunk includes some Extra Chunk Data/Information at the beginning
+				# We must determine the Chunk Extra Info size to remove its Data from the final Chunk Raw Data
+				# The Chunk Extra Info consists of a Header 0x28 (?), variable sized Flags & End of Flags (0x8)
+				chunk_raw_size_off = chunk_entry_start + pfs_entry_size + 0x20 # Chunk Raw Data Size is at 0x20-0x24
+				chunk_raw_size = int.from_bytes(chunks_payload[chunk_raw_size_off:chunk_raw_size_off + 0x4], 'little')
+				chunk_info_size = pfs_chunk_entry.DataSize - chunk_raw_size # Get Chunk Extra Info size
+				
 				# The sub PFS Payload Entries/Chunks are not in proper order by default
-				# Each Chunk includes a 0x248 sized Header followed by the Chunk Data but
-				# we are only interested in byte 0x86 which holds the Chunk Order Number
-				chunk_entry_number = chunks_payload[chunk_entry_start + 0x86]
+				# However, we can get the Chunk Order Number from a Chunk Extra Info byte
+				chunk_entry_number = chunks_payload[chunk_entry_start + pfs_entry_size + 0x3E] # Chunk Order Number is at 0x3E
 				
 				# Sub PFS Entry Data starts after the sub PFS Entry Structure
 				chunk_entry_data_start = chunk_entry_start + pfs_entry_size
@@ -398,17 +446,19 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 				chunk_entry_met = chunks_payload[chunk_entry_met_start:chunk_entry_met_end] # Store sub PFS Entry Metadata
 				chunk_entry_met_sig = chunks_payload[chunk_entry_met_sig_start:chunk_entry_met_sig_end] # Store sub PFS Entry Metadata Signature
 				
-				# Store each sub PFS Entry/Chunk Order Number & Data
-				chunk_data_all.append((chunk_entry_number, chunk_entry_data))
+				# Store each sub PFS Entry/Chunk Extra Info Size, Order Number & Raw Data
+				chunk_data_all.append((chunk_entry_number, chunk_entry_data, chunk_info_size))
 				
 				chunk_entry_start = chunk_entry_met_sig_end # Next sub PFS Entry/Chunk starts after sub PFS Entry Metadata Signature
+				
+				pfs_entry_struct, pfs_entry_size = get_pfs_entry(chunks_payload, chunk_entry_start) # Get Next PFS_HDR Info
 				
 			chunk_data_all.sort() # Sort all sub PFS Entries/Chunks based on their Order Number
 			
 			entry_data = b'' # Initialize new PFS Entry Data
 			for chunk in chunk_data_all :
 				# Merge all sub PFS Chunks into the final new PFS Entry Data
-				entry_data += chunk[1][0x248:] # Skip the sub PFS Chunk Header (0x248) when merging
+				entry_data += chunk[1][chunk[2]:] # Skip the sub PFS Chunk Extra Info when merging
 				
 			entry_type = 'CHUNKS' # Re-set PFS Entry Type from OTHER to CHUNKS, in case such info is needed afterwards
 		
@@ -560,6 +610,14 @@ def get_version(version_fields, version_types) :
 			print('\n    Error: Unknown PFS Entry Version Type 0x%0.2X!' % version_types[idx])
 			
 	return version
+	
+# Get PFS Entry Structure & Size via its Version
+def get_pfs_entry(buffer, offset) :
+	pfs_entry_ver = int.from_bytes(buffer[offset + 0x10:offset + 0x14], 'little') # PFS Entry Version
+	
+	if pfs_entry_ver == 1 : return PFS_ENTRY, ctypes.sizeof(PFS_ENTRY)
+	elif pfs_entry_ver == 2 : return PFS_ENTRY_R2, ctypes.sizeof(PFS_ENTRY_R2)
+	else : return PFS_ENTRY_R2, ctypes.sizeof(PFS_ENTRY_R2)
 			
 # Process ctypes Structure Classes
 def get_struct(buffer, start_offset, class_name, param_list = None) :
@@ -612,7 +670,6 @@ args = parser.parse_args()
 # Get ctypes Structure Sizes
 pfs_header_size = ctypes.sizeof(PFS_HDR)
 pfs_footer_size = ctypes.sizeof(PFS_FTR)
-pfs_entry_size = ctypes.sizeof(PFS_ENTRY)
 pfs_info_size = ctypes.sizeof(PFS_INFO)
 met_info_size = ctypes.sizeof(METADATA_INFO)
 

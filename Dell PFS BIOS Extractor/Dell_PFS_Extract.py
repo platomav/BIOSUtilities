@@ -7,7 +7,7 @@ Copyright (C) 2019-2020 Plato Mavropoulos
 Inspired from https://github.com/LongSoft/PFSExtractor-RS by Nikolaj Schlej
 """
 
-title = 'Dell PFS BIOS Extractor v4.0'
+title = 'Dell PFS BIOS Extractor v4.2'
 
 import os
 import re
@@ -176,6 +176,42 @@ class METADATA_INFO(ctypes.LittleEndianStructure) :
 		return '%s\n%s\n%s\n%s\n%s\n%s\n%s\n%s' % (self.ModelIDs.decode('utf-8').strip(',END'), self.FileName.decode('utf-8'),
 				self.FileVersion.decode('utf-8'), self.Date.decode('utf-8'), self.Brand.decode('utf-8'), self.ModelFile.decode('utf-8'),
 				self.ModelName.decode('utf-8'), self.ModelVersion.decode('utf-8'))
+				
+class CHUNK_INFO_HDR(ctypes.LittleEndianStructure) :
+	_pack_ = 1
+	_fields_ = [
+		('Unknown0',			uint32_t),		# 0x00
+		('DellTag',				char*16),		# 0x04
+		('Unknown1',			uint32_t),		# 0x14
+		('Unknown2',			uint32_t),		# 0x18
+		('FlagsSize',			uint32_t),		# 0x1C
+		('ChunkSize',			uint32_t),		# 0x20
+		('Unknown3',			uint16_t),		# 0x24
+		('EndTag',				char*2),		# 0x26
+		# 0x28
+	]
+	
+	def pfs_print(self) :
+		print('\nChunk Header:\n')
+		print('Unknown 0      : 0x%X' % self.Unknown0)
+		print('Dell Tag       : %s' % self.DellTag.replace(b'\x00',b'\x20').decode('utf-8','ignore').strip())
+		print('Unknown 1      : 0x%X' % self.Unknown1)
+		print('Unknown 2      : 0x%X' % self.Unknown2)
+		print('Flags Size     : 0x%X' % self.FlagsSize)
+		print('Chunk Size     : 0x%X' % self.ChunkSize)
+		print('Unknown 3      : 0x%X' % self.Unknown3)
+		print('End Tag        : %s' % self.EndTag.decode('utf-8','ignore'))
+		
+class CHUNK_INFO_FTR(ctypes.LittleEndianStructure) :
+	_pack_ = 1
+	_fields_ = [
+		('EndMarker',			uint64_t),		# 0x00
+		# 0x08
+	]
+	
+	def pfs_print(self) :
+		print('\nChunk Footer:\n')
+		print('End Marker      : 0x%X' % self.EndMarker)
 
 # Dell PFS.HDR. Extractor
 # noinspection PyUnusedLocal
@@ -221,7 +257,7 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 	entry_start = 0 # Increasing PFS Entry starting offset
 	entries_all = [] # Storage for each PFS Entry details
 	pfs_info = [] # Buffer for PFS Information Entry Data
-	pfs_entry_struct, pfs_entry_size = get_pfs_entry(payload, entry_start)
+	pfs_entry_struct, pfs_entry_size = get_pfs_entry(payload, entry_start) # Get PFS Entry Info
 	while len(payload[entry_start:entry_start + pfs_entry_size]) == pfs_entry_size :
 		# Get PFS Entry Structure values
 		pfs_entry = get_struct(payload, entry_start, pfs_entry_struct)
@@ -352,20 +388,18 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 		zlib_bios_match = zlib_bios_pattern.search(entry_data)
 		
 		# Check if a sub PFS Header with Payload has Chunked Entries
-		# Chunked Entries can be determined via the "DellX" string
-		pfs_entry_struct, pfs_entry_size = get_pfs_entry(entry_data, pfs_header_size)
-		chunk_tag_off = pfs_header_size + pfs_entry_size + 0x4 # Chunk Tag starts at 0x4 and is probably 0x10 sized
-		chunk_tag = entry_data[chunk_tag_off:chunk_tag_off + 0x10].replace(b'\x00',b'\x20').decode('utf-8','ignore').strip()
-		
-		if chunk_tag in ('DellX7','DellX11') :
-			is_chunk = True
-		elif chunk_tag.startswith('Dell') :
-			is_chunk = True
-			print('\n    Error: Unknown sub PFS Entry Chunk Tag %s!' % chunk_tag)
+		pfs_entry_struct, pfs_entry_size = get_pfs_entry(entry_data, pfs_header_size) # Get PFS Entry Info
+		chunk_info_hdr_off = pfs_header_size + pfs_entry_size # Chunk Info Header starts after PFS Header & PFS Entry
+		if len(entry_data[chunk_info_hdr_off:chunk_info_hdr_off + chunk_info_header_size]) == chunk_info_header_size :
+			chunk_info_hdr = get_struct(entry_data, chunk_info_hdr_off, CHUNK_INFO_HDR) # Get Chunk Info Header
+			chunk_dell_tag = chunk_info_hdr.DellTag.replace(b'\x00',b'\x20').decode('utf-8','ignore').strip() # Chunk Dell Tag
+			chunk_flags_size = chunk_info_hdr.FlagsSize # Size of Chunk Info Flags
+			chunk_payload_size = chunk_info_hdr.ChunkSize # Size of Chunk Raw Data
 		else :
-			is_chunk = False
+			chunk_dell_tag = 'None' # Payload does not have Chunked Entries
+			chunk_flags_size = 0
 		
-		if entry_hdr.Tag == b'PFS.HDR.' and is_chunk :
+		if entry_hdr.Tag == b'PFS.HDR.' and chunk_dell_tag.startswith('Dell') :
 			# Validate that a known sub PFS Header Version was encountered
 			if entry_hdr.HeaderVersion not in (1,2) :
 				print('\n    Error: Unknown sub PFS Entry Header Version %d!' % entry_hdr.HeaderVersion)
@@ -379,10 +413,27 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 			# Validate that a sub PFS Footer was parsed
 			if entry_ftr.Tag != b'PFS.FTR.' :
 				print('\n    Error: Sub PFS Entry Footer could not be found!')
-				
+			
 			# Validate that the sub PFS Header Payload Size matches the one at the sub PFS Footer
 			if entry_hdr.PayloadSize != entry_ftr.PayloadSize :
 				print('\n    Error: Sub PFS Entry Header & Footer Payload Size mismatch!')
+			
+			# Get sub PFS Entry Structure values
+			pfs_chunk_entry = get_struct(entry_data, pfs_header_size, pfs_entry_struct)
+			
+			# Validate that a known sub PFS Entry Header Version was encountered
+			if pfs_chunk_entry.HeaderVersion not in (1,2) :
+				print('\n    Error: Unknown sub PFS Chunk Entry Header Version %d!' % pfs_chunk_entry.HeaderVersion)
+			
+			# Validate that the sub PFS Entry Reserved field is empty
+			if pfs_chunk_entry.Reserved != 0 :
+				print('\n    Error: Detected non-empty sub PFS Chunk Entry Reserved field!')
+			
+			# Validate that the Chunk Extra Info Footer End Marker is proper
+			chunk_info_ftr_off = chunk_info_hdr_off + chunk_info_header_size + chunk_flags_size
+			chunk_info_ftr = get_struct(entry_data, chunk_info_ftr_off, CHUNK_INFO_FTR)
+			if chunk_info_ftr.EndMarker != 0xFF :
+				print('\n    Error: Unknown sub PFS Chunk Info Footer End Marker 0x%X!' % chunk_info_ftr.EndMarker)
 			
 			# Get sub PFS Payload Data
 			chunks_payload = entry_data[pfs_header_size:pfs_header_size + entry_hdr.PayloadSize]
@@ -397,8 +448,11 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 			# Parse all sub PFS Payload Entries/Chunks
 			chunk_data_all = [] # Storage for each sub PFS Entry/Chunk Order + Data
 			chunk_entry_start = 0 # Increasing sub PFS Entry/Chunk starting offset
-			pfs_entry_struct, pfs_entry_size = get_pfs_entry(chunks_payload, chunk_entry_start) # Get PFS_HDR Info
+			pfs_entry_struct, pfs_entry_size = get_pfs_entry(chunks_payload, chunk_entry_start) # Get PFS Entry Info (initial)
 			while len(chunks_payload[chunk_entry_start:chunk_entry_start + pfs_entry_size]) == pfs_entry_size :
+				# Get Next PFS Entry Info, skip at the first loop iteration because we already have it
+				if chunk_entry_start : pfs_entry_struct, pfs_entry_size = get_pfs_entry(chunks_payload, chunk_entry_start)
+				
 				# Get sub PFS Entry Structure values
 				pfs_chunk_entry = get_struct(chunks_payload, chunk_entry_start, pfs_entry_struct)
 				
@@ -410,20 +464,33 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 				if pfs_chunk_entry.Reserved != 0 :
 					print('\n    Error: Detected non-empty sub PFS Chunk Entry Reserved field!')
 				
+				# Each sub PFS Payload Entry/Chunk includes some Extra Chunk Data/Information at the beginning
+				# The Chunk Extra Info consists of a Header (0x28), variable sized Flags & End Marker Footer (0x8)
+				# We need the Chunk Extra Info size so that its Data can be removed from the final Chunk Raw Data
+				chunk_info_hdr_off = chunk_entry_start + pfs_entry_size # Chunk Info Header starts after PFS Entry
+				chunk_info_hdr = get_struct(chunks_payload, chunk_info_hdr_off, CHUNK_INFO_HDR) # Get Chunk Info Header
+				chunk_dell_tag = chunk_info_hdr.DellTag.replace(b'\x00',b'\x20').decode('utf-8','ignore').strip() # Chunk Dell Tag
+				chunk_flags_size = chunk_info_hdr.FlagsSize # Size of Chunk Info Flags
+				chunk_payload_size = chunk_info_hdr.ChunkSize # Size of Chunk Raw Data
+				chunk_info_size = pfs_chunk_entry.DataSize - chunk_payload_size # Size of Chunk Info
+				
+				# Validate that the Chunk Extra Info Header Dell Tag is proper
+				if not chunk_dell_tag.startswith('Dell') :
+					print('\n    Error: Unknown sub PFS Chunk Info Header Dell Tag %s!' % chunk_dell_tag)
+				
+				# Validate that the Chunk Extra Info Footer End Marker is proper
+				chunk_info_ftr_off = chunk_info_hdr_off + chunk_info_header_size + chunk_flags_size
+				chunk_info_ftr = get_struct(chunks_payload, chunk_info_ftr_off, CHUNK_INFO_FTR)
+				if chunk_info_ftr.EndMarker != 0xFF :
+					print('\n    Error: Unknown sub PFS Chunk Info Footer End Marker 0x%X!' % chunk_info_ftr.EndMarker)
+				
+				# The sub PFS Payload Entries/Chunks are not in proper order by default
+				# We can get the Chunk Order Number from Chunk Extra Info > Flags byte 0x16
+				chunk_entry_number = chunks_payload[chunk_info_hdr_off + chunk_info_header_size + 0x16] # Get Chunk Order Number
+				
 				# Get sub PFS Entry Version string via "Version" and "VersionType" fields
 				# This is not useful as the Version of each Chunk does not matter at all
 				chunk_entry_version = get_version(pfs_chunk_entry.Version, pfs_chunk_entry.VersionType)
-				
-				# Each sub PFS Payload Entry/Chunk includes some Extra Chunk Data/Information at the beginning
-				# We must determine the Chunk Extra Info size to remove its Data from the final Chunk Raw Data
-				# The Chunk Extra Info consists of a Header 0x28 (?), variable sized Flags & End of Flags (0x8)
-				chunk_raw_size_off = chunk_entry_start + pfs_entry_size + 0x20 # Chunk Raw Data Size is at 0x20-0x24
-				chunk_raw_size = int.from_bytes(chunks_payload[chunk_raw_size_off:chunk_raw_size_off + 0x4], 'little')
-				chunk_info_size = pfs_chunk_entry.DataSize - chunk_raw_size # Get Chunk Extra Info size
-				
-				# The sub PFS Payload Entries/Chunks are not in proper order by default
-				# However, we can get the Chunk Order Number from a Chunk Extra Info byte
-				chunk_entry_number = chunks_payload[chunk_entry_start + pfs_entry_size + 0x3E] # Chunk Order Number is at 0x3E
 				
 				# Sub PFS Entry Data starts after the sub PFS Entry Structure
 				chunk_entry_data_start = chunk_entry_start + pfs_entry_size
@@ -451,13 +518,10 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 				
 				chunk_entry_start = chunk_entry_met_sig_end # Next sub PFS Entry/Chunk starts after sub PFS Entry Metadata Signature
 				
-				pfs_entry_struct, pfs_entry_size = get_pfs_entry(chunks_payload, chunk_entry_start) # Get Next PFS_HDR Info
-				
 			chunk_data_all.sort() # Sort all sub PFS Entries/Chunks based on their Order Number
 			
 			entry_data = b'' # Initialize new PFS Entry Data
-			for chunk in chunk_data_all :
-				# Merge all sub PFS Chunks into the final new PFS Entry Data
+			for chunk in chunk_data_all : # Merge all sub PFS Chunks into the final new PFS Entry Data
 				entry_data += chunk[1][chunk[2]:] # Skip the sub PFS Chunk Extra Info when merging
 				
 			entry_type = 'CHUNKS' # Re-set PFS Entry Type from OTHER to CHUNKS, in case such info is needed afterwards
@@ -672,6 +736,8 @@ pfs_header_size = ctypes.sizeof(PFS_HDR)
 pfs_footer_size = ctypes.sizeof(PFS_FTR)
 pfs_info_size = ctypes.sizeof(PFS_INFO)
 met_info_size = ctypes.sizeof(METADATA_INFO)
+chunk_info_header_size = ctypes.sizeof(CHUNK_INFO_HDR)
+chunk_info_footer_size = ctypes.sizeof(CHUNK_INFO_FTR)
 
 if len(sys.argv) >= 2 :
 	# Drag & Drop or CLI

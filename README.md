@@ -11,11 +11,11 @@ Various BIOS Utilities for Modding/Research
 
 #### **Description**
 
-Parses modern icon-less Dell PFS BIOS executables and extracts their SPI/BIOS/UEFI firmware components. It supports all Dell PFS revisions and formats, including those which are originally compressed or split in chunks. The output comprises only final firmware components which are directly usable by end users. An optional Advanced user mode is available as well, which additionally extracts firmware Signatures and more Metadata.
+Parses Dell PFS BIOS images and extracts their SPI/BIOS/UEFI firmware components. It supports all Dell PFS revisions and formats, including those which are originally compressed or split in chunks. The output comprises only final firmware components which are directly usable by end users. An optional Advanced user mode is available as well, which additionally extracts firmware Signatures and more Metadata.
 
 #### **Usage**
 
-You can either Drag & Drop or manually enter the full path of a folder containing icon-less Dell PFS BIOS executables. Optional arguments:
+You can either Drag & Drop or manually enter the full path of a folder containing Dell PFS BIOS images. Optional arguments:
   
 * -h or --help : show help message and exit
 * -a or --advanced : extract in advanced user mode

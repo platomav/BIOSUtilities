@@ -7,7 +7,7 @@ Copyright (C) 2019-2020 Plato Mavropoulos
 Inspired from https://github.com/LongSoft/PFSExtractor-RS by Nikolaj Schlej
 """
 
-title = 'Dell PFS BIOS Extractor v4.2'
+title = 'Dell PFS BIOS Extractor v4.5'
 
 import os
 import re
@@ -385,7 +385,7 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 		
 		# Check for possibly zlib-compressed (0x4 Compressed Size + Compressed Data) PFS Entry Data
 		# The 0xE sized zlib "BIOS" section pattern (0xAA type) should be found after the Compressed Size
-		zlib_bios_match = zlib_bios_pattern.search(entry_data)
+		zlib_bios_hdr_match = zlib_bios_header.search(entry_data)
 		
 		# Check if a sub PFS Header with Payload has Chunked Entries
 		pfs_entry_struct, pfs_entry_size = get_pfs_entry(entry_data, pfs_header_size) # Get PFS Entry Info
@@ -526,11 +526,58 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 				
 			entry_type = 'CHUNKS' # Re-set PFS Entry Type from OTHER to CHUNKS, in case such info is needed afterwards
 		
-		# Check if the PFS Entry Data are zlib-compressed in a BIOS pattern (0xAA type). A zlib-compressed
-		# PFS Entry Data contains a full PFS structure, like the original Dell PFS BIOS executable
-		elif zlib_bios_match :
-			compressed_size = int.from_bytes(entry_data[zlib_bios_match.start() - 0x4:zlib_bios_match.start()], 'little')
-			entry_data = zlib.decompress(entry_data[zlib_bios_match.start() + 0xC:zlib_bios_match.start() + 0xC + compressed_size])
+		# Check if the PFS Entry Data are zlib-compressed in a "BIOS" pattern with 0xAA type.
+		# A zlib-compressed PFS Entry Data contains a full PFS structure, like the main Dell PFS BIOS image.
+		elif zlib_bios_hdr_match :
+			# Store the compressed zlib stream start offset
+			compressed_start = zlib_bios_hdr_match.start() + 0xC
+			
+			# Store the "BIOS" section header start offset
+			header_start = zlib_bios_hdr_match.start() - 0x4
+			
+			# Store the "BIOS" section header contents (16 bytes)
+			header_data = entry_data[header_start:compressed_start]
+			
+			# Check if the "BIOS" section header Checksum XOR 8 is valid
+			if chk_xor_8(header_data[:0xF], 0) != header_data[0xF] :
+				print('\n    Error: Dell sub-PFS BIOS section data is corrupted!')
+			
+			# Store the compressed zlib stream size from the header contents
+			compressed_size_hdr = int.from_bytes(header_data[:0x4], 'little')
+			
+			# Store the compressed zlib stream end offset
+			compressed_end = compressed_start + compressed_size_hdr
+			
+			# Store the compressed zlib stream contents
+			compressed_data = entry_data[compressed_start:compressed_end]
+			
+			# Check if the compressed zlib stream is complete, based on header
+			if len(compressed_data) != compressed_size_hdr :
+				print('\n    Error: Dell sub-PFS BIOS section data is corrupted!')
+				
+			# Store the "BIOS" section footer contents (16 bytes)
+			footer_data = entry_data[compressed_end:compressed_end + 0x10]
+			
+			# Check if the "BIOS" section footer Checksum XOR 8 is valid
+			if chk_xor_8(footer_data[:0xF], 0) != footer_data[0xF] :
+				print('\n    Error: Dell sub-PFS BIOS section data is corrupted!')
+			
+			# Search input PFS Entry Data for zlib "BIOS" section footer
+			zlib_bios_ftr_match = zlib_bios_footer.search(footer_data)
+			
+			# Check if "BIOS" section footer was found in the PFS Entry Data
+			if not zlib_bios_ftr_match :
+				print('\n    Error: Dell sub-PFS BIOS section data is corrupted!')
+				
+			# Store the compressed zlib stream size from the footer contents
+			compressed_size_ftr = int.from_bytes(footer_data[:0x4], 'little')
+				
+			# Check if the compressed zlib stream is complete, based on footer
+			if compressed_size_ftr != compressed_size_hdr :
+				print('\n    Error: Dell sub-PFS BIOS section data is corrupted!')
+			
+			# Decompress "BIOS" section payload, starting from zlib header start of 0x789C
+			entry_data = zlib.decompress(compressed_data)
 			
 			entry_type = 'ZLIB' # Re-set PFS Entry Type from OTHER to ZLIB, in case such info is needed afterwards
 			
@@ -642,8 +689,7 @@ def bin_is_text(buffer, file_type, is_metadata, is_advanced) :
 			is_text = True
 			write_mode = 'w'
 			extension = '.txt'
-			if buffer.endswith(b'\x00\x00') : buffer = buffer[:-2]
-			buffer = buffer.decode('utf-8').replace(';','\n')
+			buffer = buffer.split(b'\x00')[0].decode('utf-8').replace(';','\n')
 		elif b'<Rimm x-schema="' in buffer[:0x50] : # XML Type
 			is_text = True
 			write_mode = 'w'
@@ -682,18 +728,27 @@ def get_pfs_entry(buffer, offset) :
 	if pfs_entry_ver == 1 : return PFS_ENTRY, ctypes.sizeof(PFS_ENTRY)
 	elif pfs_entry_ver == 2 : return PFS_ENTRY_R2, ctypes.sizeof(PFS_ENTRY_R2)
 	else : return PFS_ENTRY_R2, ctypes.sizeof(PFS_ENTRY_R2)
-			
+
+# Calculate Checksum XOR 8 of data
+def chk_xor_8(data, init_value) :
+	value = init_value
+	for byte in data : value = value ^ byte
+	value = value ^ 0x0
+	
+	return value
+
 # Process ctypes Structure Classes
+# https://github.com/skochinsky/me-tools/blob/master/me_unpack.py by Igor Skochinsky
 def get_struct(buffer, start_offset, class_name, param_list = None) :
 	if param_list is None : param_list = []
 	
-	structure = class_name(*param_list) # Unpack optional parameter list
+	structure = class_name(*param_list) # Unpack parameter list
 	struct_len = ctypes.sizeof(structure)
 	struct_data = buffer[start_offset:start_offset + struct_len]
 	fit_len = min(len(struct_data), struct_len)
 	
 	if (start_offset >= len(buffer)) or (fit_len < struct_len) :
-		print('\n    Error: Offset 0x%X out of bounds at %s, possibly incomplete image!' % (start_offset, class_name))
+		print('\n    Error: Offset 0x%X out of bounds at %s, possibly incomplete image!' % (start_offset, class_name.__name__))
 		
 		input('\nPress enter to exit')
 		
@@ -704,6 +759,7 @@ def get_struct(buffer, start_offset, class_name, param_list = None) :
 	return structure
 	
 # Pause after any unexpected Python exception
+# https://stackoverflow.com/a/781074 by Torsten Marek
 def show_exception_and_exit(exc_type, exc_value, tb) :
 	if exc_type is KeyboardInterrupt :
 		print('\n')
@@ -727,7 +783,7 @@ elif user_os.startswith('linux') or user_os == 'darwin' or user_os.find('bsd') !
 
 # Set argparse Arguments
 parser = argparse.ArgumentParser()
-parser.add_argument('executables', type=argparse.FileType('r'), nargs='*')
+parser.add_argument('images', type=argparse.FileType('r'), nargs='*')
 parser.add_argument('-a', '--advanced', help='extract in advanced user mode', action='store_true')
 args = parser.parse_args()
 
@@ -739,11 +795,21 @@ met_info_size = ctypes.sizeof(METADATA_INFO)
 chunk_info_header_size = ctypes.sizeof(CHUNK_INFO_HDR)
 chunk_info_footer_size = ctypes.sizeof(CHUNK_INFO_FTR)
 
+# The Dell PFS BIOS images usually contain more than one section. Each section is zlib-compressed
+# with header pattern ********++EEAA761BECBB20F1E651--789C where ******** is the zlib stream size,
+# ++ is the section type and -- the header Checksum XOR 8. The "BIOS" section has type 0xAA and its
+# files are stored in PFS format. The "Utility" section has type 0xBB and its files are stored in PFS
+# BIN or 7z formats. There could be more section types but for the purposes of this utility, we are
+# only interested in extracting the "BIOS" section files. Each section is followed by a footer pattern
+# ********EEAAEE8F491BE8AE143790-- where ******** is the zlib stream size and ++ the footer Checksum XOR 8.
+zlib_bios_header = re.compile(br'\xAA\xEE\xAA\x76\x1B\xEC\xBB\x20\xF1\xE6\x51.\x78\x9C', re.DOTALL)
+zlib_bios_footer = re.compile(br'\xEE\xAA\xEE\x8F\x49\x1B\xE8\xAE\x14\x37\x90')
+
 if len(sys.argv) >= 2 :
 	# Drag & Drop or CLI
 	pfs_exec = []
-	for executable in args.executables :
-		pfs_exec.append(executable.name)
+	for image in args.images :
+		pfs_exec.append(image.name)
 else :
 	# Folder path
 	pfs_exec = []
@@ -753,7 +819,7 @@ else :
 		for name in files :
 			pfs_exec.append(os.path.join(root, name))
 
-# Process each input Dell PFS BIOS executable
+# Process each input Dell PFS BIOS image
 for input_file in pfs_exec :
 	input_name,input_extension = os.path.splitext(os.path.basename(input_file))
 	input_dir = os.path.dirname(os.path.abspath(input_file))
@@ -767,25 +833,68 @@ for input_file in pfs_exec :
 	
 	with open(input_file, 'rb') as in_file : input_data = in_file.read()
 	
-	# The Dell PFS BIOS executables may contain more than one section. Each section is zlib-compressed
-	# with header pattern ++EEAA761BECBB20F1E651--789C where ++ is the section type and -- a random number
-	# The "BIOS" section has type 0xAA and its files are stored in PFS format. The "Utility" section has
-	# type 0xBB and its files are stored in PFS, BIN or 7-Zip formats. There could be more section types
-	# but for the purposes of this utility, we are only interested in extracting the "BIOS" section files
-	zlib_bios_pattern = re.compile(br'\xAA\xEE\xAA\x76\x1B\xEC\xBB\x20\xF1\xE6\x51.\x78\x9C', re.DOTALL)
+	# Search input image for zlib "BIOS" section header
+	zlib_bios_hdr_match = zlib_bios_header.search(input_data)
 	
-	zlib_bios_match = zlib_bios_pattern.search(input_data) # Search input executable for zlib "BIOS" section
-	
-	# Check if zlib-compressed "BIOS" section with type 0xAA was found in the executable
-	if not zlib_bios_match :
-		print('\n    Error: This is not a Dell PFS BIOS executable!')
+	# Check if "BIOS" section was found in the image
+	if not zlib_bios_hdr_match :
+		print('\n    Error: This is not a Dell PFS BIOS image!')
 		continue # Next input file
 	
-	# Store the compressed zlib data size from the preceding 4 bytes of the "BIOS" section header pattern
-	compressed_size = int.from_bytes(input_data[zlib_bios_match.start() - 0x4:zlib_bios_match.start()], 'little')
+	# Store the compressed zlib stream start offset
+	compressed_start = zlib_bios_hdr_match.start() + 0xC
+	
+	# Store the "BIOS" section header start offset
+	header_start = zlib_bios_hdr_match.start() - 0x4
+	
+	# Store the "BIOS" section header contents (16 bytes)
+	header_data = input_data[header_start:compressed_start]
+	
+	# Check if the "BIOS" section header Checksum XOR 8 is valid
+	if chk_xor_8(header_data[:0xF], 0) != header_data[0xF] :
+		print('\n    Error: This Dell PFS BIOS image is corrupted!')
+		continue # Next input file
+	
+	# Store the compressed zlib stream size from the header contents
+	compressed_size_hdr = int.from_bytes(header_data[:0x4], 'little')
+	
+	# Store the compressed zlib stream end offset
+	compressed_end = compressed_start + compressed_size_hdr
+	
+	# Store the compressed zlib stream contents
+	compressed_data = input_data[compressed_start:compressed_end]
+	
+	# Check if the compressed zlib stream is complete, based on header
+	if len(compressed_data) != compressed_size_hdr :
+		print('\n    Error: This Dell PFS BIOS image is corrupted!')
+		continue # Next input file
+	
+	# Store the "BIOS" section footer contents (16 bytes)
+	footer_data = input_data[compressed_end:compressed_end + 0x10]
+	
+	# Check if the "BIOS" section footer Checksum XOR 8 is valid
+	if chk_xor_8(footer_data[:0xF], 0) != footer_data[0xF] :
+		print('\n    Error: This Dell PFS BIOS image is corrupted!')
+		continue # Next input file
+	
+	# Search input image for zlib "BIOS" section footer
+	zlib_bios_ftr_match = zlib_bios_footer.search(footer_data)
+	
+	# Check if "BIOS" section footer was found in the image
+	if not zlib_bios_ftr_match :
+		print('\n    Error: This Dell PFS BIOS image is corrupted!')
+		continue # Next input file
+	
+	# Store the compressed zlib stream size from the footer contents
+	compressed_size_ftr = int.from_bytes(footer_data[:0x4], 'little')
+	
+	# Check if the compressed zlib stream is complete, based on footer
+	if compressed_size_ftr != compressed_size_hdr :
+		print('\n    Error: This Dell PFS BIOS image is corrupted!')
+		continue # Next input file
 	
 	# Decompress "BIOS" section payload, starting from zlib header start of 0x789C
-	input_data = zlib.decompress(input_data[zlib_bios_match.start() + 0xC:zlib_bios_match.start() + 0xC + compressed_size])
+	input_data = zlib.decompress(compressed_data)
 	
 	output_path = os.path.join(input_dir, '%s%s' % (input_name, input_extension) + '_extracted') # Set extraction directory
 	
@@ -800,7 +909,7 @@ for input_file in pfs_exec :
 	
 	pfs_extract(input_data, pfs_index, pfs_name, pfs_count) # Call the Dell PFS.HDR. Extractor function
 	
-	print('\n    Extracted Dell PFS BIOS executable!')
+	print('\n    Extracted Dell PFS BIOS image!')
 
 else :
 	input('\nDone!')

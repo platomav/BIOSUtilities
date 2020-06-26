@@ -3,10 +3,10 @@
 """
 Fujitsu Package Extractor
 Fujitsu SFX Packager Extractor
-Copyright (C) 2019 Plato Mavropoulos
+Copyright (C) 2019-2020 Plato Mavropoulos
 """
 
-print('Fujitsu SFX Packager Extractor v1.0')
+print('Fujitsu SFX Packager Extractor v2.0')
 
 import os
 import re
@@ -42,24 +42,21 @@ for input_file in fjsfx_exec :
 	
 	# Check if Microsoft CAB Header XOR 0xFF pattern exists
 	if match_mscf :
-		print('\n      Detected obfuscated Microsoft CAB image.')
+		print('\n      Detected Obfuscation!')
 		
 		mscf_start = match_mscf.start() + 0xA # Microsoft CAB Header XOR 0xFF starts after "FjSfxBinay" signature
 		
 		# Determine the Microsoft CAB image Size
-		cab_size_hex = bytearray(4) # Initialize LE Hex CAB Size as mutable bytearray
-		cab_size_xor = FjSfx[mscf_start + 0x8:mscf_start + 0xC] # Get LE XOR-ed CAB Size
-		for idx in range(4) : # Parse each CAB Size byte
-			cab_size_hex[idx] = cab_size_xor[idx] ^ 0xFF # Perform XOR 0xFF
-		cab_size = int.from_bytes(cab_size_hex, 'little') # Get BE Actual CAB Size
+		cab_size = int.from_bytes(FjSfx[mscf_start + 0x8:mscf_start + 0xC], 'little') # Get LE XOR-ed CAB Size
+		xor_size = int.from_bytes(b'\xFF' * 0x4, 'little') # Create CAB Size XOR value
+		cab_size = cab_size ^ xor_size # Perform XOR 0xFF and get actual CAB Size
 		
-		print('\n      Removing Obfuscation...') # May take a while
-		
+		print('\n      Removing Obfuscation...')
+			
 		# Determine the Microsoft CAB image Data
-		cab_data = bytearray(cab_size) # Initialize CAB Data as mutable bytearray
-		cab_data_xor = FjSfx[mscf_start:mscf_start + cab_size] # Get XOR-ed CAB Data
-		for idx in range(cab_size) : # Parse each CAB Data byte
-			cab_data[idx] = cab_data_xor[idx] ^ 0xFF # Perform XOR 0xFF and get Actual CAB Data
+		cab_data = int.from_bytes(FjSfx[mscf_start:mscf_start + cab_size], 'big') # Get BE XOR-ed CAB Data
+		xor_data = int.from_bytes(b'\xFF' * cab_size, 'big') # Create CAB Data XOR value
+		cab_data = (cab_data ^ xor_data).to_bytes(cab_size, 'big') # Perform XOR 0xFF and get actual CAB Data
 		
 		print('\n      Extracting...')
 		
@@ -69,13 +66,13 @@ for input_file in fjsfx_exec :
 		
 		try :
 			decomp = subprocess.run(['7z', 'x', '-aou', '-bso0', '-bse0', '-bsp0', '-o' + extr_path, 'fjsfx_temp.cab']) # 7-Zip
+			
+			print('\n      Extracted!')
 		except :
 			print('\n      Error: Could not decompress Microsoft CAB image!')
-			print('               Make sure that "7z" executable exists!\n')
+			print('             Make sure that "7z" executable exists!')
 			
 		os.remove('fjsfx_temp.cab') # Remove temporary CAB image
-		
-		print('\n      Extracted!')
 		
 	else :
 		print('\n      Error: No Fujitsu SFX Packager found!')

@@ -3,10 +3,10 @@
 """
 VAIO Package Extractor
 VAIO Packaging Manager Extractor
-Copyright (C) 2019 Plato Mavropoulos
+Copyright (C) 2019-2020 Plato Mavropoulos
 """
 
-print('VAIO Packaging Manager Extractor v1.0')
+print('VAIO Packaging Manager Extractor v2.0')
 
 import os
 import re
@@ -36,7 +36,7 @@ check_pattern = re.compile(br'\x0A\x55\x73\x65\x56\x41\x49\x4F\x43\x68\x65\x63\x
 
 # VAIO Packaging Manager Configuration file entry "ExtractPathByUser" pattern
 path_pattern = re.compile(br'\x0A\x45\x78\x74\x72\x61\x63\x74\x50\x61\x74\x68\x42\x79\x55\x73\x65\x72\x3D')
-			
+
 for input_file in vaio_exec :
 	file_path = os.path.abspath(input_file)
 	file_dir = os.path.dirname(file_path)
@@ -53,22 +53,19 @@ for input_file in vaio_exec :
 	
 	# Check if Microsoft CAB Header XOR 0xFF pattern exists
 	if match_mscf :
-		print('\n      Detected obfuscated Microsoft CAB image.')
+		print('\n      Detected Obfuscation!')
 		
 		# Determine the Microsoft CAB image Size
-		cab_size_hex = bytearray(4) # Initialize LE Hex CAB Size as mutable bytearray
-		cab_size_xor = vaio_data[match_mscf.start() + 0x8:match_mscf.start() + 0xC] # Get LE XOR-ed CAB Size
-		for idx in range(4) : # Parse each CAB Size byte
-			cab_size_hex[idx] = cab_size_xor[idx] ^ 0xFF # Perform XOR 0xFF
-		cab_size = int.from_bytes(cab_size_hex, 'little') # Get BE Actual CAB Size
+		cab_size = int.from_bytes(vaio_data[match_mscf.start() + 0x8:match_mscf.start() + 0xC], 'little') # Get LE XOR-ed CAB Size
+		xor_size = int.from_bytes(b'\xFF' * 0x4, 'little') # Create CAB Size XOR value
+		cab_size = cab_size ^ xor_size # Perform XOR 0xFF and get actual CAB Size
 		
-		print('\n      Removing Obfuscation...') # May take a while
+		print('\n      Removing Obfuscation...')
 		
 		# Determine the Microsoft CAB image Data
-		cab_data = bytearray(cab_size) # Initialize CAB Data as mutable bytearray
-		cab_data_xor = vaio_data[match_mscf.start():match_mscf.start() + cab_size] # Get XOR-ed CAB Data
-		for idx in range(cab_size) : # Parse each CAB Data byte
-			cab_data[idx] = cab_data_xor[idx] ^ 0xFF # Perform XOR 0xFF and get Actual CAB Data
+		cab_data = int.from_bytes(vaio_data[match_mscf.start():match_mscf.start() + cab_size], 'big') # Get BE XOR-ed CAB Data
+		xor_data = int.from_bytes(b'\xFF' * cab_size, 'big') # Create CAB Data XOR value
+		cab_data = (cab_data ^ xor_data).to_bytes(cab_size, 'big') # Perform XOR 0xFF and get actual CAB Data
 		
 		print('\n      Extracting...')
 		
@@ -78,13 +75,13 @@ for input_file in vaio_exec :
 		
 		try :
 			decomp = subprocess.run(['7z', 'x', '-aou', '-bso0', '-bse0', '-bsp0', '-o' + extr_path, 'vaio_temp.cab']) # 7-Zip
+			
+			print('\n      Extracted!')
 		except :
 			print('\n      Error: Could not decompress Microsoft CAB image!')
-			print('               Make sure that "7z" executable exists!\n')
+			print('             Make sure that "7z" executable exists!')
 			
 		os.remove('vaio_temp.cab') # Remove temporary CAB image
-		
-		print('\n      Extracted!')
 	
 	# Check if VAIO Packaging Manager Configuration file pattern exists
 	elif match_vaio :
@@ -99,10 +96,11 @@ for input_file in vaio_exec :
 		# Determine VAIO Package Configuration file True & False values
 		for info in vaio_info :
 			if info.startswith(b'ExtractPathByUser=') : val_false = bytearray(b'0' if info[18:] in (b'0',b'1') else info[18:]) # Should be 0/No/False
-			if info.startswith(b'UseVAIOCheck=') : val_true = bytearray(b'1' if info[13:] in (b'0',b'1') else info[13:]) # Should be 1/Yes/True
+			if info.startswith(b'UseCompression=') : val_true = bytearray(b'1' if info[15:] in (b'0',b'1') else info[15:]) # Should be 1/Yes/True
 		else :
 			if val_false == val_true or not val_false or not val_true :
 				print('\n      Error: Could not determine True/False values!')
+				print('             Please report this VAIO Packaging Manager!')
 				continue # Next input file
 		
 		# Find and replace UseVAIOCheck entry from 1/Yes/True to 0/No/False

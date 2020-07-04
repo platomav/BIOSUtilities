@@ -6,7 +6,7 @@ Apple EFI IM4P Splitter
 Copyright (C) 2018-2020 Plato Mavropoulos
 """
 
-title = 'Apple EFI IM4P Splitter v2.0'
+title = 'Apple EFI IM4P Splitter v2.1'
 
 import os
 import re
@@ -99,14 +99,15 @@ for input_file in apple_im4p :
 	for fd_idx in range(fd_count) :
 		fd = fd_matches[fd_idx] # Get Intel Flash Descriptor match object
 		
-		# Platform Controller Hub (PCH)
-		if (fd.start() == 0x10 or buffer[fd.start() - 0x4:fd.start()] == b'\xFF' * 4) \
-		and buffer[fd.start() + 0x4] in [3,2] and buffer[fd.start() + 0x6] == 4 :
-			start_substruct = 0x10 # At PCH, Flash Descriptor starts at 0x10
-			end_substruct = 0xBC # 0xBC for [0xAC] + 0xFF * 16 sanity check
+		fd_flmap0_fcba = buffer[fd.start() + 0x4] * 0x10 # Component Base Address from FD start (ICH8-ICH10 = 1, IBX = 2, CPT+ = 3)
+		
 		# I/O Controller Hub (ICH)
-		else :
+		if fd_flmap0_fcba == 0x10 :
 			start_substruct = 0x0 # At ICH, Flash Descriptor starts at 0x0
+			end_substruct = 0xBC # 0xBC for [0xAC] + 0xFF * 16 sanity check
+		# Platform Controller Hub (PCH)
+		else :
+			start_substruct = 0x10 # At PCH, Flash Descriptor starts at 0x10
 			end_substruct = 0xBC # 0xBC for [0xAC] + 0xFF * 16 sanity check
 			
 		fd_match_start = fd.start() - start_substruct # Actual Flash Descriptor Start Offset
@@ -114,17 +115,16 @@ for input_file in apple_im4p :
 		
 		# Calculate Intel Flash Descriptor Flash Component Total Size
 		fd_flmap0_nc = ((int.from_bytes(buffer[fd_match_end:fd_match_end + 0x4], 'little') >> 8) & 3) + 1 # Component Count (00 = 1, 01 = 2)
-		fd_flmap1_isl = buffer[fd_match_end + 0x7] # PCH Strap Length (ICH8-IBX <= 0x10, CPT-PPT = 0x12, LPT+ >= 0x15)
-		fd_comp_den_off = 0x1C if fd_flmap1_isl > 0x10 else 0xC # Component Density Offset (ICH8-IBX = 0xC, CPT+ = 0x1C)
-		fd_comp_den_byte = buffer[fd_match_end + fd_comp_den_off] # Component Density Byte (ICH8-PPT = 0:5, LPT+ = 0:7)
-		fd_comp_1_bitwise = 0xF if fd_flmap1_isl >= 0x15 else 0x7 # Component 1 Density Bits (ICH8-PPT = 3, LPT+ = 4)
-		fd_comp_2_bitwise = 0x4 if fd_flmap1_isl >= 0x15 else 0x3 # Component 2 Density Bits (ICH8-PPT = 3, LPT+ = 4)
-		fd_comp_all_size = comp_dict[fd_comp_den_byte & fd_comp_1_bitwise] # Component 1 Density (FCBA > C0DEN)
-		if fd_flmap0_nc == 2 : fd_comp_all_size += comp_dict[fd_comp_den_byte >> fd_comp_2_bitwise] # Component 2 Density (FCBA > C1DEN)
+		fd_flmap1_isl = buffer[fd_match_end + 0x7] # PCH/ICH Strap Length (ME 2-8 & TXE 0-2 & SPS 1-2 <= 0x12, ME 9+ & TXE 3+ & SPS 3+ >= 0x13)
+		fd_comp_den = buffer[fd_match_start + fd_flmap0_fcba] # Component Density Byte (ME 2-8 & TXE 0-2 & SPS 1-2 = 0:5, ME 9+ & TXE 3+ & SPS 3+ = 0:7)
+		fd_comp_1_bitwise = 0xF if fd_flmap1_isl >= 0x13 else 0x7 # Component 1 Density Bits (ME 2-8 & TXE 0-2 & SPS 1-2 = 3, ME 9+ & TXE 3+ & SPS 3+ = 4)
+		fd_comp_2_bitwise = 0x4 if fd_flmap1_isl >= 0x13 else 0x3 # Component 2 Density Bits (ME 2-8 & TXE 0-2 & SPS 1-2 = 3, ME 9+ & TXE 3+ & SPS 3+ = 4)
+		fd_comp_all_size = comp_dict[fd_comp_den & fd_comp_1_bitwise] # Component 1 Density (FCBA > C0DEN)
+		if fd_flmap0_nc == 2 : fd_comp_all_size += comp_dict[fd_comp_den >> fd_comp_2_bitwise] # Component 2 Density (FCBA > C1DEN)
 		
 		fd_final.append((fd_match_start,fd_comp_all_size)) # Store Intel Flash Descriptor final info
 	
-	# Split IM4P via the final Intel Flash Descriptor mathes
+	# Split IM4P via the final Intel Flash Descriptor matches
 	for fd_idx in range(fd_count) :
 		fd = fd_final[fd_idx] # Get Intel Flash Descriptor final info [FD Start, FD Component(s) Size]
 		

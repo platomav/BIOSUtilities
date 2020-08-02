@@ -1,13 +1,21 @@
 #!/usr/bin/env python3
 
 """
-Dell PFS Extract
-Dell PFS BIOS Extractor
+Dell PFS BIOS Extractor v4.5.1
+
+Added functions:
+	-i: show information about BIOS entries, including GUID, Name, Version
+	-d: disassemble BIOS entries to raw files, each raw file includes its header and payload
+
+The "Disassemble" option is to use with Dell PFS BIOS Assembler,
+	at https://github.com/vuquangtrong/Dell-PFS-BIOS-Assembler
+"""
+
+"""
+Dell PFS BIOS Extractor v4.5
 Copyright (C) 2019-2020 Plato Mavropoulos
 Inspired from https://github.com/LongSoft/PFSExtractor-RS by Nikolaj Schlej
 """
-
-title = 'Dell PFS BIOS Extractor v4.5'
 
 import os
 import re
@@ -18,6 +26,8 @@ import struct
 import ctypes
 import argparse
 import traceback
+
+title = 'Dell PFS BIOS Extractor v4.5.1'
 
 # Set ctypes Structure types
 char = ctypes.c_char
@@ -74,7 +84,7 @@ class PFS_ENTRY(ctypes.LittleEndianStructure) :
 	
 	def pfs_print(self) :
 		GUID = ''.join('%0.8X' % int.from_bytes(struct.pack('<I', val), 'little') for val in reversed(self.GUID))
-		VersionType = ''.join('%0.4X' % int.from_bytes(struct.pack('<I', val), 'little') for val in reversed(self.VersionType))
+		VersionType = ''.join('%0.2X' % int.from_bytes(struct.pack('<I', val), 'little') for val in reversed(self.VersionType))
 		Version = ''.join('%0.4X' % int.from_bytes(struct.pack('<I', val), 'little') for val in reversed(self.Version))
 		Unknown = ''.join('%0.8X' % int.from_bytes(struct.pack('<I', val), 'little') for val in reversed(self.Unknown))
 		
@@ -108,7 +118,7 @@ class PFS_ENTRY_R2(ctypes.LittleEndianStructure) :
 	
 	def pfs_print(self) :
 		GUID = ''.join('%0.8X' % int.from_bytes(struct.pack('<I', val), 'little') for val in reversed(self.GUID))
-		VersionType = ''.join('%0.4X' % int.from_bytes(struct.pack('<I', val), 'little') for val in reversed(self.VersionType))
+		VersionType = ''.join('%0.2X' % int.from_bytes(struct.pack('<I', val), 'little') for val in reversed(self.VersionType))
 		Version = ''.join('%0.4X' % int.from_bytes(struct.pack('<I', val), 'little') for val in reversed(self.Version))
 		Unknown = ''.join('%0.8X' % int.from_bytes(struct.pack('<I', val), 'little') for val in reversed(self.Unknown))
 		
@@ -251,7 +261,11 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 	# Validate PFS Payload Data Checksum via the PFS Footer
 	if pfs_ftr.Checksum != footer_checksum :
 		print('\n    Error: Invalid PFS Footer Payload Checksum!')
-	
+
+	# Store BIOS version to mark PFS Information and Modem Information entries
+	if is_disassemble:
+		bios_version = 'unknown'
+
 	# Parse all PFS Payload Entries/Components
 	entry_index = 1 # Index number of each PFS Entry
 	entry_start = 0 # Increasing PFS Entry starting offset
@@ -307,6 +321,7 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 		# Get Model Information from the PFS Entry with GUID 6F1D619A22A6CB924FD4DA68233AE3FB
 		elif entry_guid == '6F1D619A22A6CB924FD4DA68233AE3FB' :
 			entry_type = 'MODEL_INFO'
+			bios_version = get_bios_version(entry_data)
 			
 		# Get Nested PFS from the PFS Entry with GUID 900FAE60437F3AB14055F456AC9FDA84
 		elif entry_guid == '900FAE60437F3AB14055F456AC9FDA84' :
@@ -314,7 +329,14 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 		
 		# Store all relevant PFS Entry details
 		entries_all.append([entry_index, entry_guid, entry_version, entry_type, entry_data, entry_data_sig, entry_met, entry_met_sig])
-		
+
+		# Export BIOS entries in raw format
+		# include Entry header, Entry Data, Entry Data Sign, Entry Metadata, Entry Metadata Sign
+		if is_disassemble:
+			entry = payload[entry_start:entry_met_sig_end]
+			with open(os.path.join(output_entries_path, "%s-%s.bin" % (entry_guid, entry_version)), "wb") as exporter:
+				exporter.write(entry)
+
 		entry_index += 1 # Increase PFS Entry Index number for user-friendly output and name duplicates
 		entry_start = entry_met_sig_end # Next PFS Entry starts after PFS Entry Metadata Signature
 	
@@ -601,19 +623,21 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 	for entry_index in range(len(entries_all)) :
 		file_index = entries_all[entry_index][0]
 		file_guid = entries_all[entry_index][1]
-		file_version = entries_all[entry_index][2]
+		file_version_org = entries_all[entry_index][2]
+		file_version = file_version_org # in advanced mode, file version is referred in PFS Information Entry
 		file_type = entries_all[entry_index][3]
 		file_data = entries_all[entry_index][4]
 		file_data_sig = entries_all[entry_index][5]
 		file_meta = entries_all[entry_index][6]
 		file_meta_sig = entries_all[entry_index][7]
-		
+
 		# Give Names to special PFS Entries, not covered by PFS Information
 		if file_type == 'MODEL_INFO' :
 			file_name = 'Model Information'
 		elif file_type == 'PFS_INFO' :
 			file_name = 'PFS Information'
-			if not is_advanced : continue # Don't store PFS Information in non-advanced user mode
+			if not is_disassemble :
+				if not is_advanced : continue # Don't store PFS Information in non-advanced user mode
 		else :
 			file_name = ''
 		
@@ -631,7 +655,30 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 				
 				info_all[info_index][0] = 'USED' # PFS with zlib-compressed full PFS (multiple BIOS) use the same GUID
 				break # Break at 1st Name match to not rename from next zlib-compressed full PFS with the same GUID
-		
+
+		if is_info or is_disassemble:
+			print("Entry %d" % (entry_index+1))
+			print("    GUID: %s" % file_guid)
+			print("    Name: %s" % file_name)
+			if file_version_org == file_version:
+				print("    Version: %s" % file_version)
+			else:
+				print(" *  Version: %s (reported in PFS Information: %s) < Updater will use version reported in PFS Information" % (file_version_org, file_version))
+			print("")
+
+		# Convert file name in GUID format to human readable name
+		if is_disassemble:
+			if file_type == 'MODEL_INFO' or file_type == 'PFS_INFO' :
+				# Replace GUID by NAME and FILE Version by BIOS Version
+				os.rename(
+					os.path.join(output_entries_path, "%s-%s.bin" % (file_guid, file_version_org)),
+					os.path.join(output_entries_path, "%s-%s.bin" % (file_name, bios_version)))
+			else :
+				# Replace GUID by NAME only
+				os.rename(
+					os.path.join(output_entries_path, "%s-%s.bin" % (file_guid, file_version_org)),
+					os.path.join(output_entries_path, "%s-%s.bin" % (file_name, file_version_org)))
+
 		data_ext = '.data.bin' if is_advanced else '.bin' # Simpler Data Extension for non-advanced users
 		meta_ext = '.meta.bin' if is_advanced else '.bin' # Simpler Metadata Extension for non-advanced users
 		full_name = '%d%s -- %d %s v%s' % (pfs_index, pfs_name, file_index, file_name, file_version)
@@ -720,7 +767,21 @@ def get_version(version_fields, version_types) :
 			print('\n    Error: Unknown PFS Entry Version Type 0x%0.2X!' % version_types[idx])
 			
 	return version
-	
+
+# Get BIOS version from Model Information entry
+def get_bios_version(entry_data) :
+	model_infos = entry_data.decode().split(";")
+	version = "unknown"
+
+	print("\nMODEL INFORMATION")
+	for info in model_infos:
+		print("    %s" % info)
+		if info.startswith("Version") :
+			version = info.split("=")[1]
+	print("")
+
+	return version
+
 # Get PFS Entry Structure & Size via its Version
 def get_pfs_entry(buffer, offset) :
 	pfs_entry_ver = int.from_bytes(buffer[offset + 0x10:offset + 0x14], 'little') # PFS Entry Version
@@ -784,7 +845,9 @@ elif user_os.startswith('linux') or user_os == 'darwin' or user_os.find('bsd') !
 # Set argparse Arguments
 parser = argparse.ArgumentParser()
 parser.add_argument('images', type=argparse.FileType('r'), nargs='*')
-parser.add_argument('-a', '--advanced', help='extract in advanced user mode', action='store_true')
+parser.add_argument('-a', '--advanced', help='extract BIOS entries to data, metadata, sign files', action='store_true')
+parser.add_argument('-i', '--info', help='show information of BIOS entries', action='store_true')
+parser.add_argument('-d', '--disassemble', help='disassemble BIOS entries to raw files (include header, entry data and/or antry metadata and their signs)', action='store_true')
 args = parser.parse_args()
 
 # Get ctypes Structure Sizes
@@ -819,99 +882,138 @@ else :
 		for name in files :
 			pfs_exec.append(os.path.join(root, name))
 
+# Check args
+is_advanced = True if args.advanced else False # Set Advanced user mode optional argument
+is_info = True if args.info else False
+is_disassemble = True if args.disassemble else False
+
 # Process each input Dell PFS BIOS image
 for input_file in pfs_exec :
 	input_name,input_extension = os.path.splitext(os.path.basename(input_file))
 	input_dir = os.path.dirname(os.path.abspath(input_file))
-	
+
 	print('\nFile: %s%s' % (input_name, input_extension))
-	
+
 	# Check if input file exists
 	if not os.path.isfile(input_file) :
 		print('\n    Error: This input file does not exist!')
 		continue # Next input file
-	
+
+	# Set extraction directory
+	output_path = os.path.join(input_dir, '%s%s' % (input_name, input_extension) + '_extracted')
+
+	if is_disassemble:
+		# Set export directory
+		output_entries_path = os.path.join(output_path, 'entries')
+		# Delete any existing export directory
+		if os.path.isdir(output_entries_path) : shutil.rmtree(output_entries_path)
+
+	# Delete any existing extraction directory
+	if os.path.isdir(output_path) : shutil.rmtree(output_path)
+
+	# Create extraction directories
+	os.mkdir(output_path)
+
+	if is_disassemble:
+		os.mkdir(output_entries_path)
+
+	# Read the input file
 	with open(input_file, 'rb') as in_file : input_data = in_file.read()
-	
+
 	# Search input image for zlib "BIOS" section header
 	zlib_bios_hdr_match = zlib_bios_header.search(input_data)
-	
+
 	# Check if "BIOS" section was found in the image
 	if not zlib_bios_hdr_match :
 		print('\n    Error: This is not a Dell PFS BIOS image!')
 		continue # Next input file
-	
+
 	# Store the compressed zlib stream start offset
 	compressed_start = zlib_bios_hdr_match.start() + 0xC
-	
+
 	# Store the "BIOS" section header start offset
 	header_start = zlib_bios_hdr_match.start() - 0x4
-	
+
 	# Store the "BIOS" section header contents (16 bytes)
 	header_data = input_data[header_start:compressed_start]
-	
+
 	# Check if the "BIOS" section header Checksum XOR 8 is valid
 	if chk_xor_8(header_data[:0xF], 0) != header_data[0xF] :
 		print('\n    Error: This Dell PFS BIOS image is corrupted!')
 		continue # Next input file
-	
+
 	# Store the compressed zlib stream size from the header contents
 	compressed_size_hdr = int.from_bytes(header_data[:0x4], 'little')
-	
+
 	# Store the compressed zlib stream end offset
 	compressed_end = compressed_start + compressed_size_hdr
-	
+
 	# Store the compressed zlib stream contents
 	compressed_data = input_data[compressed_start:compressed_end]
-	
+
 	# Check if the compressed zlib stream is complete, based on header
 	if len(compressed_data) != compressed_size_hdr :
 		print('\n    Error: This Dell PFS BIOS image is corrupted!')
 		continue # Next input file
-	
+
+	# "BIOS" section footer start after the compressed zlib stream ends
+	# and this footer is 16 bytes
+	footer_end = compressed_end + 0x10
+
 	# Store the "BIOS" section footer contents (16 bytes)
-	footer_data = input_data[compressed_end:compressed_end + 0x10]
-	
+	footer_data = input_data[compressed_end:footer_end]
+
 	# Check if the "BIOS" section footer Checksum XOR 8 is valid
 	if chk_xor_8(footer_data[:0xF], 0) != footer_data[0xF] :
 		print('\n    Error: This Dell PFS BIOS image is corrupted!')
 		continue # Next input file
-	
+
 	# Search input image for zlib "BIOS" section footer
 	zlib_bios_ftr_match = zlib_bios_footer.search(footer_data)
-	
+
 	# Check if "BIOS" section footer was found in the image
 	if not zlib_bios_ftr_match :
 		print('\n    Error: This Dell PFS BIOS image is corrupted!')
 		continue # Next input file
-	
+
 	# Store the compressed zlib stream size from the footer contents
 	compressed_size_ftr = int.from_bytes(footer_data[:0x4], 'little')
-	
+
 	# Check if the compressed zlib stream is complete, based on footer
 	if compressed_size_ftr != compressed_size_hdr :
 		print('\n    Error: This Dell PFS BIOS image is corrupted!')
 		continue # Next input file
-	
+
+	if is_disassemble:
+		# Dell Firmware Update Tool executable file is a container which has BIOS section
+		# because we want to replace the BIOS section only
+		# so, we save other parts to re-assemble executable file later
+
+		# save bytes from the begin of file to the start of BIOS header
+		with open(os.path.join(output_entries_path, "__exe_begin.bin"), "wb") as exporter:
+			exporter.write(input_data[:header_start])
+
+		# BIOS section header will be re-calculated later
+		# BIOS section payload will be compressed and included later
+		# BIOS section footer will be re-calculated later
+
+		# save bytes from the end of BIOS footer to the end of file
+		with open(os.path.join(output_entries_path, "__exe_end.bin"), "wb") as exporter:
+			exporter.write(input_data[footer_end:])
+
 	# Decompress "BIOS" section payload, starting from zlib header start of 0x789C
-	input_data = zlib.decompress(compressed_data)
-	
-	output_path = os.path.join(input_dir, '%s%s' % (input_name, input_extension) + '_extracted') # Set extraction directory
-	
-	if os.path.isdir(output_path) : shutil.rmtree(output_path) # Delete any existing extraction directory
-	
-	os.mkdir(output_path) # Create extraction directory
-	
+	uncompressed_data = zlib.decompress(compressed_data)
+
 	pfs_name = '' # N/A for Main/First/Initial full PFS, used for sub-PFS recursions
 	pfs_index = 1 # Main/First/Initial full PFS Index is 1
 	pfs_count = 1 # Main/First/Initial full PFS Count is 1
-	is_advanced = True if args.advanced else False # Set Advanced user mode optional argument
-	
-	pfs_extract(input_data, pfs_index, pfs_name, pfs_count) # Call the Dell PFS.HDR. Extractor function
-	
-	print('\n    Extracted Dell PFS BIOS image!')
+
+	# Extract BIOS entries
+	pfs_extract(uncompressed_data, pfs_index, pfs_name, pfs_count) # Call the Dell PFS.HDR. Extractor function
+
+	print('\nExtracted Dell PFS BIOS image!')
 
 else :
-	input('\nDone!')
-	
+	print('\nDone!')
+
 	sys.exit(0)

@@ -7,7 +7,7 @@ Copyright (C) 2019-2020 Plato Mavropoulos
 Inspired from https://github.com/LongSoft/PFSExtractor-RS by Nikolaj Schlej
 """
 
-title = 'Dell PFS BIOS Extractor v4.5'
+title = 'Dell PFS BIOS Extractor v4.6'
 
 import os
 import re
@@ -74,7 +74,7 @@ class PFS_ENTRY(ctypes.LittleEndianStructure) :
 	
 	def pfs_print(self) :
 		GUID = ''.join('%0.8X' % int.from_bytes(struct.pack('<I', val), 'little') for val in reversed(self.GUID))
-		VersionType = ''.join('%0.4X' % int.from_bytes(struct.pack('<I', val), 'little') for val in reversed(self.VersionType))
+		VersionType = ''.join('%0.2X' % int.from_bytes(struct.pack('<I', val), 'little') for val in reversed(self.VersionType))
 		Version = ''.join('%0.4X' % int.from_bytes(struct.pack('<I', val), 'little') for val in reversed(self.Version))
 		Unknown = ''.join('%0.8X' % int.from_bytes(struct.pack('<I', val), 'little') for val in reversed(self.Unknown))
 		
@@ -108,7 +108,7 @@ class PFS_ENTRY_R2(ctypes.LittleEndianStructure) :
 	
 	def pfs_print(self) :
 		GUID = ''.join('%0.8X' % int.from_bytes(struct.pack('<I', val), 'little') for val in reversed(self.GUID))
-		VersionType = ''.join('%0.4X' % int.from_bytes(struct.pack('<I', val), 'little') for val in reversed(self.VersionType))
+		VersionType = ''.join('%0.2X' % int.from_bytes(struct.pack('<I', val), 'little') for val in reversed(self.VersionType))
 		Version = ''.join('%0.4X' % int.from_bytes(struct.pack('<I', val), 'little') for val in reversed(self.Version))
 		Unknown = ''.join('%0.8X' % int.from_bytes(struct.pack('<I', val), 'little') for val in reversed(self.Unknown))
 		
@@ -634,7 +634,8 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 		
 		data_ext = '.data.bin' if is_advanced else '.bin' # Simpler Data Extension for non-advanced users
 		meta_ext = '.meta.bin' if is_advanced else '.bin' # Simpler Metadata Extension for non-advanced users
-		full_name = '%d%s -- %d %s v%s' % (pfs_index, pfs_name, file_index, file_name, file_version)
+		full_name = '%d%s -- %d %s v%s' % (pfs_index, pfs_name, file_index, file_name, file_version) # Full Entry Name
+		safe_name = re.sub(r'[\\/*?:"<>|]', '_', full_name) # Replace common Windows reserved/illegal filename characters
 		
 		is_zlib = True if file_type == 'ZLIB' else False # Determine if PFS Entry Data was zlib-compressed
 		
@@ -644,13 +645,13 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 			# Some Data may be Text or XML files with useful information for non-advanced users
 			is_text, final_data, file_ext, write_mode = bin_is_text(file_data, file_type, False, is_advanced)
 			
-			final_name = '%s%s' % (full_name, data_ext[:-4] + file_ext if is_text else data_ext)
+			final_name = '%s%s' % (safe_name, data_ext[:-4] + file_ext if is_text else data_ext)
 			final_path = os.path.join(output_path, final_name)
 			
 			with open(final_path, write_mode) as o : o.write(final_data) # Write final Data
 		
 		if file_data_sig and is_advanced : # Store Data Signature (advanced users only)
-			final_name = '%s.data.sig' % full_name
+			final_name = '%s.data.sig' % safe_name
 			final_path = os.path.join(output_path, final_name)
 			
 			with open(final_path, 'wb') as o : o.write(file_data_sig) # Write final Data Signature
@@ -661,13 +662,13 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 			# Some Data may be Text or XML files with useful information for non-advanced users
 			is_text, final_data, file_ext, write_mode = bin_is_text(file_meta, file_type, True, is_advanced)
 			
-			final_name = '%s%s' % (full_name, meta_ext[:-4] + file_ext if is_text else meta_ext)
+			final_name = '%s%s' % (safe_name, meta_ext[:-4] + file_ext if is_text else meta_ext)
 			final_path = os.path.join(output_path, final_name)
 			
 			with open(final_path, write_mode) as o : o.write(final_data) # Write final Data Metadata
 		
 		if file_meta_sig and is_advanced : # Store Metadata Signature (advanced users only)
-			final_name = '%s.meta.sig' % full_name
+			final_name = '%s.meta.sig' % safe_name
 			final_path = os.path.join(output_path, final_name)
 			
 			with open(final_path, 'wb') as o : o.write(file_meta_sig) # Write final Data Metadata Signature
@@ -770,7 +771,7 @@ def show_exception_and_exit(exc_type, exc_value, tb) :
 	
 	sys.exit(1)
 
-# Set pause-able Python exception hander
+# Set pause-able Python exception handler
 sys.excepthook = show_exception_and_exit
 
 # Show script title
@@ -824,7 +825,7 @@ for input_file in pfs_exec :
 	input_name,input_extension = os.path.splitext(os.path.basename(input_file))
 	input_dir = os.path.dirname(os.path.abspath(input_file))
 	
-	print('\nFile: %s%s' % (input_name, input_extension))
+	print('\n*** %s%s' % (input_name, input_extension))
 	
 	# Check if input file exists
 	if not os.path.isfile(input_file) :

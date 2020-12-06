@@ -60,11 +60,13 @@ Some Anti-Virus software may claim that the built/frozen/compiled executable con
 
 ## **AMI BIOS Guard Extractor**
 
-![](https://i.imgur.com/ci3H4Y3.png)
+![](https://i.imgur.com/p0rrlqv.png)
 
 #### **Description**
 
-Parses AMI BIOS Guard (a.k.a. PFAT) images and extracts a proper SPI/BIOS/UEFI firmware.
+Parses AMI BIOS Guard (a.k.a. PFAT, Platform Firmware Armoring Technology) images, extracts their SPI/BIOS/UEFI firmware components and decompiles the Intel BIOS Guard Scripts. It supports all AMI PFAT revisions and formats, including those with nested AMI PFAT structures. The output comprises only final firmware components which are directly usable by end users.
+
+Note that the AMI PFAT structure does not have an explicit component order. AMI's BIOS Guard Firmware Update Tool (AFUBGT) updates components based on the user/OEM provided Parameters and Options. That means that merging all the components together does not usually yield a proper SPI/BIOS/UEFI image. The utility does generate such a merged file with the name "X_00 -- AMI_PFAT_X_DATA_ALL.bin" but it is up to the end user to determine its usefulness. Moreover, any custom OEM data after the AMI PFAT structure are stored in a file with the name "X_YY -- AMI_PFAT_X_DATA_END.bin" and it is once again up to the end user to determine its usefulness. In cases where the trailing custom OEM data include a nested AMI PFAT structure, the utility will process and extract it automatically as well.
 
 #### **Usage**
 
@@ -80,7 +82,9 @@ Should work at all Windows, Linux or macOS operating systems which have Python 3
 
 #### **Prerequisites**
 
-To run the utility, you do not need any 3rd party tool.
+To decompile the Intel BIOS Guard Scripts via the Python script, you need to additionally have the following 3rd party Python utility at the same directory:
+
+* [BIOS Guard Script Tool](https://github.com/allowitsme/big-tool/tree/sdk-compat) (i.e. big_script_tool.py)
 
 #### **Build/Freeze/Compile with PyInstaller**
 
@@ -94,7 +98,11 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 
 > pip3 install pyinstaller
 
-3. Build/Freeze/Compile:
+3. Copy BIOS Guard Script Tool dependency to build directory:
+
+> AMI_PFAT_Extract.py, big_script_tool.py
+
+4. Build/Freeze/Compile:
 
 > pyinstaller --noupx --onefile AMI_PFAT_Extract.py
 
@@ -103,6 +111,10 @@ At dist folder you should find the final utility executable
 #### **Anti-Virus False Positives**
 
 Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
+
+#### **Pictures**
+
+![](https://i.imgur.com/iZD3GY0.png)
 
 ## **Apple EFI Sucatalog Link Grabber**
 

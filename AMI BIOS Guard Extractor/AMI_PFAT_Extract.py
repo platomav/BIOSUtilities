@@ -4,10 +4,10 @@
 """
 AMI PFAT Extract
 AMI BIOS Guard Extractor
-Copyright (C) 2018-2020 Plato Mavropoulos
+Copyright (C) 2018-2021 Plato Mavropoulos
 """
 
-print('AMI BIOS Guard Extractor v3.0')
+print('AMI BIOS Guard Extractor v3.1')
 
 import sys
 
@@ -21,7 +21,6 @@ if sys_ver < (3,7) :
 import os
 import re
 import ctypes
-import struct
 import shutil
 import traceback
 
@@ -205,7 +204,7 @@ for input_file in ami_pfat :
 	input_dir = os.path.dirname(os.path.abspath(input_file))
 	
 	file_data = b''
-	final_image = b''
+	final_data = b''
 	block_name = ''
 	block_count = 0
 	file_index = 0
@@ -284,7 +283,7 @@ for input_file in ami_pfat :
 			print('            Error: BIOS Guard Script Tool dependency missing!')
 		
 		file_data += block_data
-		final_image += block_data
+		final_data += block_data
 		
 		if i and is_file_start and file_data :
 			file_index += 1
@@ -296,9 +295,10 @@ for input_file in ami_pfat :
 	
 	with open('%s_%0.2d -- %s' % (file_path, file_index + 1, block_name), 'wb') as o : o.write(file_data) # Last File
 	
-	with open('%s_00 -- AMI_PFAT_%d_DATA_ALL.bin' % (file_path, pfat_index), 'wb') as final : final.write(final_image)
-	
 	eof_data = buffer[block_start:] # Store any data after the end of PFAT
+	
+	with open('%s_00 -- AMI_PFAT_%d_DATA_ALL.bin' % (file_path, pfat_index), 'wb') as final : final.write(final_data + eof_data)
+	
 	if eof_data[:-0x100] != b'\xFF' * (len(eof_data) - 0x100) :
 		eof_path = '%s_%0.2d -- AMI_PFAT_%d_DATA_END.bin' % (file_path, file_index + 2, pfat_index)
 		with open(eof_path, 'wb') as final : final.write(eof_data)
@@ -310,5 +310,4 @@ for input_file in ami_pfat :
 		else :
 			pfat_index = 1
 		
-else :
-	input('\nDone!')
+input('\nDone!')

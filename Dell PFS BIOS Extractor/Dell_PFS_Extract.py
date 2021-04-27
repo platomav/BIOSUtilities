@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
+#coding=utf-8
 
 """
 Dell PFS Extract
 Dell PFS BIOS Extractor
-Copyright (C) 2019-2020 Plato Mavropoulos
+Copyright (C) 2019-2021 Plato Mavropoulos
 Inspired from https://github.com/LongSoft/PFSExtractor-RS by Nikolaj Schlej
 """
 
-title = 'Dell PFS BIOS Extractor v4.6'
+title = 'Dell PFS BIOS Extractor v4.8'
 
 import os
 import re
 import sys
 import zlib
+import lzma
 import shutil
 import struct
 import ctypes
@@ -214,7 +216,6 @@ class CHUNK_INFO_FTR(ctypes.LittleEndianStructure) :
 		print('End Marker      : 0x%X' % self.EndMarker)
 
 # Dell PFS.HDR. Extractor
-# noinspection PyUnusedLocal
 def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 	# Get PFS Header Structure values
 	pfs_hdr = get_struct(buffer, 0, PFS_HDR)
@@ -490,7 +491,7 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 				
 				# Get sub PFS Entry Version string via "Version" and "VersionType" fields
 				# This is not useful as the Version of each Chunk does not matter at all
-				chunk_entry_version = get_version(pfs_chunk_entry.Version, pfs_chunk_entry.VersionType)
+				#chunk_entry_version = get_version(pfs_chunk_entry.Version, pfs_chunk_entry.VersionType)
 				
 				# Sub PFS Entry Data starts after the sub PFS Entry Structure
 				chunk_entry_data_start = chunk_entry_start + pfs_entry_size
@@ -509,9 +510,9 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 				chunk_entry_met_sig_end = chunk_entry_met_sig_start + pfs_chunk_entry.DataMetSigSize
 				
 				chunk_entry_data = chunks_payload[chunk_entry_data_start:chunk_entry_data_end] # Store sub PFS Entry Data
-				chunk_entry_data_sig = chunks_payload[chunk_entry_data_sig_start:chunk_entry_data_sig_end] # Store sub PFS Entry Data Signature
-				chunk_entry_met = chunks_payload[chunk_entry_met_start:chunk_entry_met_end] # Store sub PFS Entry Metadata
-				chunk_entry_met_sig = chunks_payload[chunk_entry_met_sig_start:chunk_entry_met_sig_end] # Store sub PFS Entry Metadata Signature
+				#chunk_entry_data_sig = chunks_payload[chunk_entry_data_sig_start:chunk_entry_data_sig_end] # Store sub PFS Entry Data Signature
+				#chunk_entry_met = chunks_payload[chunk_entry_met_start:chunk_entry_met_end] # Store sub PFS Entry Metadata
+				#chunk_entry_met_sig = chunks_payload[chunk_entry_met_sig_start:chunk_entry_met_sig_end] # Store sub PFS Entry Metadata Signature
 				
 				# Store each sub PFS Entry/Chunk Extra Info Size, Order Number & Raw Data
 				chunk_data_all.append((chunk_entry_number, chunk_entry_data, chunk_info_size))
@@ -637,7 +638,7 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count) :
 		full_name = '%d%s -- %d %s v%s' % (pfs_index, pfs_name, file_index, file_name, file_version) # Full Entry Name
 		safe_name = re.sub(r'[\\/*?:"<>|]', '_', full_name) # Replace common Windows reserved/illegal filename characters
 		
-		is_zlib = True if file_type == 'ZLIB' else False # Determine if PFS Entry Data was zlib-compressed
+		is_zlib = file_type == 'ZLIB' # Determine if PFS Entry Data was zlib-compressed
 		
 		# For both advanced & non-advanced users, the goal is to store final/usable files only
 		# so empty or intermediate files such as sub-PFS, PFS w/ Chunks or zlib-PFS are skipped
@@ -727,14 +728,15 @@ def get_pfs_entry(buffer, offset) :
 	pfs_entry_ver = int.from_bytes(buffer[offset + 0x10:offset + 0x14], 'little') # PFS Entry Version
 	
 	if pfs_entry_ver == 1 : return PFS_ENTRY, ctypes.sizeof(PFS_ENTRY)
-	elif pfs_entry_ver == 2 : return PFS_ENTRY_R2, ctypes.sizeof(PFS_ENTRY_R2)
-	else : return PFS_ENTRY_R2, ctypes.sizeof(PFS_ENTRY_R2)
+	if pfs_entry_ver == 2 : return PFS_ENTRY_R2, ctypes.sizeof(PFS_ENTRY_R2)
+
+	return PFS_ENTRY_R2, ctypes.sizeof(PFS_ENTRY_R2)
 
 # Calculate Checksum XOR 8 of data
 def chk_xor_8(data, init_value) :
 	value = init_value
 	for byte in data : value = value ^ byte
-	value = value ^ 0x0
+	value ^= 0x0
 	
 	return value
 
@@ -796,6 +798,13 @@ met_info_size = ctypes.sizeof(METADATA_INFO)
 chunk_info_header_size = ctypes.sizeof(CHUNK_INFO_HDR)
 chunk_info_footer_size = ctypes.sizeof(CHUNK_INFO_FTR)
 
+# The Dell ThinOS PKG BIOS images usually contain more than one section. Each section starts with
+# a 0x30 sized header, which begins with pattern 72135500. The section length is found at 0x10-0x14
+# and its (optional) MD5 hash at 0x20-0x30. The section data can be raw or LZMA2 (7zXZ) compressed.
+# The LZMA2 section includes the actual Dell PFS BIOS image, so it needs to be decompressed first.
+# For the purposes of this utility, we are only interested in extracting the Dell PFS BIOS section.
+lzma_pkg_header = re.compile(br'\x72\x13\x55\x00.{45}\x37\x7A\x58\x5A', re.DOTALL)
+
 # The Dell PFS BIOS images usually contain more than one section. Each section is zlib-compressed
 # with header pattern ********++EEAA761BECBB20F1E651--789C where ******** is the zlib stream size,
 # ++ is the section type and -- the header Checksum XOR 8. The "BIOS" section has type 0xAA and its
@@ -816,7 +825,7 @@ else :
 	pfs_exec = []
 	in_path = input('\nEnter the full folder path: ')
 	print('\nWorking...')
-	for root, dirs, files in os.walk(in_path):
+	for root, _, files in os.walk(in_path):
 		for name in files :
 			pfs_exec.append(os.path.join(root, name))
 
@@ -833,6 +842,23 @@ for input_file in pfs_exec :
 		continue # Next input file
 	
 	with open(input_file, 'rb') as in_file : input_data = in_file.read()
+	
+	# Search input image for ThinOS PKG 7zXZ section header
+	lzma_pkg_hdr_match = lzma_pkg_header.search(input_data)
+	
+	# Decompress ThinOS PKG 7zXZ section first, if present
+	if lzma_pkg_hdr_match :
+		lzma_len_off = lzma_pkg_hdr_match.start() + 0x10
+		lzma_len_int = int.from_bytes(input_data[lzma_len_off:lzma_len_off + 0x4], 'little')
+		lzma_bin_off = lzma_pkg_hdr_match.end() - 0x5
+		lzma_bin_dat = input_data[lzma_bin_off:lzma_bin_off + lzma_len_int]
+		
+		# Check if the compressed 7zXZ stream is complete, based on header
+		if len(lzma_bin_dat) != lzma_len_int :
+			print('\n    Error: This Dell ThinOS PKG BIOS image is corrupted!')
+			continue # Next input file
+		
+		input_data = lzma.decompress(lzma_bin_dat)
 	
 	# Search input image for zlib "BIOS" section header
 	zlib_bios_hdr_match = zlib_bios_header.search(input_data)
@@ -906,13 +932,12 @@ for input_file in pfs_exec :
 	pfs_name = '' # N/A for Main/First/Initial full PFS, used for sub-PFS recursions
 	pfs_index = 1 # Main/First/Initial full PFS Index is 1
 	pfs_count = 1 # Main/First/Initial full PFS Count is 1
-	is_advanced = True if args.advanced else False # Set Advanced user mode optional argument
+	is_advanced = bool(args.advanced) # Set Advanced user mode optional argument
 	
 	pfs_extract(input_data, pfs_index, pfs_name, pfs_count) # Call the Dell PFS.HDR. Extractor function
 	
 	print('\n    Extracted Dell PFS BIOS image!')
 
-else :
-	input('\nDone!')
-	
-	sys.exit(0)
+input('\nDone!')
+
+sys.exit(0)

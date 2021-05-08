@@ -8,7 +8,7 @@ Copyright (C) 2019-2021 Plato Mavropoulos
 Inspired from https://github.com/LongSoft/PFSExtractor-RS by Nikolaj Schlej
 """
 
-title = 'Dell PFS BIOS Extractor v4.8'
+title = 'Dell PFS BIOS Extractor v4.9'
 
 import os
 import re
@@ -682,7 +682,7 @@ def bin_is_text(buffer, file_type, is_metadata, is_advanced) :
 	
 	# Only for non-advanced users due to signature (.sig) invalidation
 	if not is_advanced :
-		if b',END' in buffer[-0x6:-0x1] : # Text Type 1
+		if b',END' in buffer[-0x7:] : # Text Type 1
 			is_text = True
 			write_mode = 'w'
 			extension = '.txt'

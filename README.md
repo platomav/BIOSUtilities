@@ -58,6 +58,65 @@ Some Anti-Virus software may claim that the built/frozen/compiled executable con
 
 ![](https://i.imgur.com/LCsUknA.png)
 
+## **AMI UCP BIOS Extractor**
+
+![](https://i.imgur.com/6YWoMGk.png)
+
+#### **Description**
+
+Parses AMI UCP (Utility Configuration Program) BIOS images, extracts their SPI/BIOS/UEFI firmware components and shows all relevant info. It supports all AMI UCP revisions and formats, including those with nested AMI UCP or Insyde SFX structures. The output comprises only final firmware components and utilities which are directly usable by end users.
+
+Note that AMI UCP BIOS images are protected by various checksums but, due to algorithmic performance reasons, AMI UCP BIOS Extractor does not check them by default. An optional parameter is provided though, for verifying all checksums during extraction.
+
+#### **Usage**
+
+You can either Drag & Drop or manually enter the full path of a folder containing AMI UCP BIOS images. Optional arguments:
+  
+* -h or --help : show help message and exit
+* -p or --path : parse files within given folder
+* -c or --checksum : verify AMI UCP Checksums (slow)
+
+#### **Download**
+
+An already built/frozen/compiled binary is provided by me for Windows only. Thus, **you don't need to manually build/freeze/compile it under Windows**. Instead, download the latest version from the [Releases](https://github.com/platomav/BIOSUtilities/releases) tab. To extract the already built/frozen/compiled archive, you need to use programs which support RAR5 compression. Note that you need to manually apply any prerequisites.
+
+#### **Compatibility**
+
+Should work at all Windows, Linux or macOS operating systems which have Python 3.7 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
+
+#### **Prerequisites**
+
+To run the python script, you need to have the following 3rd party tools placed at the same directory:
+
+* [TianoCompress](https://github.com/tianocore/edk2/tree/master/BaseTools/Source/C/TianoCompress/) (i.e. [TianoCompress.exe](https://github.com/tianocore/edk2-BaseTools-win32/))
+* [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe)
+
+#### **Build/Freeze/Compile with PyInstaller**
+
+PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
+
+1. Make sure Python 3.7.0 or newer is installed:
+
+> python --version
+
+2. Use pip to install PyInstaller:
+
+> pip3 install pyinstaller
+
+3. Build/Freeze/Compile:
+
+> pyinstaller --noupx --onefile AMI_UCP_Extract.py
+
+At dist folder you should find the final utility executable
+
+#### **Anti-Virus False Positives**
+
+Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
+
+#### **Pictures**
+
+![](https://i.imgur.com/3PaWy3M.png)
+
 ## **AMI BIOS Guard Extractor**
 
 ![](https://i.imgur.com/p0rrlqv.png)

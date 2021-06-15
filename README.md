@@ -175,6 +175,62 @@ Some Anti-Virus software may claim that the built/frozen/compiled executable con
 
 ![](https://i.imgur.com/iZD3GY0.png)
 
+## **Phoenix SCT BIOS Extractor**
+
+![](https://i.imgur.com/z4VM06J.png)
+
+#### **Description**
+
+Parses Phoenix SecureCore Technology (SCT) BIOS images and extracts their SPI/BIOS/UEFI firmware components. It supports all Phoenix SCT revisions and formats, including those which are originally LZMA compressed. The output comprises only final firmware components which are directly usable by end users.
+
+![](https://i.imgur.com/p6s8L6j.png)
+<sub><sup>*Icon owned by Phoenix*</sup></sub>
+
+#### **Usage**
+
+You can either Drag & Drop or manually enter the full path of a folder containing Phoenix SCT BIOS images. Optional arguments:
+  
+* -h or --help : show help message and exit
+* -p or --path : parse files within given folder
+
+#### **Download**
+
+An already built/frozen/compiled binary is provided by me for Windows only. Thus, **you don't need to manually build/freeze/compile it under Windows**. Instead, download the latest version from the [Releases](https://github.com/platomav/BIOSUtilities/releases) tab. To extract the already built/frozen/compiled archive, you need to use programs which support RAR5 compression. Note that you need to manually apply any prerequisites.
+
+#### **Compatibility**
+
+Should work at all Windows, Linux or macOS operating systems which have Python 3.7 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
+
+#### **Prerequisites**
+
+To run the utility, you do not need any 3rd party tool.
+
+#### **Build/Freeze/Compile with PyInstaller**
+
+PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
+
+1. Make sure Python 3.7.0 or newer is installed:
+
+> python --version
+
+2. Use pip to install PyInstaller:
+
+> pip3 install pyinstaller
+
+3. Build/Freeze/Compile:
+
+> pyinstaller --noupx --onefile Phoenix_SCT_Extract.py
+
+At dist folder you should find the final utility executable
+
+#### **Anti-Virus False Positives**
+
+Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
+
+#### **Pictures**
+
+![](https://i.imgur.com/Td6F5mm.png)
+
 ## **Apple EFI Sucatalog Link Grabber**
 
 ![](https://i.imgur.com/zTVFs4I.png)

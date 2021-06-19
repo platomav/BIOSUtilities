@@ -5,6 +5,20 @@
 
 <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=DJDZD3PRGCSCL"><img border="0" title="BIOS Utilities Donation via Paypal or Debit/Credit Card" alt="BIOS Utilities Donation via Paypal or Debit/Credit Card" src="https://user-images.githubusercontent.com/11527726/109392268-e0f68280-7923-11eb-83d8-0a63f0d20783.png"></a>
 
+* [**Dell PFS BIOS Extractor**](#dell-pfs-bios-extractor)
+* [**AMI UCP BIOS Extractor**](#ami-ucp-bios-extractor)
+* [**AMI BIOS Guard Extractor**](#ami-bios-guard-extractor)
+* [**Phoenix SCT BIOS Extractor**](#phoenix-sct-bios-extractor)
+* [**Portwell EFI BIOS Extractor**](#portwell-efi-bios-extractor)
+* [**Panasonic BIOS Update Extractor**](#panasonic-bios-update-extractor)
+* [**VAIO Packaging Manager Extractor**](#vaio-packaging-manager-extractor)
+* [**Fujitsu SFX Packager Extractor**](#fujitsu-sfx-packager-extractor)
+* [**Award BIOS Module Extractor**](#award-bios-module-extractor)
+* [**Apple EFI Sucatalog Link Grabber**](#apple-efi-sucatalog-link-grabber)
+* [**Apple EFI File Renamer**](#apple-efi-file-renamer)
+* [**Apple EFI IM4P Splitter**](#apple-efi-im4p-splitter)
+* [**Apple EFI Package Extractor**](#apple-efi-package-extractor)
+
 ## **Dell PFS BIOS Extractor**
 
 ![](https://i.imgur.com/Oy1IkcW.png)
@@ -231,6 +245,71 @@ Some Anti-Virus software may claim that the built/frozen/compiled executable con
 
 ![](https://i.imgur.com/Td6F5mm.png)
 
+## **Portwell EFI BIOS Extractor**
+
+![](https://i.imgur.com/ySdUSgf.png)
+
+#### **Description**
+
+Parses Portwell UEFI Unpacker EFI images (usually named "Update.efi"), extracts their SPI/BIOS/UEFI/EC firmware components and shows all relevant info. It supports all Portwell UEFI Unpacker revisions and formats, including those which contain Tiano compressed files. The output comprises only final firmware components and utilities which are directly usable by end users.
+
+#### **Usage**
+
+You can either Drag & Drop or manually enter the full path of a folder containing Portwell UEFI Unpacker EFI images. Optional arguments:
+  
+* -h or --help : show help message and exit
+* -p or --path : parse files within given folder
+
+#### **Download**
+
+An already built/frozen/compiled binary is provided by me for Windows only. Thus, **you don't need to manually build/freeze/compile it under Windows**. Instead, download the latest version from the [Releases](https://github.com/platomav/BIOSUtilities/releases) tab. To extract the already built/frozen/compiled archive, you need to use programs which support RAR5 compression. Note that you need to manually apply any prerequisites.
+
+#### **Compatibility**
+
+Should work at all Windows, Linux or macOS operating systems which have Python 3.7 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
+
+#### **Prerequisites**
+
+To run the python script, you need to have the following 3rd party Python module installed:
+
+* [pefile](https://pypi.org/project/pefile/)
+
+> pip3 install pefile
+
+To run the python script or its built/frozen/compiled binary, you need to additionally have the following 3rd party tool at the same directory:
+
+* [TianoCompress](https://github.com/tianocore/edk2/tree/master/BaseTools/Source/C/TianoCompress/) (i.e. [TianoCompress.exe](https://github.com/tianocore/edk2-BaseTools-win32/))
+
+#### **Build/Freeze/Compile with PyInstaller**
+
+PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
+
+1. Make sure Python 3.7.0 or newer is installed:
+
+> python --version
+
+2. Use pip to install PyInstaller:
+
+> pip3 install pyinstaller
+
+3. Use pip to install pefile:
+
+> pip3 install pefile
+
+4. Build/Freeze/Compile:
+
+> pyinstaller --noupx --onefile Portwell_EFI_Extract.py
+
+At dist folder you should find the final utility executable
+
+#### **Anti-Virus False Positives**
+
+Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
+
+#### **Pictures**
+
+![](https://i.imgur.com/EhCzMLk.png)
+
 ## **Apple EFI Sucatalog Link Grabber**
 
 ![](https://i.imgur.com/zTVFs4I.png)
@@ -445,9 +524,9 @@ Should work at all Windows operating systems which have Python 3.7 support. Wind
 
 #### **Prerequisites**
 
-To run the python script, you need to have the following 3rd party Python modules installed:
+To run the python script, you need to have the following 3rd party Python module installed:
 
-* [PEfile](https://pypi.python.org/pypi/pefile/)
+* [pefile](https://pypi.org/project/pefile/)
 
 > pip3 install pefile
 
@@ -467,7 +546,7 @@ PyInstaller can build/freeze/compile the utility at Windows, it is simple to run
 
 > pip3 install pyinstaller
 
-3. Use pip to install PEfile:
+3. Use pip to install pefile:
 
 > pip3 install pefile
 

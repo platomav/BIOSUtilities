@@ -7,7 +7,7 @@ AMI UCP BIOS Extractor
 Copyright (C) 2021 Plato Mavropoulos
 """
 
-title = 'AMI UCP BIOS Extractor v1.0'
+title = 'AMI UCP BIOS Extractor v1.1'
 
 print('\n' + title) # Print script title
 
@@ -483,8 +483,8 @@ def ucp_extract(buffer, out_dir, level, padd) :
 			print('%s            Use "AMI BIOS Guard Extractor" from https://github.com/platomav/BIOSUtilities' % padd)
 		
 		# Detect Intel Management Engine (ME) image and print parsing instructions/utility
-		if len(uaf_data_raw) and uaf_tag.startswith('ME') :
-			print('\n%s        Intel Management Engine (ME) Image:\n' % padd)
+		if len(uaf_data_raw) and uaf_name.startswith('ME_0') :
+			print('\n%s        Intel Management Engine (ME) Firmware:\n' % padd)
 			print('%s            Use "ME Analyzer" from https://github.com/platomav/MEAnalyzer' % padd)
 		
 		# Get best Nested AMI UCP Pattern match based on @UAF Size
@@ -511,7 +511,7 @@ tag_desc = {
 			'PFC' : 'AMI BGT Command',
 			'VER' : 'OEM Version',
 			'CKV' : 'Check Version',
-			'MEC' : 'ME FWUpdLcl',
+			'MEC' : 'ME FWUpdLcl Command',
 			}
 
 # AMI UCP Tag-File Dictionary
@@ -525,6 +525,8 @@ tag_dict = {
 			'PFC' : 'BGT_Command.txt',
 			'VER' : 'OEM_Version.txt',
 			'CKV' : 'Check_Version.txt',
+			'OKM' : 'OK_Message.txt',
+			'CPM' : 'AC_Message.txt',
 			'DIS' : 'Command_Status.bin',
 			'UAF' : 'UCP_Main.bin',
 			'UII' : 'UCP_Info.txt',
@@ -564,6 +566,7 @@ tag_dict = {
 			'B34' : 'BiosMgmt32.s14',
 			'DFE' : 'HpDevFwUpdate.efi',
 			'DFS' : 'HpDevFwUpdate.s12',
+			'ENB' : 'ENBG64.exe',
 			}
 
 # Process each input AMI UCP BIOS executable

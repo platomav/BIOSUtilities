@@ -7,7 +7,7 @@ AMI UCP BIOS Extractor
 Copyright (C) 2021 Plato Mavropoulos
 """
 
-title = 'AMI UCP BIOS Extractor v1.1'
+title = 'AMI UCP BIOS Extractor v1.2'
 
 print('\n' + title) # Print script title
 
@@ -388,11 +388,6 @@ def ucp_extract(buffer, out_dir, level, padd) :
 					
 					print('%s            Description    : %s' % (padd, desc)) # Store UII Module Description
 		
-		# Process and Print known text only UAF Modules
-		if uaf_tag in ['CMD','PFC','VER','MEC','CKV'] : # Always referenced in tag_desc
-			text_data = uaf_data_raw.decode('utf-8')
-			print('\n%s        %s:\n\n%s            %s' % (padd, tag_desc[uaf_tag], padd, text_data))
-		
 		# Adjust UAF Module Raw Data for extraction
 		if is_comp :
 			# Some Compressed UAF Module EFI data lack necessary padding in the end
@@ -424,6 +419,11 @@ def ucp_extract(buffer, out_dir, level, padd) :
 			except :
 				print('\n%s        Error: Could not extract AMI UCP Module %s via TianoCompress!' % (padd, uaf_tag))
 				input('%s               Make sure that "TianoCompress" executable exists!' % padd)
+		
+		# Process and Print known text only UAF Modules (after EFI/Tiano Decompression)
+		if uaf_tag in ['CMD','PFC','VER','MEC','CKV'] : # Always referenced in tag_desc
+			text_data = uaf_data_raw.decode('utf-8')
+			print('\n%s        %s:\n\n%s            %s' % (padd, tag_desc[uaf_tag], padd, text_data))
 		
 		# Parse Default Command Status UAF Module (DIS)
 		if len(uaf_data_raw) and uaf_tag == 'DIS' :

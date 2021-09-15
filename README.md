@@ -12,7 +12,8 @@
 * [**Portwell EFI BIOS Extractor**](#portwell-efi-bios-extractor)
 * [**Panasonic BIOS Update Extractor**](#panasonic-bios-update-extractor)
 * [**VAIO Packaging Manager Extractor**](#vaio-packaging-manager-extractor)
-* [**Fujitsu SFX Packager Extractor**](#fujitsu-sfx-packager-extractor)
+* [**Fujitsu UPC BIOS Extractor**](#fujitsu-upc-bios-extractor)
+* [**Fujitsu SFX BIOS Extractor**](#fujitsu-sfx-bios-extractor)
 * [**Award BIOS Module Extractor**](#award-bios-module-extractor)
 * [**Apple EFI Sucatalog Link Grabber**](#apple-efi-sucatalog-link-grabber)
 * [**Apple EFI File Renamer**](#apple-efi-file-renamer)
@@ -609,18 +610,73 @@ At dist folder you should find the final utility executable
 
 Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
 
-## **Fujitsu SFX Packager Extractor**
+## **Fujitsu UPC BIOS Extractor**
+
+![](https://i.imgur.com/JqrlxfE.png)
+
+#### **Description**
+
+Parses Fujitsu UPC images and extracts their Tiano compressed SPI/BIOS firmware component. The output comprises only a final firmware component which is directly usable by end users.
+
+#### **Usage**
+
+You can either Drag & Drop or manually enter the full path of a folder containing Portwell UEFI Unpacker EFI images. Optional arguments:
+  
+* -h or --help : show help message and exit
+* -p or --path : parse files within given folder
+
+#### **Download**
+
+An already built/frozen/compiled binary is provided by me for Windows only. Thus, **you don't need to manually build/freeze/compile it under Windows**. Instead, download the latest version from the [Releases](https://github.com/platomav/BIOSUtilities/releases) tab. To extract the already built/frozen/compiled archive, you need to use programs which support RAR5 compression. Note that you need to manually apply any prerequisites.
+
+#### **Compatibility**
+
+Should work at all Windows, Linux or macOS operating systems which have Python 3.7 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
+
+#### **Prerequisites**
+
+To run the python script or its built/frozen/compiled binary, you need to additionally have the following 3rd party tool at the same directory:
+
+* [TianoCompress](https://github.com/tianocore/edk2/tree/master/BaseTools/Source/C/TianoCompress/) (i.e. [TianoCompress.exe](https://github.com/tianocore/edk2-BaseTools-win32/))
+
+#### **Build/Freeze/Compile with PyInstaller**
+
+PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
+
+1. Make sure Python 3.7.0 or newer is installed:
+
+> python --version
+
+2. Use pip to install PyInstaller:
+
+> pip3 install pyinstaller
+
+3. Build/Freeze/Compile:
+
+> pyinstaller --noupx --onefile Fujitsu_UPC_Extract.py
+
+At dist folder you should find the final utility executable
+
+#### **Anti-Virus False Positives**
+
+Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
+
+#### **Pictures**
+
+![](https://i.imgur.com/FE8MNi2.png)
+
+## **Fujitsu SFX BIOS Extractor**
 
 ![](https://i.imgur.com/NlZGBsy.png)
 <sub><sup>*Icon owned by FUJITSU*</sup></sub>
 
 #### **Description**
 
-Parses Fujitsu SFX Packager executables and extracts their contents. The utility automatically uses [Igor Pavlov's 7-Zip](https://www.7-zip.org/) tool in order to decompress the initially obfuscated Microsoft CAB compressed contents.
+Parses Fujitsu SFX BIOS executables and extracts their contents. The utility automatically uses [Igor Pavlov's 7-Zip](https://www.7-zip.org/) tool in order to decompress the initially obfuscated Microsoft CAB compressed contents.
 
 #### **Usage**
 
-You can either Drag & Drop or manually enter the full path of a folder containing Fujitsu SFX Packager executables.
+You can either Drag & Drop or manually enter the full path of a folder containing Fujitsu SFX BIOS executables.
 
 #### **Download**
 
@@ -650,7 +706,7 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 
 3. Build/Freeze/Compile:
 
-> pyinstaller --noupx --onefile Fujitsu_Package_Extract.py
+> pyinstaller --noupx --onefile Fujitsu_SFX_Extract.py
 
 At dist folder you should find the final utility executable
 

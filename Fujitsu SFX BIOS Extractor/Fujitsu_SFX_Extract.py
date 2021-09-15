@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 """
-Fujitsu Package Extractor
-Fujitsu SFX Packager Extractor
-Copyright (C) 2019-2020 Plato Mavropoulos
+Fujitsu SFX Extractor
+Fujitsu SFX BIOS Extractor
+Copyright (C) 2019-2021 Plato Mavropoulos
 """
 
-print('Fujitsu SFX Packager Extractor v2.0')
+print('Fujitsu SFX BIOS Extractor v2.1')
 
 import os
 import re
@@ -75,7 +75,7 @@ for input_file in fjsfx_exec :
 		os.remove('fjsfx_temp.cab') # Remove temporary CAB image
 		
 	else :
-		print('\n      Error: No Fujitsu SFX Packager found!')
+		print('\n      Error: This is not a Fujitsu SFX BIOS image!')
 		continue # Next input file
 
 else :

@@ -5,7 +5,7 @@
 
 <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=DJDZD3PRGCSCL"><img border="0" title="BIOS Utilities Donation via Paypal or Debit/Credit Card" alt="BIOS Utilities Donation via Paypal or Debit/Credit Card" src="https://user-images.githubusercontent.com/11527726/109392268-e0f68280-7923-11eb-83d8-0a63f0d20783.png"></a>
 
-* [**Dell PFS BIOS Extractor**](#dell-pfs-bios-extractor)
+* [**Dell PFS Update Extractor**](#dell-pfs-update-extractor)
 * [**AMI UCP BIOS Extractor**](#ami-ucp-bios-extractor)
 * [**AMI BIOS Guard Extractor**](#ami-bios-guard-extractor)
 * [**Phoenix SCT BIOS Extractor**](#phoenix-sct-bios-extractor)
@@ -20,13 +20,13 @@
 * [**Apple EFI IM4P Splitter**](#apple-efi-im4p-splitter)
 * [**Apple EFI Package Extractor**](#apple-efi-package-extractor)
 
-## **Dell PFS BIOS Extractor**
+## **Dell PFS Update Extractor**
 
-![](https://i.imgur.com/Oy1IkcW.png)
+![](https://i.imgur.com/5WaGPPl.png)
 
 #### **Description**
 
-Parses Dell PFS BIOS images and extracts their SPI/BIOS/UEFI firmware components. It supports all Dell PFS revisions and formats, including those which are originally LZMA compressed in ThinOS packages, ZLIB compressed or split in chunks. The output comprises only final firmware components which are directly usable by end users. An optional Advanced user mode is available as well, which additionally extracts firmware Signatures and more Metadata.
+Parses Dell PFS Update images and extracts their Firmware (e.g. SPI, BIOS/UEFI, EC, ME etc) and Utilities (e.g. Flasher etc) component sections. It supports all Dell PFS revisions and formats, including those which are originally LZMA compressed in ThinOS packages, ZLIB compressed or Intel BIOS Guard (PFAT) protected. The output comprises only final firmware components which are directly usable by end users. An optional advanced user mode is available as well, which additionally extracts firmware Signatures and more Metadata.
 
 #### **Usage**
 
@@ -34,6 +34,10 @@ You can either Drag & Drop or manually enter the full path of a folder containin
   
 * -h or --help : show help message and exit
 * -a or --advanced : extract in advanced user mode
+* -v or --verbose : show PFS structure information
+* -e or --auto-exit : skip press enter to exit prompts
+* -o or --output-dir : extract in given output directory
+* -i or --input-dir : extract from given input directory
 
 #### **Download**
 
@@ -45,7 +49,9 @@ Should work at all Windows, Linux or macOS operating systems which have Python 3
 
 #### **Prerequisites**
 
-To run the utility, you do not need any 3rd party tool.
+To decompile the Intel BIOS Guard Scripts via the Python script, you need to additionally have the following 3rd party Python utility at the same directory:
+
+* [BIOS Guard Script Tool](https://github.com/allowitsme/big-tool/tree/sdk-compat) (i.e. big_script_tool.py)
 
 #### **Build/Freeze/Compile with PyInstaller**
 
@@ -59,7 +65,11 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 
 > pip3 install pyinstaller
 
-3. Build/Freeze/Compile:
+3. Copy BIOS Guard Script Tool dependency to build directory:
+
+> Dell_PFS_Extract.py, big_script_tool.py
+
+4. Build/Freeze/Compile:
 
 > pyinstaller --noupx --onefile Dell_PFS_Extract.py
 
@@ -72,6 +82,12 @@ Some Anti-Virus software may claim that the built/frozen/compiled executable con
 #### **Pictures**
 
 ![](https://i.imgur.com/LCsUknA.png)
+
+![](https://i.imgur.com/TcARQpk.png)
+
+![](https://i.imgur.com/UWCx75g.png)
+
+![](https://i.imgur.com/1rokMss.png)
 
 ## **AMI UCP BIOS Extractor**
 

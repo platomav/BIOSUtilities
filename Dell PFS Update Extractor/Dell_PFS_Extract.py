@@ -7,7 +7,7 @@ Dell PFS Update Extractor
 Copyright (C) 2018-2021 Plato Mavropoulos
 """
 
-title = 'Dell PFS Update Extractor v5.0'
+title = 'Dell PFS Update Extractor v5.1'
 
 import sys
 
@@ -702,7 +702,7 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count, output_path, pfs_padd) :
 		pfat_entry_hdr = get_struct(entry_data, 0, PFS_DELL_HDR, None, pfs_padd + 8) # Possible PFS PFAT Entry
 		if len(entry_data) - pfat_hdr_off >= pfat_hdr_size :
 			pfat_hdr = get_struct(entry_data, pfat_hdr_off, PFS_PFAT_HDR, [0], pfs_padd + 8)
-			is_pfat = bytes(pfat_hdr.PlatformID).startswith((b'Dell',b'DELL'))
+			is_pfat = bytes(pfat_hdr.PlatformID).upper().startswith(b'DELL')
 		
 		# Parse PFS Entry which contains sub-PFS Volume with PFAT Payload
 		if pfat_entry_hdr.Tag == b'PFS.HDR.' and is_pfat :
@@ -894,7 +894,7 @@ def parse_pfat_pfs(entry_hdr, entry_data, padd) :
 			msg_print(padd + 16, 'Error: Detected sub-PFS PFAT Entry Header & PFAT Size mismatch!')
 		
 		# Parse sub-PFS PFAT Signature, if applicable (only when PFAT Header > SFAM flag is set)
-		if pfat_flag_sig and pfat_payload[pfat_payload_end:pfat_payload_end + pfat_sig_size] == pfat_sig_size :
+		if pfat_flag_sig and len(pfat_payload[pfat_payload_end:pfat_payload_end + pfat_sig_size]) == pfat_sig_size :
 			# Get sub-PFS PFAT Signature Structure values
 			pfat_sig = get_struct(pfat_payload, pfat_payload_end, PFS_PFAT_SIG, [pfat_entry_index], padd + 12)
 			

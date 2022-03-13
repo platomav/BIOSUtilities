@@ -9,6 +9,7 @@
 * [**AMI UCP BIOS Extractor**](#ami-ucp-bios-extractor)
 * [**AMI BIOS Guard Extractor**](#ami-bios-guard-extractor)
 * [**Phoenix SCT BIOS Extractor**](#phoenix-sct-bios-extractor)
+* [**Insyde iFlash Image Extractor**](#insyde-iflash-image-extractor)
 * [**Portwell EFI BIOS Extractor**](#portwell-efi-bios-extractor)
 * [**Panasonic BIOS Update Extractor**](#panasonic-bios-update-extractor)
 * [**VAIO Packaging Manager Extractor**](#vaio-packaging-manager-extractor)
@@ -261,6 +262,62 @@ Some Anti-Virus software may claim that the built/frozen/compiled executable con
 #### **Pictures**
 
 ![](https://i.imgur.com/Td6F5mm.png)
+
+## **Insyde iFlash Image Extractor**
+
+![](https://i.imgur.com/13GJjwO.png)
+
+#### **Description**
+
+Parses Insyde iFlash images and extracts their raw components (e.g. SPI/BIOS/UEFI, EC, ME, Flasher, Configuration etc).
+
+#### **Usage**
+
+You can either Drag & Drop or manually enter the full path of a folder containing Insyde iFlash images. Optional arguments:
+  
+* -h or --help : show help message and exit
+* -v or --verbose : show iFlash structure information
+* -e or --auto-exit : skip press enter to exit prompts
+* -o or --output-dir : extract in given output directory
+* -i or --input-dir : extract from given input directory
+
+#### **Download**
+
+An already built/frozen/compiled binary is provided by me for Windows only. Thus, **you don't need to manually build/freeze/compile it under Windows**. Instead, download the latest version from the [Releases](https://github.com/platomav/BIOSUtilities/releases) tab. To extract the already built/frozen/compiled archive, you need to use programs which support RAR5 compression. Note that you need to manually apply any prerequisites.
+
+#### **Compatibility**
+
+Should work at all Windows, Linux or macOS operating systems which have Python 3.7 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
+
+#### **Prerequisites**
+
+To run the utility, you do not need any 3rd party tool.
+
+#### **Build/Freeze/Compile with PyInstaller**
+
+PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
+
+1. Make sure Python 3.7.0 or newer is installed:
+
+> python --version
+
+2. Use pip to install PyInstaller:
+
+> pip3 install pyinstaller
+
+3. Build/Freeze/Compile:
+
+> pyinstaller --noupx --onefile Insyde_iFlash_Extract.py
+
+At dist folder you should find the final utility executable
+
+#### **Anti-Virus False Positives**
+
+Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
+
+#### **Pictures**
+
+![](https://i.imgur.com/Pn4JNiG.png)
 
 ## **Portwell EFI BIOS Extractor**
 

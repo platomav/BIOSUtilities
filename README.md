@@ -16,7 +16,7 @@
 * [**Fujitsu UPC BIOS Extractor**](#fujitsu-upc-bios-extractor)
 * [**Fujitsu SFX BIOS Extractor**](#fujitsu-sfx-bios-extractor)
 * [**Award BIOS Module Extractor**](#award-bios-module-extractor)
-* [**Apple EFI Sucatalog Link Grabber**](#apple-efi-sucatalog-link-grabber)
+* [**Apple EFI Package Grabber**](#apple-efi-package-grabber)
 * [**Apple EFI File Renamer**](#apple-efi-file-renamer)
 * [**Apple EFI IM4P Splitter**](#apple-efi-im4p-splitter)
 * [**Apple EFI Package Extractor**](#apple-efi-package-extractor)
@@ -384,17 +384,17 @@ Some Anti-Virus software may claim that the built/frozen/compiled executable con
 
 ![](https://i.imgur.com/EhCzMLk.png)
 
-## **Apple EFI Sucatalog Link Grabber**
+## **Apple EFI Package Grabber**
 
-![](https://i.imgur.com/zTVFs4I.png)
+![](https://i.imgur.com/BaHrjGi.png)
 
 #### **Description**
 
-Parses Apple Software Update CatalogURL .sucatalog files and saves all EFI firmware package links into a text file. It removes any xml formatting, ignores false positives, removes duplicate links and sorts them in alphabetical order for easy comparison afterwards.
+Parses user-provided (DB) list of Apple Software Update CatalogURL .sucatalog links and saves all newer (since last run) EFI firmware package links into a text file. It removes any xml formatting, ignores false positives, removes duplicate links and sorts them in alphabetical order for easy comparison afterwards.
 
 #### **Usage**
 
-You can either Drag & Drop or let it automatically parse any .sucatalog files within its working directory.
+First, you need to familiarize a bit with the DB (i.e. Apple_EFI_Grab.dat file). It consists of 3 sections: Last run DateTime (YYYY-MM-DD HH:MM:SS), Sucatalog links to check and EFI Package links which have been gathered so far across all runs. Before running the utility for the fist time, you need to insert the Sucatalog links into the DB, below the 1st line (DateTime). The Sucatalog links in the DB are stored in partial form, starting from "index" string. For example: "https://swscan.apple.com/content/catalogs/others/index-12.merged-1.sucatalog" must be stored as "index-12.merged-1.sucatalog" in the DB. The Sucatalog links are not pre-included in the DB but you can find them online (e.g. https://github.com/zhangyoufu/swscan.apple.com/blob/master/url.txt).
 
 #### **Download**
 
@@ -422,7 +422,7 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 
 3. Build/Freeze/Compile:
 
-> pyinstaller --noupx --onefile Apple_EFI_Links.py
+> pyinstaller --noupx --onefile Apple_EFI_Grab.py
 
 At dist folder you should find the final utility executable
 

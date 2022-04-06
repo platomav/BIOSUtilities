@@ -3,10 +3,10 @@
 
 import os
 import re
+import sys
+import inspect
 import argparse
 from pathlib import Path
-
-from common.script_get import get_script_dir
 
 # Fix illegal/reserved Windows characters
 def safe_name(in_name):
@@ -77,3 +77,15 @@ def process_input_files(argparse_args, sys_argv=None):
         output_path = get_absolute_path(input('\nEnter output directory path: '))
     
     return input_files, output_path
+
+# https://stackoverflow.com/a/22881871 by jfs
+def get_script_dir(follow_symlinks=True):
+    if getattr(sys, 'frozen', False):
+        path = os.path.abspath(sys.executable)
+    else:
+        path = inspect.getabsfile(get_script_dir)
+    
+    if follow_symlinks:
+        path = os.path.realpath(path)
+
+    return os.path.dirname(path)

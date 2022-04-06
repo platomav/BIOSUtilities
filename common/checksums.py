@@ -2,12 +2,20 @@
 #coding=utf-8
 
 # Get Checksum 16-bit
-def checksum16(data):
-    chk16 = 0
-    
+def get_chk_16(data, value=0, order='little'):
     for idx in range(0, len(data), 2):
-        chk16 += int.from_bytes(data[idx:idx + 2], 'little')
+        # noinspection PyTypeChecker
+        value += int.from_bytes(data[idx:idx + 2], order)
     
-    chk16 &= 0xFFFF
+    value &= 0xFFFF
     
-    return chk16
+    return value
+
+# Get Checksum 8-bit XOR
+def get_chk_8_xor(data, value=0):
+    for byte in data:
+        value ^= byte
+    
+    value ^= 0x0
+    
+    return value

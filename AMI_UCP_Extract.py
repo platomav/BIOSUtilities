@@ -7,7 +7,7 @@ AMI UCP BIOS Extractor
 Copyright (C) 2021-2022 Plato Mavropoulos
 """
 
-title = 'AMI UCP BIOS Extractor v2.0_a1'
+title = 'AMI UCP BIOS Extractor v2.0_a2'
 
 import os
 import sys
@@ -19,14 +19,14 @@ import contextlib
 # Stop __pycache__ generation
 sys.dont_write_bytecode = True
 
-from common.patterns import PAT_AMI_UCP, PAT_INTEL_ENG
-from common.checksums import checksum16
-from common.text_ops import padder
 from common.a7z_comp import a7z_decompress, is_7z_supported
+from common.checksums import get_chk_16
 from common.efi_comp import efi_decompress, is_efi_compressed
-from common.path_ops import argparse_init, process_input_files, safe_name
+from common.path_ops import argparse_init, safe_name
+from common.patterns import PAT_AMI_UCP, PAT_INTEL_ENG
 from common.struct_ops import get_struct, char, uint8_t, uint16_t, uint32_t
-from common.system import nice_exc_handler, check_sys_py, check_sys_os, show_title, print_input
+from common.system import script_init, script_title, printer
+
 from AMI_PFAT_Extract import get_ami_pfat, parse_pfat_file
 
 class UafHeader(ctypes.LittleEndianStructure):
@@ -41,15 +41,13 @@ class UafHeader(ctypes.LittleEndianStructure):
         # 0x10
     ]
     
-    def struct_print(self, padding):
-        p = padder(padding)
-        
-        print(p + 'Tag          :', self.ModuleTag.decode('utf-8'))
-        print(p + 'Size         :', '0x%X' % self.ModuleSize)
-        print(p + 'Checksum     :', '0x%0.4X' % self.Checksum)
-        print(p + 'Unknown 0    :', '0x%0.2X' % self.Unknown0)
-        print(p + 'Unknown 1    :', '0x%0.2X' % self.Unknown1)
-        print(p + 'Reserved     :', '0x%0.8X' % self.Reserved)
+    def struct_print(self, p):
+        printer(['Tag          :', self.ModuleTag.decode('utf-8')], p, False)
+        printer(['Size         :', '0x%X' % self.ModuleSize], p, False)
+        printer(['Checksum     :', '0x%0.4X' % self.Checksum], p, False)
+        printer(['Unknown 0    :', '0x%0.2X' % self.Unknown0], p, False)
+        printer(['Unknown 1    :', '0x%0.2X' % self.Unknown1], p, False)
+        printer(['Reserved     :', '0x%0.8X' % self.Reserved], p, False)
 
 class UafModule(ctypes.LittleEndianStructure):
     _pack_ = 1
@@ -59,12 +57,10 @@ class UafModule(ctypes.LittleEndianStructure):
         # 0x08
     ]
     
-    def struct_print(self, padding, filename):
-        p = padder(padding)
-        
-        print(p + 'Compress Size:', '0x%X' % self.CompressSize)
-        print(p + 'Original Size:', '0x%X' % self.OriginalSize)
-        print(p + 'File Name    :', filename)
+    def struct_print(self, p, filename):
+        printer(['Compress Size:', '0x%X' % self.CompressSize], p, False)
+        printer(['Original Size:', '0x%X' % self.OriginalSize], p, False)
+        printer(['File Name    :', filename], p, False)
 
 class UiiHeader(ctypes.LittleEndianStructure):
     _pack_ = 1
@@ -88,26 +84,24 @@ class UiiHeader(ctypes.LittleEndianStructure):
     PTP = {1: 'Executable', 2: 'Library', 3: 'Driver'}
     PMD = {1: 'API', 2: 'Console', 3: 'GUI', 4: 'Console/GUI'}
     
-    def struct_print(self, padding, description):
-        p = padder(padding)
-        
+    def struct_print(self, p, description):
         SupportBIOS = self.SBI.get(self.SupportBIOS, 'Unknown (%d)' % self.SupportBIOS)
         SupportOS = self.SOS.get(self.SupportOS, 'Unknown (%d)' % self.SupportOS)
         DataBusWidth = self.DBW.get(self.DataBusWidth, 'Unknown (%d)' % self.DataBusWidth)
         ProgramType = self.PTP.get(self.ProgramType, 'Unknown (%d)' % self.ProgramType)
         ProgramMode = self.PMD.get(self.ProgramMode, 'Unknown (%d)' % self.ProgramMode)
         
-        print(p + 'UII Size      :', '0x%X' % self.UIISize)
-        print(p + 'Checksum      :', '0x%0.4X' % self.Checksum)
-        print(p + 'Tool Version  :', '0x%0.8X' % self.UtilityVersion)
-        print(p + 'Info Size     :', '0x%X' % self.InfoSize)
-        print(p + 'Supported BIOS:', SupportBIOS)
-        print(p + 'Supported OS  :', SupportOS)
-        print(p + 'Data Bus Width:', DataBusWidth)
-        print(p + 'Program Type  :', ProgramType)
-        print(p + 'Program Mode  :', ProgramMode)
-        print(p + 'SourceSafe Tag:', '%0.2d' % self.SourceSafeRel)
-        print(p + 'Description   :', description)
+        printer(['UII Size      :', '0x%X' % self.UIISize], p, False)
+        printer(['Checksum      :', '0x%0.4X' % self.Checksum], p, False)
+        printer(['Tool Version  :', '0x%0.8X' % self.UtilityVersion], p, False)
+        printer(['Info Size     :', '0x%X' % self.InfoSize], p, False)
+        printer(['Supported BIOS:', SupportBIOS], p, False)
+        printer(['Supported OS  :', SupportOS], p, False)
+        printer(['Data Bus Width:', DataBusWidth], p, False)
+        printer(['Program Type  :', ProgramType], p, False)
+        printer(['Program Mode  :', ProgramMode], p, False)
+        printer(['SourceSafe Tag:', '%0.2d' % self.SourceSafeRel], p, False)
+        printer(['Description   :', description], p, False)
 
 class DisHeader(ctypes.LittleEndianStructure):
     _pack_ = 1
@@ -118,12 +112,10 @@ class DisHeader(ctypes.LittleEndianStructure):
         # 0x10
     ]
     
-    def struct_print(self, padding):
-        p = padder(padding)
-        
-        print(p + 'Password Size:', '0x%X' % self.PasswordSize)
-        print(p + 'Entry Count  :', self.EntryCount)
-        print(p + 'Password     :', self.Password.decode('utf-8'))
+    def struct_print(self, p):
+        printer(['Password Size:', '0x%X' % self.PasswordSize], p, False)
+        printer(['Entry Count  :', self.EntryCount], p, False)
+        printer(['Password     :', self.Password.decode('utf-8')], p, False)
 
 class DisModule(ctypes.LittleEndianStructure):
     _pack_ = 1
@@ -138,23 +130,21 @@ class DisModule(ctypes.LittleEndianStructure):
     ENDIS = {0: 'Disabled', 1: 'Enabled'}
     SHOWN = {0: 'Hidden', 1: 'Shown', 2: 'Shown Only'}
     
-    def struct_print(self, padding):
-        p = padder(padding)
-        
+    def struct_print(self, p):
         EnabledDisabled = self.ENDIS.get(self.EnabledDisabled, 'Unknown (%d)' % self.EnabledDisabled)
         ShownHidden = self.SHOWN.get(self.ShownHidden, 'Unknown (%d)' % self.ShownHidden)
         
-        print(p + 'State      :', EnabledDisabled)
-        print(p + 'Display    :', ShownHidden)
-        print(p + 'Command    :', self.Command.decode('utf-8').strip())
-        print(p + 'Description:', self.Description.decode('utf-8').strip())
+        printer(['State      :', EnabledDisabled], p, False)
+        printer(['Display    :', ShownHidden], p, False)
+        printer(['Command    :', self.Command.decode('utf-8').strip()], p, False)
+        printer(['Description:', self.Description.decode('utf-8').strip()], p, False)
 
 # Validate @UAF Module Checksum-16
 def chk16_validate(data, tag, padd=0):
-    if checksum16(data) != 0:
-        print_input('\n%sError: Invalid UCP Module %s Checksum!' % (padder(padd), tag))
+    if get_chk_16(data) != 0:
+        printer('Error: Invalid UCP Module %s Checksum!' % tag, padd, pause=True)
     else:
-        print('\n%sChecksum of UCP Module %s is valid!' % (padder(padd), tag))
+        printer('Checksum of UCP Module %s is valid!' % tag, padd)
 
 # Get all input file AMI UCP patterns
 def get_ami_ucp(buffer):
@@ -197,10 +187,10 @@ def get_uaf_mod(buffer, uaf_off=0x0):
     return uaf_all
 
 # Parse & Extract AMI UCP structures
-def ucp_extract(buffer, output_path, padding=0, is_chk16=False):
+def ucp_extract(buffer, output_path, padding=0, is_checksum=False):
     nal_dict = {} # Initialize @NAL Dictionary per UCP
     
-    print('\n%sUtility Configuration Program' % padder(padding))
+    printer('Utility Configuration Program', padding)
     
     extract_path = os.path.join(output_path + '_extracted', '')
     
@@ -210,7 +200,7 @@ def ucp_extract(buffer, output_path, padding=0, is_chk16=False):
     
     uaf_hdr = get_struct(buffer, 0, UafHeader) # Parse @UAF Header Structure
     
-    print('\n%sUtility Auxiliary File > @UAF:\n' % padder(padding + 4))
+    printer('Utility Auxiliary File > @UAF:\n', padding + 4)
     
     uaf_hdr.struct_print(padding + 8)
     
@@ -220,15 +210,15 @@ def ucp_extract(buffer, output_path, padding=0, is_chk16=False):
     
     uaf_mod.struct_print(padding + 8, UAF_TAG_DICT['@UAF'][0]) # Print @UAF Module EFI Info
     
-    if is_chk16: chk16_validate(buffer, '@UAF', padding + 8)
+    if is_checksum: chk16_validate(buffer, '@UAF', padding + 8)
     
     uaf_all = get_uaf_mod(buffer, UAF_HDR_LEN)
     
     for mod_info in uaf_all:
-        nal_dict = uaf_extract(buffer, extract_path, mod_info, padding + 8, is_chk16, nal_dict)
+        nal_dict = uaf_extract(buffer, extract_path, mod_info, padding + 8, is_checksum, nal_dict)
 
 # Parse & Extract AMI UCP > @UAF Module/Section
-def uaf_extract(buffer, extract_path, mod_info, padding=0, is_chk16=False, nal_dict=None):
+def uaf_extract(buffer, extract_path, mod_info, padding=0, is_checksum=False, nal_dict=None):
     if nal_dict is None: nal_dict = {}
     
     uaf_tag,uaf_off,uaf_hdr = mod_info
@@ -239,7 +229,7 @@ def uaf_extract(buffer, extract_path, mod_info, padding=0, is_chk16=False, nal_d
     
     uaf_data_raw = uaf_data_mod[UAF_MOD_LEN:] # @UAF Module Raw Data
     
-    print('\n%sUtility Auxiliary File > %s:\n' % (padder(padding), uaf_tag))
+    printer('Utility Auxiliary File > %s:\n' % uaf_tag, padding)
     
     uaf_hdr.struct_print(padding + 4) # Print @UAF Module Info
     
@@ -264,12 +254,12 @@ def uaf_extract(buffer, extract_path, mod_info, padding=0, is_chk16=False, nal_d
     
     # Check if unknown @UAF Module Tag is present in NAL but not in built-in dictionary
     if uaf_tag in nal_dict and uaf_tag not in UAF_TAG_DICT and not uaf_tag.startswith(('@ROM','@R0','@S0','@DR','@DS')):
-        print_input('\n%sNote: Detected new AMI UCP Module %s (%s) in NAL!' % (padder(padding), uaf_tag, nal_dict[uaf_tag]))
+        printer('Note: Detected new AMI UCP Module %s (%s) in NAL!' % (uaf_tag, nal_dict[uaf_tag]), padding, pause=True)
     
     # Generate @UAF Module File name, depending on whether decompression will be required
     uaf_fname = os.path.join(extract_path, safe_name(uaf_name + ('.temp' if is_comp else uaf_fext)))
     
-    if is_chk16: chk16_validate(uaf_data_all, uaf_tag, padding + 4)
+    if is_checksum: chk16_validate(uaf_data_all, uaf_tag, padding + 4)
     
     # Parse Utility Identification Information @UAF Module (@UII)
     if uaf_tag == '@UII':
@@ -280,11 +270,11 @@ def uaf_extract(buffer, extract_path, mod_info, padding=0, is_chk16=False, nal_d
         # Get @UII Module Info/Description text field
         info_desc = info_data.decode('utf-8','ignore').strip('\x00 ')
         
-        print('\n%sUtility Identification Information:\n' % padder(padding + 4))
+        printer('Utility Identification Information:\n', padding + 4)
         
         info_hdr.struct_print(padding + 8, info_desc) # Print @UII Module Info
         
-        if is_chk16: chk16_validate(uaf_data_raw, '@UII > Info', padding + 8)
+        if is_checksum: chk16_validate(uaf_data_raw, '@UII > Info', padding + 8)
         
         # Store/Save @UII Module Info in file
         with open(uaf_fname[:-4] + '.txt', 'a', encoding='utf-8') as uii_out:
@@ -319,14 +309,14 @@ def uaf_extract(buffer, extract_path, mod_info, padding=0, is_chk16=False, nal_d
     
     # Process and Print known text only @UAF Modules (after EFI/Tiano Decompression)
     if uaf_tag in UAF_TAG_DICT and UAF_TAG_DICT[uaf_tag][2] == 'Text':
-        print('\n%s%s:' % (padder(padding + 4), UAF_TAG_DICT[uaf_tag][1]))
-        print('\n%s%s' % (padder(padding + 8), uaf_data_raw.decode('utf-8','ignore')))
+        printer(UAF_TAG_DICT[uaf_tag][1] + ':', padding + 4)
+        printer(uaf_data_raw.decode('utf-8','ignore'), padding + 8)
     
     # Parse Default Command Status @UAF Module (@DIS)
     if len(uaf_data_raw) and uaf_tag == '@DIS':
         dis_hdr = get_struct(uaf_data_raw, 0x0, DisHeader) # Parse @DIS Module Raw Header Structure
         
-        print('\n%sDefault Command Status Header:\n' % padder(padding + 4))
+        printer('Default Command Status Header:\n', padding + 4)
         
         dis_hdr.struct_print(padding + 8) # Print @DIS Module Raw Header Info
         
@@ -341,14 +331,14 @@ def uaf_extract(buffer, extract_path, mod_info, padding=0, is_chk16=False, nal_d
         for mod_idx in range(dis_hdr.EntryCount):
             dis_mod = get_struct(dis_data, mod_idx * DIS_MOD_LEN, DisModule) # Parse @DIS Module Raw Entry Structure
             
-            print('\n%sDefault Command Status Entry %0.2d/%0.2d:\n' % (padder(padding + 8), mod_idx + 1, dis_hdr.EntryCount))
+            printer('Default Command Status Entry %0.2d/%0.2d:\n' % (mod_idx + 1, dis_hdr.EntryCount), padding + 8)
             
             dis_mod.struct_print(padding + 12) # Print @DIS Module Raw Entry Info
             
             # Store/Save @DIS Module Entry Info in file
             with open(uaf_fname[:-3] + 'txt', 'a', encoding='utf-8') as dis:
                 with contextlib.redirect_stdout(dis):
-                    print()
+                    printer()
                     dis_mod.struct_print(4) # Store @DIS Module Entry Info
         
         os.remove(uaf_fname) # Delete @DIS Module binary, info exported as text
@@ -357,13 +347,13 @@ def uaf_extract(buffer, extract_path, mod_info, padding=0, is_chk16=False, nal_d
     if len(uaf_data_raw) >= 5 and (uaf_tag,uaf_data_raw[0],uaf_data_raw[4]) == ('@NAL',0x40,0x3A):
         nal_info = uaf_data_raw.decode('utf-8','ignore').replace('\r','').strip().split('\n')
         
-        print('\n%s@UAF Module Name List:\n' % padder(padding + 4))
+        printer('@UAF Module Name List:\n', padding + 4)
         
         # Parse all @NAL Module Entries
         for info in nal_info:
             info_tag,info_val = info.split(':',1)
             
-            print('%s%s : %s' % (padder(padding + 8), info_tag, info_val)) # Print @NAL Module Tag-Path Info
+            printer(info_tag + ' : ' + info_val, padding + 8, False) # Print @NAL Module Tag-Path Info
             
             nal_dict[info_tag] = os.path.basename(info_val) # Assign a file name (w/o path) to each Tag
     
@@ -371,7 +361,7 @@ def uaf_extract(buffer, extract_path, mod_info, padding=0, is_chk16=False, nal_d
     if uaf_tag == '@INS' and is_7z_supported(uaf_fname):
         ins_dir = os.path.join(extract_path, safe_name(uaf_tag + '_nested-SFX')) # Generate extraction directory
         
-        print('\n%sInsyde BIOS 7z SFX Archive:' % padder(padding + 4))
+        printer('Insyde BIOS 7z SFX Archive:', padding + 4)
         
         if a7z_decompress(uaf_fname, ins_dir, '7z SFX', padding + 8) == 0:
             os.remove(uaf_fname) # Successful extraction, delete @INS Module file/archive
@@ -388,8 +378,8 @@ def uaf_extract(buffer, extract_path, mod_info, padding=0, is_chk16=False, nal_d
     
     # Detect Intel Engine firmware image and show ME Analyzer advice
     if uaf_tag.startswith('@ME') and PAT_INTEL_ENG.search(uaf_data_raw):
-        print('\n%sIntel Management Engine (ME) Firmware:\n' % padder(padding + 4))
-        print('%sUse "ME Analyzer" from https://github.com/platomav/MEAnalyzer' % padder(padding + 8))
+        printer('Intel Management Engine (ME) Firmware:\n', padding + 4)
+        printer('Use "ME Analyzer" from https://github.com/platomav/MEAnalyzer', padding + 8, False)
     
     # Get best Nested AMI UCP Pattern match based on @UAF Size
     nested_uaf_off,nested_uaf_bin = get_ami_ucp(uaf_data_raw)
@@ -398,7 +388,7 @@ def uaf_extract(buffer, extract_path, mod_info, padding=0, is_chk16=False, nal_d
     if nested_uaf_off:
         uaf_dir = os.path.join(extract_path, safe_name(uaf_tag + '_nested-UCP')) # Generate extraction directory
         
-        ucp_extract(nested_uaf_bin, uaf_dir, padding + 4, is_chk16) # Call recursively
+        ucp_extract(nested_uaf_bin, uaf_dir, padding + 4, is_checksum) # Call recursively
         
         os.remove(uaf_fname) # Delete raw nested AMI UCP Structure after successful recursion/extraction
     
@@ -468,32 +458,22 @@ UAF_TAG_DICT = {
 
 if __name__ == '__main__':
     # Show script title
-    show_title(title)
+    script_title(title)
     
     # Set argparse Arguments    
     argparser = argparse_init()
     argparser.add_argument('-c', '--checksum', help='verify AMI UCP Checksums (slow)', action='store_true')
     arguments = argparser.parse_args()
     
-    # Pretty Python exception handler (must be after argparse)
-    sys.excepthook = nice_exc_handler
+    is_checksum = arguments.checksum # Set Checksum verification optional argument
     
-    # Check Python Version (must be after argparse)
-    check_sys_py()
-    
-    # Check OS Platform (must be after argparse)
-    check_sys_os()
-    
-    # Process input files and generate output path
-    input_files,output_path = process_input_files(arguments, sys.argv)
-    
-    # Initial output padding count
-    padding = 4
+    # Initialize script (must be after argparse)
+    input_files,output_path,padding = script_init(arguments, 4)
     
     for input_file in input_files:
         input_name = os.path.basename(input_file)
         
-        print('\n*** %s' % input_name)
+        printer(['***', input_name], padding - 4)
         
         with open(input_file, 'rb') as in_file: input_buffer = in_file.read()
         
@@ -501,14 +481,14 @@ if __name__ == '__main__':
         main_uaf_off,main_uaf_bin = get_ami_ucp(input_buffer)
         
         if not main_uaf_off:
-            print('\n%sError: This is not an AMI UCP BIOS executable!' % padder(padding))
+            printer('Error: This is not an AMI UCP BIOS executable!', padding)
             
             continue # Next input file
         
         extract_path = os.path.join(output_path, input_name)
         
-        ucp_extract(main_uaf_bin, extract_path, padding, arguments.checksum)
+        ucp_extract(main_uaf_bin, extract_path, padding, is_checksum)
     
-        print('\n%sExtracted AMI UCP BIOS executable!' % padder(padding))
+        printer('Extracted AMI UCP BIOS executable!', padding)
     
-    print_input('\nDone!')
+    printer('Done!', pause=True)

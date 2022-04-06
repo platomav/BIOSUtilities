@@ -5,6 +5,9 @@ import sys
 import ctypes
 import traceback
 
+from common.text_ops import padder
+from common.path_ops import process_input_files
+
 # Get Python Version (tuple)
 def get_py_ver():
     return sys.version_info
@@ -20,7 +23,7 @@ def get_os_ver():
 
 # Check for --auto-exit|-e
 def is_auto_exit():
-    return '--auto-exit' in sys.argv or '-e' in sys.argv
+    return bool('--auto-exit' in sys.argv or '-e' in sys.argv)
 
 # Check Python Version
 def check_sys_py():
@@ -40,7 +43,7 @@ def check_sys_os():
     os_tag,os_win,os_sup = get_os_ver()
     
     if not os_sup:
-        print('\nError: Unsupported platform "%s"!' % os_tag)
+        printer('Error: Unsupported platform "%s"!' % os_tag)
         
         if not is_auto_exit():
             input('\nPress enter to exit')
@@ -51,8 +54,8 @@ def check_sys_os():
     if os_win: sys.stdout.reconfigure(encoding='utf-8')
 
 # Show Script Title
-def show_title(title):
-    print('\n' + title)
+def script_title(title):
+    printer(title)
     
     _,os_win,_ = get_os_ver()
     
@@ -60,12 +63,28 @@ def show_title(title):
     if os_win: ctypes.windll.kernel32.SetConsoleTitleW(title)
     else: sys.stdout.write('\x1b]2;' + title + '\x07')
 
+# Initialize Script
+def script_init(arguments, padding=0):
+    # Pretty Python exception handler (must be after argparse)
+    sys.excepthook = nice_exc_handler
+    
+    # Check Python Version (must be after argparse)
+    check_sys_py()
+    
+    # Check OS Platform (must be after argparse)
+    check_sys_os()
+    
+    # Process input files and generate output path
+    input_files,output_path = process_input_files(arguments, sys.argv)
+    
+    return input_files, output_path, padding
+
 # https://stackoverflow.com/a/781074 by Torsten Marek
 def nice_exc_handler(exc_type, exc_value, tb):
     if exc_type is KeyboardInterrupt:
-        print('\n')
+        printer('')
     else:
-        print('\nError: Script crashed, please report the following:\n')
+        printer('Error: Script crashed, please report the following:\n')
         
         traceback.print_exception(exc_type, exc_value, tb)
 
@@ -74,6 +93,17 @@ def nice_exc_handler(exc_type, exc_value, tb):
 
     sys.exit(3)
 
-# Print or Input Message based on --auto-exit|-e
-def print_input(msg):
-    (print if is_auto_exit() else input)(msg)
+# Show message(s) while controlling padding, newline, pausing & separator
+def printer(in_message='', padd_count=0, new_line=True, pause=False, sep_char=' '):    
+    if type(in_message).__name__ in ('list','tuple'):
+        message = sep_char.join(map(str, in_message))
+    else:
+        message = str(in_message)
+    
+    padding = padder(padd_count)
+    
+    newline = '\n' if new_line else ''
+    
+    output = newline + padding + message
+    
+    (input if pause and not is_auto_exit() else print)(output)

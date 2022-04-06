@@ -4,9 +4,9 @@
 import os
 import subprocess
 
-from common.script_get import get_script_dir
+from common.path_ops import get_script_dir
 from common.system import get_os_ver
-from common.text_ops import padder
+from common.system import printer
 
 def get_compress_sizes(data):    
     size_compress = int.from_bytes(data[0x0:0x4], 'little')
@@ -42,10 +42,10 @@ def efi_decompress(in_path, out_path, padding, comp_type='--uefi'):
         if os.path.getsize(out_path) != size_orig: raise Exception('EFI_DECOMPRESS_ERROR')
         
     except:
-        print('\n%sError: TianoCompress could not extract file %s!' % (padder(padding), in_path))
+        printer('Error: TianoCompress could not extract file %s!' % in_path, padding)
         
         return 1
     
-    print('\n%sSuccesfull EFI/Tiano decompression via TianoCompress!' % padder(padding))
+    printer('Succesfull EFI/Tiano decompression via TianoCompress!', padding)
     
     return 0

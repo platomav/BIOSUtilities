@@ -7,7 +7,7 @@ AMI BIOS Guard Extractor
 Copyright (C) 2018-2022 Plato Mavropoulos
 """
 
-title = 'AMI BIOS Guard Extractor v4.0_a1'
+title = 'AMI BIOS Guard Extractor v4.0_a2'
 
 import os
 import re
@@ -18,13 +18,12 @@ import ctypes
 # Stop __pycache__ generation
 sys.dont_write_bytecode = True
 
-from common.patterns import PAT_AMI_PFAT
 from common.externals import get_bgs_tool
 from common.num_ops import get_ordinal
-from common.text_ops import padder
-from common.path_ops import argparse_init, process_input_files, safe_name
+from common.path_ops import argparse_init, safe_name
+from common.patterns import PAT_AMI_PFAT
 from common.struct_ops import get_struct, char, uint8_t, uint16_t, uint32_t
-from common.system import nice_exc_handler, check_sys_py, check_sys_os, show_title, print_input
+from common.system import script_init, script_title, printer
 
 class AmiBiosGuardHeader(ctypes.LittleEndianStructure):
     _pack_ = 1
@@ -36,13 +35,11 @@ class AmiBiosGuardHeader(ctypes.LittleEndianStructure):
         # 0x11
     ]
     
-    def struct_print(self, padding):
-        p = padder(padding)
-        
-        print(p + 'Size    :', '0x%X' % self.Size)
-        print(p + 'Checksum:', '0x%0.4X' % self.Checksum)
-        print(p + 'Tag     :', self.Tag.decode('utf-8'))
-        print(p + 'Flags   :', '0x%0.2X' % self.Flags)
+    def struct_print(self, p):
+        printer(['Size    :', '0x%X' % self.Size], p, False)
+        printer(['Checksum:', '0x%0.4X' % self.Checksum], p, False)
+        printer(['Tag     :', self.Tag.decode('utf-8')], p, False)
+        printer(['Flags   :', '0x%0.2X' % self.Flags], p, False)
 
 class IntelBiosGuardHeader(ctypes.LittleEndianStructure):
     _pack_ = 1
@@ -77,25 +74,23 @@ class IntelBiosGuardHeader(ctypes.LittleEndianStructure):
         
         return attr.b.SFAM, attr.b.ProtectEC, attr.b.GFXMitDis, attr.b.FTU, attr.b.Reserved
     
-    def struct_print(self, padding):
-        p = padder(padding)
-        
+    def struct_print(self, p):
         no_yes = ['No','Yes']
         f1,f2,f3,f4,f5 = self.get_flags()
         
-        print(p + 'BIOS Guard Version          :', '%d.%d' % (self.BGVerMajor, self.BGVerMinor))
-        print(p + 'Platform Identity           :', self.get_platform_id())
-        print(p + 'Signed Flash Address Map    :', no_yes[f1])
-        print(p + 'Protected EC OpCodes        :', no_yes[f2])
-        print(p + 'Graphics Security Disable   :', no_yes[f3])
-        print(p + 'Fault Tolerant Update       :', no_yes[f4])
-        print(p + 'Attributes Reserved         :', '0x%X' % f5)
-        print(p + 'Script Version              :', '%d.%d' % (self.ScriptVerMajor, self.ScriptVerMinor))
-        print(p + 'Script Size                 :', '0x%X' % self.ScriptSize)
-        print(p + 'Data Size                   :', '0x%X' % self.DataSize)
-        print(p + 'BIOS Security Version Number:', '0x%X' % self.BIOSSVN)
-        print(p + 'EC Security Version Number  :', '0x%X' % self.ECSVN)
-        print(p + 'Vendor Information          :', '0x%X' % self.VendorInfo)
+        printer(['BIOS Guard Version          :', '%d.%d' % (self.BGVerMajor, self.BGVerMinor)], p, False)
+        printer(['Platform Identity           :', self.get_platform_id()], p, False)
+        printer(['Signed Flash Address Map    :', no_yes[f1]], p, False)
+        printer(['Protected EC OpCodes        :', no_yes[f2]], p, False)
+        printer(['Graphics Security Disable   :', no_yes[f3]], p, False)
+        printer(['Fault Tolerant Update       :', no_yes[f4]], p, False)
+        printer(['Attributes Reserved         :', '0x%X' % f5], p, False)
+        printer(['Script Version              :', '%d.%d' % (self.ScriptVerMajor, self.ScriptVerMinor)], p, False)
+        printer(['Script Size                 :', '0x%X' % self.ScriptSize], p, False)
+        printer(['Data Size                   :', '0x%X' % self.DataSize], p, False)
+        printer(['BIOS Security Version Number:', '0x%X' % self.BIOSSVN], p, False)
+        printer(['EC Security Version Number  :', '0x%X' % self.ECSVN], p, False)
+        printer(['Vendor Information          :', '0x%X' % self.VendorInfo], p, False)
         
 class IntelBiosGuardHeaderAttributes(ctypes.LittleEndianStructure):
     _fields_ = [
@@ -123,17 +118,15 @@ class IntelBiosGuardSignature2k(ctypes.LittleEndianStructure):
         # 0x20C
     ]
     
-    def struct_print(self, padding):
-        p = padder(padding)
-        
+    def struct_print(self, p):
         Modulus = '%0.*X' % (0x100 * 2, int.from_bytes(self.Modulus, 'little'))
         Signature = '%0.*X' % (0x100 * 2, int.from_bytes(self.Signature, 'little'))
         
-        print(p + 'Unknown 0:', '0x%X' % self.Unknown0)
-        print(p + 'Unknown 1:', '0x%X' % self.Unknown1)
-        print(p + 'Modulus  :', '%s [...]' % Modulus[:32])
-        print(p + 'Exponent :', '0x%X' % self.Exponent)
-        print(p + 'Signature:', '%s [...]' % Signature[:32])
+        printer(['Unknown 0:', '0x%X' % self.Unknown0], p, False)
+        printer(['Unknown 1:', '0x%X' % self.Unknown1], p, False)
+        printer(['Modulus  :', '%s [...]' % Modulus[:32]], p, False)
+        printer(['Exponent :', '0x%X' % self.Exponent], p, False)
+        printer(['Signature:', '%s [...]' % Signature[:32]], p, False)
 
 def get_ami_pfat(input_buffer):
     match = PAT_AMI_PFAT.search(input_buffer)
@@ -149,33 +142,33 @@ def parse_bg_script(script_data, padding):
     is_opcode_div = len(script_data) % 8 == 0
     
     if not is_opcode_div:
-        print('%sError: Script not divisible by OpCode length!' % padder(padding))
+        printer('Error: Script not divisible by OpCode length!', padding, False)
         
         return 1
     
     is_begin_end = script_data[:8] + script_data[-8:] == b'\x01' + b'\x00' * 7 + b'\xFF' + b'\x00' * 7
     
     if not is_begin_end:
-        print('%sError: Script lacks Begin and/or End OpCodes!' % padder(padding))
+        printer('Error: Script lacks Begin and/or End OpCodes!', padding, False)
         
         return 2
     
     BigScript = get_bgs_tool()
     
     if not BigScript:
-        print('%sError: BIOS Guard Script Tool dependency missing!' % padder(padding))
+        printer('Error: BIOS Guard Script Tool dependency missing!', padding, False)
         
         return 3
     
     script = BigScript(code_bytes=script_data).to_string().replace('\t','    ').split('\n')
     
     for opcode in script:
-        if opcode.endswith(('begin','end')): spacing = padder(padding)
-        elif opcode.endswith(':'): spacing = padder(padding + 4)
-        else: spacing = padder(padding + 12)
+        if opcode.endswith(('begin','end')): spacing = padding
+        elif opcode.endswith(':'): spacing = padding + 4
+        else: spacing = padding + 12
         
         operands = [operand for operand in opcode.split(' ') if operand]
-        print(spacing + ('{:<12s}' + '{:<11s}' * (len(operands) - 1)).format(*operands))
+        printer(('{:<12s}' + '{:<11s}' * (len(operands) - 1)).format(*operands), spacing, False)
     
     return 0
 
@@ -188,7 +181,7 @@ def parse_pfat_hdr(buffer, padding):
     hdr_data = buffer[PFAT_AMI_HDR_LEN:hdr_size]
     hdr_text = hdr_data.decode('utf-8').splitlines()
     
-    print('\n%sAMI BIOS Guard Header:\n' % padder(padding))
+    printer('AMI BIOS Guard Header:\n', padding)
     
     pfat_hdr.struct_print(padding + 4)
     
@@ -198,7 +191,7 @@ def parse_pfat_hdr(buffer, padding):
     
     hdr_tag,*hdr_indexes = hdr_title.split('II')
     
-    print('\n%s%s\n' % (padder(padding + 4), hdr_tag))
+    printer(hdr_tag + '\n', padding + 4)
     
     bgt_indexes = [int(h, 16) for h in re.findall(r'.{1,4}', hdr_indexes[0])] if hdr_indexes else []
     
@@ -218,7 +211,7 @@ def parse_pfat_hdr(buffer, padding):
         
         block_all += [(desc, name, order, param, flags, index, i, count) for i in range(count)]
     
-    _ = [print(padder(padding + 8) + block[0]) for block in block_all if block[6] == 0]
+    _ = [printer(block[0], padding + 8, False) for block in block_all if block[6] == 0]
     
     return block_all, hdr_size, files_count
 
@@ -240,7 +233,7 @@ def parse_pfat_file(buffer, output_path, padding):
         file_desc,file_name,_,_,_,file_index,block_index,block_count = block
         
         if block_index == 0:
-            print('\n%s%s' % (padder(padding + 4), file_desc))
+            printer(file_desc, padding + 4)
             
             file_path = os.path.join(extract_path, get_file_name(file_index + 1, file_name))
             
@@ -250,7 +243,7 @@ def parse_pfat_file(buffer, output_path, padding):
         
         bg_hdr = get_struct(buffer, block_off, IntelBiosGuardHeader)
         
-        print('\n%sIntel BIOS Guard %s Header:\n' % (padder(padding + 8), block_status))
+        printer('Intel BIOS Guard %s Header:\n' % block_status, padding + 8)
         
         bg_hdr.struct_print(padding + 12)
         
@@ -274,13 +267,13 @@ def parse_pfat_file(buffer, output_path, padding):
             if len(bg_sig_bin) == PFAT_BLK_S2K_LEN:
                 bg_sig = get_struct(bg_sig_bin, 0x0, IntelBiosGuardSignature2k)
                 
-                print('\n%sIntel BIOS Guard %s Signature:\n' % (padder(padding + 8), block_status))
+                printer('Intel BIOS Guard %s Signature:\n' % block_status, padding + 8)
                 
                 bg_sig.struct_print(padding + 12)
 
             block_off = bg_sig_end # Adjust next block to start at data + signature end
         
-        print('\n%sIntel BIOS Guard %s Script:\n' % (padder(padding + 8), block_status))
+        printer('Intel BIOS Guard %s Script:\n' % block_status, padding + 8)
         
         _ = parse_bg_script(bg_script_bin, padding + 12)
         
@@ -310,38 +303,26 @@ PFAT_BLK_S2K_LEN = ctypes.sizeof(IntelBiosGuardSignature2k)
 
 if __name__ == '__main__':
     # Show script title
-    show_title(title)
+    script_title(title)
     
     # Set argparse Arguments    
     argparser = argparse_init()
     arguments = argparser.parse_args()
     
-    # Pretty Python exception handler (must be after argparse)
-    sys.excepthook = nice_exc_handler
-    
-    # Check Python Version (must be after argparse)
-    check_sys_py()
-    
-    # Check OS Platform (must be after argparse)
-    check_sys_os()
-    
-    # Process input files and generate output path
-    input_files,output_path = process_input_files(arguments, sys.argv)
-    
-    # Initial output padding count
-    padding = 4
+    # Initialize script (must be after argparse)
+    input_files,output_path,padding = script_init(arguments, 4)
     
     for input_file in input_files:
         input_name = os.path.basename(input_file)
         
-        print('\n*** %s' % input_name)
+        printer(['***', input_name], padding - 4)
         
         with open(input_file, 'rb') as in_file: input_buffer = in_file.read()
         
         pfat_match,pfat_buffer = get_ami_pfat(input_buffer)
         
         if not pfat_match:
-            print('\n%sError: This is not an AMI BIOS Guard (PFAT) image!' % padder(padding))
+            printer('Error: This is not an AMI BIOS Guard (PFAT) image!', padding)
             
             continue # Next input file
         
@@ -349,4 +330,4 @@ if __name__ == '__main__':
         
         parse_pfat_file(pfat_buffer, extract_path, padding)
     
-    print_input('\nDone!')
+    printer('Done!', pause=True)

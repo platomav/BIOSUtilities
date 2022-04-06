@@ -5,8 +5,68 @@
 
 <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=DJDZD3PRGCSCL"><img border="0" title="BIOS Utilities Donation via Paypal or Debit/Credit Card" alt="BIOS Utilities Donation via Paypal or Debit/Credit Card" src="https://user-images.githubusercontent.com/11527726/109392268-e0f68280-7923-11eb-83d8-0a63f0d20783.png"></a>
 
+* [**Dell PFS Update Extractor**](#dell-pfs-update-extractor)
 * [**AMI UCP BIOS Extractor**](#ami-ucp-bios-extractor)
 * [**AMI BIOS Guard Extractor**](#ami-bios-guard-extractor)
+
+## **Dell PFS Update Extractor**
+
+![]()
+
+#### **Description**
+
+Parses Dell PFS Update images and extracts their Firmware (e.g. SPI, BIOS/UEFI, EC, ME etc) and Utilities (e.g. Flasher etc) component sections. It supports all Dell PFS revisions and formats, including those which are originally LZMA compressed in ThinOS packages, ZLIB compressed or Intel BIOS Guard (PFAT) protected. The output comprises only final firmware components which are directly usable by end users.
+
+#### **Usage**
+
+You can either Drag & Drop or manually enter Dell PFS Update images(s). Optional arguments:
+  
+* -h or --help : show help message and exit
+* -i or --input-dir : extract from given input directory
+* -o or --output-dir : extract in given output directory
+* -e or --auto-exit : skip press enter to exit prompts
+* -a or --advanced : extract signatures and metadata
+* -v or --verbose : show PFS structure information
+
+#### **Compatibility**
+
+Should work at all Windows, Linux or macOS operating systems which have Python 3.7 support.
+
+#### **Prerequisites**
+
+Optionally, to decompile the Intel BIOS Guard (PFAT) Scripts, you must have the following 3rd party utility at the "external" project directory:
+
+* [BIOS Guard Script Tool](https://github.com/allowitsme/big-tool/tree/sdk-compat) (i.e. big_script_tool.py)
+
+#### **Build/Freeze/Compile with PyInstaller**
+
+PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
+
+1. Make sure Python 3.7.0 or newer is installed:
+
+> python --version
+
+2. Use pip to install PyInstaller:
+
+> pip3 install pyinstaller
+
+3. Place any appropriate prerequisite at the project directory:
+
+> BIOS Guard Script Tool
+
+4. Build/Freeze/Compile:
+
+> pyinstaller --noupx --onefile \<path-to-project\>\/Dell_PFS_Extract.py
+
+You should find the final utility executable at "dist" folder
+
+#### **Anti-Virus False Positives**
+
+Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
+
+#### **Pictures**
+
+![]()
 
 ## **AMI UCP BIOS Extractor**
 
@@ -28,7 +88,7 @@ You can either Drag & Drop or manually enter AMI UCP BIOS executable file(s). Op
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.7 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.7 support.
 
 #### **Prerequisites**
 
@@ -61,7 +121,7 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 
 > pyinstaller --noupx --onefile \<path-to-project\>\/AMI_UCP_Extract.py
 
-At dist folder you should find the final utility executable
+You should find the final utility executable at "dist" folder
 
 #### **Anti-Virus False Positives**
 
@@ -92,7 +152,7 @@ You can either Drag & Drop or manually enter AMI BIOS Guard (PFAT) image file(s)
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.7 support. Windows users who plan to use the already built/frozen/compiled binary must make sure that they have the latest Windows Updates installed which include all required "Universal C Runtime (CRT)" libraries.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.7 support.
 
 #### **Prerequisites**
 
@@ -120,7 +180,7 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 
 > pyinstaller --noupx --onefile \<path-to-project\>\/AMI_PFAT_Extract.py
 
-At dist folder you should find the final utility executable
+You should find the final utility executable at "dist" folder
 
 #### **Anti-Virus False Positives**
 

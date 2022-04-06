@@ -4,9 +4,9 @@
 import os
 import subprocess
 
-from common.script_get import get_script_dir
+from common.path_ops import get_script_dir
 from common.system import get_os_ver
-from common.text_ops import padder
+from common.system import printer
 
 # Get 7z path
 def get_7z_path(static=False):
@@ -36,10 +36,10 @@ def a7z_decompress(in_path, out_path, in_name, padding, static=False):
         if not os.path.isdir(out_path): raise Exception('EXTRACT_DIR_MISSING')
     
     except:
-        print('\n%sError: 7-Zip could not extract %s file %s!' % (padder(padding), in_name, in_path))
+        printer('Error: 7-Zip could not extract %s file %s!' % (in_name, in_path), padding)
         
         return 1
     
-    print('\n%sSuccesfull %s decompression via 7-Zip!' % (padder(padding), in_name))
+    printer('Succesfull %s decompression via 7-Zip!' % in_name, padding)
     
     return 0

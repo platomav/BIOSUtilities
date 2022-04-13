@@ -7,7 +7,7 @@ AMI BIOS Guard Extractor
 Copyright (C) 2018-2022 Plato Mavropoulos
 """
 
-title = 'AMI BIOS Guard Extractor v4.0_a2'
+title = 'AMI BIOS Guard Extractor v4.0_a3'
 
 import os
 import re
@@ -20,10 +20,10 @@ sys.dont_write_bytecode = True
 
 from common.externals import get_bgs_tool
 from common.num_ops import get_ordinal
-from common.path_ops import argparse_init, safe_name
+from common.path_ops import safe_name
 from common.patterns import PAT_AMI_PFAT
 from common.struct_ops import get_struct, char, uint8_t, uint16_t, uint32_t
-from common.system import script_init, script_title, printer
+from common.system import script_init, script_title, argparse_init, printer
 
 class AmiBiosGuardHeader(ctypes.LittleEndianStructure):
     _pack_ = 1

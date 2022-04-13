@@ -3,6 +3,7 @@
 
 import sys
 import ctypes
+import argparse
 import traceback
 
 from common.text_ops import padder
@@ -53,6 +54,18 @@ def check_sys_os():
     # Fix Windows Unicode console redirection
     if os_win: sys.stdout.reconfigure(encoding='utf-8')
 
+# Initialize common argparse arguments
+def argparse_init():
+    argparser = argparse.ArgumentParser()
+    
+    argparser.add_argument('files', type=argparse.FileType('r'), nargs='*')
+    argparser.add_argument('-e', '--auto-exit', help='skip press enter to exit prompts', action='store_true')
+    argparser.add_argument('-v', '--version', help='show utility name and version', action='store_true')
+    argparser.add_argument('-o', '--output-dir', help='extract in given output directory')
+    argparser.add_argument('-i', '--input-dir', help='extract from given input directory')
+    
+    return argparser
+
 # Show Script Title
 def script_title(title):
     printer(title)
@@ -63,16 +76,19 @@ def script_title(title):
     if os_win: ctypes.windll.kernel32.SetConsoleTitleW(title)
     else: sys.stdout.write('\x1b]2;' + title + '\x07')
 
-# Initialize Script
+# Initialize Script (must be after argparse)
 def script_init(arguments, padding=0):
-    # Pretty Python exception handler (must be after argparse)
+    # Pretty Python exception handler
     sys.excepthook = nice_exc_handler
     
-    # Check Python Version (must be after argparse)
+    # Check Python Version
     check_sys_py()
     
-    # Check OS Platform (must be after argparse)
+    # Check OS Platform
     check_sys_os()
+    
+    # Show Utility Version on demand
+    if arguments.version: sys.exit(0)
     
     # Process input files and generate output path
     input_files,output_path = process_input_files(arguments, sys.argv)

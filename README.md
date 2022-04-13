@@ -22,11 +22,12 @@ Parses Dell PFS Update images and extracts their Firmware (e.g. SPI, BIOS/UEFI, 
 You can either Drag & Drop or manually enter Dell PFS Update images(s). Optional arguments:
   
 * -h or --help : show help message and exit
+* -v or --version : show utility name and version
 * -i or --input-dir : extract from given input directory
 * -o or --output-dir : extract in given output directory
 * -e or --auto-exit : skip press enter to exit prompts
 * -a or --advanced : extract signatures and metadata
-* -v or --verbose : show PFS structure information
+* -s or --structure : show PFS structure information
 
 #### **Compatibility**
 
@@ -81,6 +82,7 @@ Parses AMI UCP (Utility Configuration Program) BIOS executables, extracts their 
 You can either Drag & Drop or manually enter AMI UCP BIOS executable file(s). Optional arguments:
   
 * -h or --help : show help message and exit
+* -v or --version : show utility name and version
 * -i or --input-dir : extract from given input directory
 * -o or --output-dir : extract in given output directory
 * -e or --auto-exit : skip press enter to exit prompts
@@ -146,6 +148,7 @@ Note that the AMI PFAT structure may not have an explicit component order. AMI's
 You can either Drag & Drop or manually enter AMI BIOS Guard (PFAT) image file(s). Optional arguments:
   
 * -h or --help : show help message and exit
+* -v or --version : show utility name and version
 * -i or --input-dir : extract from given input directory
 * -o or --output-dir : extract in given output directory
 * -e or --auto-exit : skip press enter to exit prompts

@@ -7,7 +7,7 @@ AMI UCP BIOS Extractor
 Copyright (C) 2021-2022 Plato Mavropoulos
 """
 
-title = 'AMI UCP BIOS Extractor v2.0_a3'
+title = 'AMI UCP BIOS Extractor v2.0_a4'
 
 import os
 import re
@@ -23,10 +23,10 @@ sys.dont_write_bytecode = True
 from common.a7z_comp import a7z_decompress, is_7z_supported
 from common.checksums import get_chk_16
 from common.efi_comp import efi_decompress, is_efi_compressed
-from common.path_ops import argparse_init, safe_name
+from common.path_ops import safe_name
 from common.patterns import PAT_AMI_UCP, PAT_INTEL_ENG
 from common.struct_ops import get_struct, char, uint8_t, uint16_t, uint32_t
-from common.system import script_init, script_title, printer
+from common.system import script_init, script_title, argparse_init, printer
 
 from AMI_PFAT_Extract import get_ami_pfat, parse_pfat_file
 

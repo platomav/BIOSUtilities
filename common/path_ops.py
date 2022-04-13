@@ -5,7 +5,6 @@ import os
 import re
 import sys
 import inspect
-import argparse
 from pathlib import Path
 
 # Fix illegal/reserved Windows characters
@@ -42,17 +41,6 @@ def get_absolute_path(argparse_path):
         else: absolute_path = os.path.join(script_dir, argparse_path)
     
     return absolute_path
-
-# Initialize common argparse arguments
-def argparse_init():
-    argparser = argparse.ArgumentParser()
-    
-    argparser.add_argument('files', type=argparse.FileType('r'), nargs='*')
-    argparser.add_argument('-e', '--auto-exit', help='skip press enter to exit prompts', action='store_true')
-    argparser.add_argument('-o', '--output-dir', help='extract in given output directory')
-    argparser.add_argument('-i', '--input-dir', help='extract from given input directory')
-    
-    return argparser
 
 # Process input files (argparse object)
 def process_input_files(argparse_args, sys_argv=None):

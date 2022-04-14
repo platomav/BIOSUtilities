@@ -7,7 +7,7 @@ Dell PFS Update Extractor
 Copyright (C) 2018-2022 Plato Mavropoulos
 """
 
-title = 'Dell PFS Update Extractor v6.0_a2'
+title = 'Dell PFS Update Extractor v6.0_a3'
 
 import os
 import io
@@ -208,7 +208,7 @@ def is_pfs_ftr(in_buffer):
 
 # Check if input buffer is Dell PFS/PKG image
 def is_dell_pfs(in_buffer):
-    return is_pfs_hdr(in_buffer) or is_pfs_pkg(in_buffer)
+    return bool(is_pfs_hdr(in_buffer) or is_pfs_pkg(in_buffer))
 
 # Get PFS ZLIB Section Offsets
 def get_section_offsets(buffer):

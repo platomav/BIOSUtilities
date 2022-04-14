@@ -7,7 +7,7 @@ AMI UCP BIOS Extractor
 Copyright (C) 2021-2022 Plato Mavropoulos
 """
 
-title = 'AMI UCP BIOS Extractor v2.0_a4'
+title = 'AMI UCP BIOS Extractor v2.0_a5'
 
 import os
 import re
@@ -158,6 +158,10 @@ def chk16_validate(data, tag, padd=0):
         printer('Error: Invalid UCP Module %s Checksum!' % tag, padd, pause=True)
     else:
         printer('Checksum of UCP Module %s is valid!' % tag, padd)
+
+# Check if input file is AMI UCP image
+def is_ami_ucp(buffer):
+    return bool(get_ami_ucp(buffer)[0])
 
 # Get all input file AMI UCP patterns
 def get_ami_ucp(buffer):

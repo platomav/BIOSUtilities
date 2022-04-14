@@ -7,7 +7,7 @@ AMI BIOS Guard Extractor
 Copyright (C) 2018-2022 Plato Mavropoulos
 """
 
-title = 'AMI BIOS Guard Extractor v4.0_a3'
+title = 'AMI BIOS Guard Extractor v4.0_a4'
 
 import os
 import re
@@ -127,6 +127,9 @@ class IntelBiosGuardSignature2k(ctypes.LittleEndianStructure):
         printer(['Modulus  :', '%s [...]' % Modulus[:32]], p, False)
         printer(['Exponent :', '0x%X' % self.Exponent], p, False)
         printer(['Signature:', '%s [...]' % Signature[:32]], p, False)
+
+def is_ami_pfat(input_buffer):
+    return bool(get_ami_pfat(input_buffer)[0])
 
 def get_ami_pfat(input_buffer):
     match = PAT_AMI_PFAT.search(input_buffer)

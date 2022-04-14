@@ -7,7 +7,7 @@ AMI UCP BIOS Extractor
 Copyright (C) 2021-2022 Plato Mavropoulos
 """
 
-title = 'AMI UCP BIOS Extractor v2.0_a5'
+title = 'AMI UCP BIOS Extractor v2.0_a6'
 
 import os
 import re
@@ -26,7 +26,7 @@ from common.efi_comp import efi_decompress, is_efi_compressed
 from common.path_ops import safe_name
 from common.patterns import PAT_AMI_UCP, PAT_INTEL_ENG
 from common.struct_ops import get_struct, char, uint8_t, uint16_t, uint32_t
-from common.system import script_init, script_title, argparse_init, printer
+from common.system import script_init, argparse_init, printer
 
 from AMI_PFAT_Extract import get_ami_pfat, parse_pfat_file
 
@@ -482,9 +482,6 @@ UAF_TAG_DICT = {
     }
 
 if __name__ == '__main__':
-    # Show script title
-    script_title(title)
-    
     # Set argparse Arguments    
     argparser = argparse_init()
     argparser.add_argument('-c', '--checksum', help='verify AMI UCP Checksums (slow)', action='store_true')
@@ -493,7 +490,7 @@ if __name__ == '__main__':
     is_checksum = arguments.checksum # Set Checksum verification optional argument
     
     # Initialize script (must be after argparse)
-    input_files,output_path,padding = script_init(arguments, 4)
+    input_files,output_path,padding = script_init(title, arguments, 4)
     
     for input_file in input_files:
         input_name = os.path.basename(input_file)
@@ -513,7 +510,5 @@ if __name__ == '__main__':
         extract_path = os.path.join(output_path, input_name)
         
         ucp_extract(main_uaf_bin, extract_path, main_uaf_tag, padding, is_checksum)
-    
-        printer('Extracted AMI UCP BIOS executable!', padding)
     
     printer('Done!', pause=True)

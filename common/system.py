@@ -66,18 +66,8 @@ def argparse_init():
     
     return argparser
 
-# Show Script Title
-def script_title(title):
-    printer(title)
-    
-    _,os_win,_ = get_os_ver()
-    
-    # Set console/shell window title
-    if os_win: ctypes.windll.kernel32.SetConsoleTitleW(title)
-    else: sys.stdout.write('\x1b]2;' + title + '\x07')
-
 # Initialize Script (must be after argparse)
-def script_init(arguments, padding=0):
+def script_init(title, arguments, padding=0):
     # Pretty Python exception handler
     sys.excepthook = nice_exc_handler
     
@@ -87,8 +77,14 @@ def script_init(arguments, padding=0):
     # Check OS Platform
     check_sys_os()
     
+    # Show Script Title
+    printer(title, new_line=False)
+    
     # Show Utility Version on demand
     if arguments.version: sys.exit(0)
+    
+    # Set console/terminal window title (Windows only)
+    if get_os_ver()[1]: ctypes.windll.kernel32.SetConsoleTitleW(title)
     
     # Process input files and generate output path
     input_files,output_path = process_input_files(arguments, sys.argv)

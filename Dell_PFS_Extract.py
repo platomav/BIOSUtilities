@@ -7,7 +7,7 @@ Dell PFS Update Extractor
 Copyright (C) 2018-2022 Plato Mavropoulos
 """
 
-title = 'Dell PFS Update Extractor v6.0_a3'
+title = 'Dell PFS Update Extractor v6.0_a4'
 
 import os
 import io
@@ -25,7 +25,7 @@ from common.checksums import get_chk_8_xor
 from common.path_ops import safe_name
 from common.patterns import PAT_DELL_HDR, PAT_DELL_FTR, PAT_DELL_PKG
 from common.struct_ops import get_struct, char, uint8_t, uint16_t, uint32_t, uint64_t
-from common.system import script_init, script_title, argparse_init, printer
+from common.system import script_init, argparse_init, printer
 
 from AMI_PFAT_Extract import IntelBiosGuardHeader, IntelBiosGuardSignature2k, parse_bg_script
 
@@ -912,10 +912,7 @@ PFS_PFAT_LEN = ctypes.sizeof(DellPfsPfatMetadata)
 PFAT_HDR_LEN = ctypes.sizeof(IntelBiosGuardHeader)
 PFAT_SIG_LEN = ctypes.sizeof(IntelBiosGuardSignature2k)
 
-if __name__ == '__main__':
-    # Show script title
-    script_title(title)
-    
+if __name__ == '__main__':    
     # Set argparse arguments
     argparser = argparse_init()
     argparser.add_argument('-a', '--advanced', help='extract signatures and metadata', action='store_true')
@@ -926,7 +923,7 @@ if __name__ == '__main__':
     is_structure = arguments.structure # Set Structure output mode optional argument
     
     # Initialize script (must be after argparse)
-    input_files,output_path,padding = script_init(arguments, 4)
+    input_files,output_path,padding = script_init(title, arguments, 4)
     
     for input_file in input_files:
         input_name = os.path.basename(input_file)
@@ -969,7 +966,5 @@ if __name__ == '__main__':
         for offset in pfs_zlib_offsets:
             # Call the PFS ZLIB Section Parser function
             pfs_section_parse(input_buffer, offset, extract_path, extract_name, 1, 1, False, padding, is_structure, is_advanced)
-        
-        printer('Extracted Dell PFS Update image!', padding)
     
     printer('Done!', pause=True)

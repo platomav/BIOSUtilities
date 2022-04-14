@@ -7,7 +7,7 @@ AMI BIOS Guard Extractor
 Copyright (C) 2018-2022 Plato Mavropoulos
 """
 
-title = 'AMI BIOS Guard Extractor v4.0_a4'
+title = 'AMI BIOS Guard Extractor v4.0_a5'
 
 import os
 import re
@@ -23,7 +23,7 @@ from common.num_ops import get_ordinal
 from common.path_ops import safe_name
 from common.patterns import PAT_AMI_PFAT
 from common.struct_ops import get_struct, char, uint8_t, uint16_t, uint32_t
-from common.system import script_init, script_title, argparse_init, printer
+from common.system import script_init, argparse_init, printer
 
 class AmiBiosGuardHeader(ctypes.LittleEndianStructure):
     _pack_ = 1
@@ -305,15 +305,12 @@ PFAT_BLK_HDR_LEN = ctypes.sizeof(IntelBiosGuardHeader)
 PFAT_BLK_S2K_LEN = ctypes.sizeof(IntelBiosGuardSignature2k)
 
 if __name__ == '__main__':
-    # Show script title
-    script_title(title)
-    
     # Set argparse Arguments    
     argparser = argparse_init()
     arguments = argparser.parse_args()
     
     # Initialize script (must be after argparse)
-    input_files,output_path,padding = script_init(arguments, 4)
+    input_files,output_path,padding = script_init(title, arguments, 4)
     
     for input_file in input_files:
         input_name = os.path.basename(input_file)

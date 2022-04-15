@@ -7,7 +7,7 @@ Dell PFS Update Extractor
 Copyright (C) 2018-2022 Plato Mavropoulos
 """
 
-title = 'Dell PFS Update Extractor v6.0_a4'
+title = 'Dell PFS Update Extractor v6.0_a5'
 
 import os
 import io
@@ -22,7 +22,7 @@ import contextlib
 sys.dont_write_bytecode = True
 
 from common.checksums import get_chk_8_xor
-from common.path_ops import safe_name
+from common.path_ops import get_safe_name
 from common.patterns import PAT_DELL_HDR, PAT_DELL_FTR, PAT_DELL_PKG
 from common.struct_ops import get_struct, char, uint8_t, uint16_t, uint32_t, uint64_t
 from common.system import script_init, argparse_init, printer
@@ -243,7 +243,7 @@ def pfs_section_parse(zlib_data, zlib_start, output_path, pfs_name, pfs_index, p
     printer('Extracting Dell PFS %d >%s > %s' % (pfs_index, pfs_name, section_name), padding)
     
     # Set PFS ZLIB Section extraction sub-directory path
-    section_path = os.path.join(output_path, section_name)
+    section_path = os.path.join(output_path, get_safe_name(section_name))
     
     # Delete existing extraction sub-directory (not in recursions)
     if os.path.isdir(section_path) and not is_rec: shutil.rmtree(section_path)
@@ -406,7 +406,7 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count, output_path, pfs_padd, i
         name_start = info_start + PFS_INFO_LEN + PFS_NAME_LEN # PFS Entry's FileName start offset
         name_size = entry_info_mod.CharacterCount * 2 # PFS Entry's FileName buffer total size
         name_data = filename_info[name_start:name_start + name_size] # PFS Entry's FileName buffer
-        entry_name = safe_name(name_data.decode('utf-16').strip()) # PFS Entry's FileName value
+        entry_name = get_safe_name(name_data.decode('utf-16').strip()) # PFS Entry's FileName value
         
         # Show PFS FileName Structure info
         if is_structure:
@@ -443,7 +443,7 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count, output_path, pfs_padd, i
                 
                 # As Nested PFS Entry Name, we'll use the actual PFS File Name
                 # Replace common Windows reserved/illegal filename characters
-                entry_name = safe_name(entry_info.FileName.decode('utf-8').strip('.exe'))
+                entry_name = get_safe_name(entry_info.FileName.decode('utf-8').strip('.exe'))
                 
                 # As Nested PFS Entry Version, we'll use the actual PFS File Version
                 entry_version = entry_info.FileVersion.decode('utf-8')
@@ -537,7 +537,7 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count, output_path, pfs_padd, i
                 sub_pfs_name = ' %s v%s' % (info_all[pfs_count - 2][1], info_all[pfs_count - 2][2]) if info_all else ' UNKNOWN'
                 
                 # Set the sub-PFS output path (create sub-folders for each sub-PFS and its ZLIB sections)
-                sub_pfs_path = os.path.join(output_path, str(pfs_count) + sub_pfs_name)
+                sub_pfs_path = os.path.join(output_path, str(pfs_count) + get_safe_name(sub_pfs_name))
                 
                 # Recursively call the PFS ZLIB Section Parser function for the sub-PFS Volume (pfs_index = pfs_count)
                 pfs_section_parse(entry_data, offset, sub_pfs_path, sub_pfs_name, pfs_count, pfs_count, True, pfs_padd + 4, is_structure, is_advanced)
@@ -844,7 +844,7 @@ def chk_pfs_ftr(footer_buffer, data_buffer, data_size, text, padding, is_structu
 def pfs_file_write(bin_buff, bin_name, bin_type, full_name, out_path, padding, is_structure=True, is_advanced=True):
     # Store Data/Metadata Signature (advanced users only)
     if bin_name.startswith('sign'):
-        final_name = '%s.%s.sig' % (safe_name(full_name), bin_name.split('_')[1])
+        final_name = '%s.%s.sig' % (get_safe_name(full_name), bin_name.split('_')[1])
         final_path = os.path.join(out_path, final_name)
         
         with open(final_path, 'wb') as pfs_out: pfs_out.write(bin_buff) # Write final Data/Metadata Signature
@@ -857,7 +857,7 @@ def pfs_file_write(bin_buff, bin_name, bin_type, full_name, out_path, padding, i
     # Some Data may be Text or XML files with useful information for non-advanced users
     is_text,final_data,file_ext,write_mode = bin_is_text(bin_buff, bin_type, bin_name == 'meta', padding, is_structure, is_advanced)
     
-    final_name = '%s%s' % (safe_name(full_name), bin_ext[:-4] + file_ext if is_text else bin_ext)
+    final_name = '%s%s' % (get_safe_name(full_name), bin_ext[:-4] + file_ext if is_text else bin_ext)
     final_path = os.path.join(out_path, final_name)
     
     with open(final_path, write_mode) as pfs_out: pfs_out.write(final_data) # Write final Data/Metadata Payload

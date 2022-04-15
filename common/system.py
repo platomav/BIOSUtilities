@@ -6,7 +6,7 @@ import ctypes
 import argparse
 import traceback
 
-from common.text_ops import padder
+from common.text_ops import padder, to_string
 from common.path_ops import process_input_files
 
 # Get Python Version (tuple)
@@ -106,11 +106,8 @@ def nice_exc_handler(exc_type, exc_value, tb):
     sys.exit(3)
 
 # Show message(s) while controlling padding, newline, pausing & separator
-def printer(in_message='', padd_count=0, new_line=True, pause=False, sep_char=' '):    
-    if type(in_message).__name__ in ('list','tuple'):
-        message = sep_char.join(map(str, in_message))
-    else:
-        message = str(in_message)
+def printer(in_message='', padd_count=0, new_line=True, pause=False, sep_char=' '):
+    message = to_string(in_message, sep_char)
     
     padding = padder(padd_count)
     

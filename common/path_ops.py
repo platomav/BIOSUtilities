@@ -7,13 +7,54 @@ import sys
 import inspect
 from pathlib import Path
 
+from common.text_ops import to_string
+
 # Fix illegal/reserved Windows characters
-def safe_name(in_name):
+def get_safe_name(in_name):
     raw_name = repr(in_name).strip("'")
 
     fix_name = re.sub(r'[\\/*?:"<>|]', '_', raw_name)
 
     return fix_name
+
+# Check and attempt to fix illegal/unsafe OS path traversals
+def get_safe_path(base_path, user_paths, follow_symlinks=False):
+    # Convert user path(s) to string w/ OS separators
+    user_path = to_string(user_paths, os.sep)
+    
+    # Create target path from base + requested user path
+    target_path = get_norm_path(base_path, user_path)
+    
+    # Check if target path is OS illegal/unsafe
+    if is_safe_path(base_path, target_path, follow_symlinks):
+        return target_path
+    
+    # Re-create target path from base + leveled/safe illegal "path" (now file)
+    nuked_path = get_norm_path(base_path, get_safe_name(user_path))
+    
+    # Check if illegal path leveling worked
+    if is_safe_path(base_path, nuked_path, follow_symlinks):
+        return nuked_path
+    
+    # Still illegal, create fallback base path + placeholder file
+    failed_path = get_norm_path(base_path, 'illegal_path_traversal')
+    
+    return failed_path
+
+# Check for illegal/unsafe OS path traversal
+def is_safe_path(base_path, target_path, follow_symlinks=True):
+    if follow_symlinks:
+        actual_path = os.path.realpath(target_path)
+    else:
+        actual_path = os.path.abspath(target_path)
+    
+    common_path = os.path.commonpath((base_path, actual_path))
+    
+    return base_path == common_path
+
+# Create normalized base path + OS separator + user path
+def get_norm_path(base_path, user_path):
+    return os.path.normpath(base_path + os.sep + user_path)
 
 # Walk path to get all files
 def get_path_files(in_path):

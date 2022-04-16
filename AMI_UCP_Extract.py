@@ -7,7 +7,7 @@ AMI UCP BIOS Extractor
 Copyright (C) 2021-2022 Plato Mavropoulos
 """
 
-title = 'AMI UCP BIOS Extractor v2.0_a7'
+title = 'AMI UCP BIOS Extractor v2.0_a8'
 
 import os
 import re
@@ -24,7 +24,7 @@ sys.dont_write_bytecode = True
 from common.a7z_comp import a7z_decompress, is_7z_supported
 from common.checksums import get_chk_16
 from common.efi_comp import efi_decompress, is_efi_compressed
-from common.path_ops import get_safe_name, get_safe_path
+from common.path_ops import get_comp_path, get_safe_name, get_safe_path
 from common.patterns import PAT_AMI_UCP, PAT_INTEL_ENG
 from common.struct_ops import get_struct, char, uint8_t, uint16_t, uint32_t
 from common.system import script_init, argparse_init, printer
@@ -387,7 +387,7 @@ def uaf_extract(buffer, extract_path, mod_info, padding=0, is_checksum=False, na
             
             printer(info_tag + ' : ' + info_value, padding + 8, False) # Print @NAL Module Tag-Path Info
             
-            info_part = PurePath(info_value.replace('\\', os.sep)).parts # Split path in parts
+            info_part = PurePath(get_comp_path(info_value)).parts # Split OS agnostic path in parts
             info_path = to_string(info_part[1:-1], os.sep) # Get path without drive/root or file
             info_name = info_part[-1] # Get file from last path part
             

@@ -7,16 +7,14 @@ AMI UCP BIOS Extractor
 Copyright (C) 2021-2022 Plato Mavropoulos
 """
 
-title = 'AMI UCP BIOS Extractor v2.0_a8'
+title = 'AMI UCP BIOS Extractor v2.0_a9'
 
 import os
 import re
 import sys
-import shutil
 import struct
 import ctypes
 import contextlib
-from pathlib import Path, PurePath
 
 # Stop __pycache__ generation
 sys.dont_write_bytecode = True
@@ -24,7 +22,7 @@ sys.dont_write_bytecode = True
 from common.a7z_comp import a7z_decompress, is_7z_supported
 from common.checksums import get_chk_16
 from common.efi_comp import efi_decompress, is_efi_compressed
-from common.path_ops import get_comp_path, get_safe_name, get_safe_path
+from common.path_ops import agnostic_path, safe_name, safe_path, make_dirs
 from common.patterns import PAT_AMI_UCP, PAT_INTEL_ENG
 from common.struct_ops import get_struct, char, uint8_t, uint16_t, uint32_t
 from common.system import script_init, argparse_init, printer
@@ -215,9 +213,7 @@ def ucp_extract(buffer, out_path, ucp_tag='@UAF', padding=0, is_checksum=False):
     
     extract_path = os.path.join(out_path + '_extracted')
     
-    if os.path.isdir(extract_path): shutil.rmtree(extract_path)
-    
-    os.mkdir(extract_path)
+    make_dirs(extract_path, delete=True)
     
     uaf_hdr = get_struct(buffer, 0, UafHeader) # Parse @UAF|@HPU Header Structure
     
@@ -283,13 +279,13 @@ def uaf_extract(buffer, extract_path, mod_info, padding=0, is_checksum=False, na
         printer('Note: Detected new AMI UCP Module %s (%s) in @NAL!' % (uaf_tag, nal_dict[uaf_tag][1]), padding + 4, pause=True)
     
     # Generate @UAF|@HPU Module File name, depending on whether decompression will be required
-    uaf_sname = get_safe_name(uaf_name + ('.temp' if is_comp else uaf_fext))
+    uaf_sname = safe_name(uaf_name + ('.temp' if is_comp else uaf_fext))
     if uaf_tag in nal_dict:
-        uaf_npath = get_safe_path(extract_path, nal_dict[uaf_tag][0])
-        Path.mkdir(Path(uaf_npath), parents=True, exist_ok=True)
-        uaf_fname = get_safe_path(uaf_npath, uaf_sname)
+        uaf_npath = safe_path(extract_path, nal_dict[uaf_tag][0])
+        make_dirs(uaf_npath, exist_ok=True)
+        uaf_fname = safe_path(uaf_npath, uaf_sname)
     else:
-        uaf_fname = get_safe_path(extract_path, uaf_sname)
+        uaf_fname = safe_path(extract_path, uaf_sname)
     
     if is_checksum: chk16_validate(uaf_data_all, uaf_tag, padding + 4)
     
@@ -387,15 +383,15 @@ def uaf_extract(buffer, extract_path, mod_info, padding=0, is_checksum=False, na
             
             printer(info_tag + ' : ' + info_value, padding + 8, False) # Print @NAL Module Tag-Path Info
             
-            info_part = PurePath(get_comp_path(info_value)).parts # Split OS agnostic path in parts
+            info_part = agnostic_path(info_value).parts # Split OS agnostic path in parts
             info_path = to_string(info_part[1:-1], os.sep) # Get path without drive/root or file
             info_name = info_part[-1] # Get file from last path part
             
             nal_dict[info_tag] = (info_path,info_name) # Assign a file path & name to each Tag
     
     # Parse Insyde BIOS @UAF|@HPU Module (@INS)
-    if uaf_tag == '@INS' and is_7z_supported(uaf_fname):
-        ins_dir = os.path.join(extract_path, get_safe_name(uaf_tag + '_nested-SFX')) # Generate extraction directory
+    if uaf_tag == '@INS' and is_7z_supported(uaf_fname, padding + 4):
+        ins_dir = os.path.join(extract_path, safe_name(uaf_tag + '_nested-SFX')) # Generate extraction directory
         
         printer('Insyde BIOS 7z SFX Archive:', padding + 4)
         
@@ -406,7 +402,7 @@ def uaf_extract(buffer, extract_path, mod_info, padding=0, is_checksum=False, na
     pfat_match,pfat_buffer = get_ami_pfat(uaf_data_raw)
     
     if pfat_match:
-        pfat_dir = os.path.join(extract_path, get_safe_name(uaf_name))
+        pfat_dir = os.path.join(extract_path, safe_name(uaf_name))
         
         parse_pfat_file(pfat_buffer, pfat_dir, padding + 4)
         
@@ -422,7 +418,7 @@ def uaf_extract(buffer, extract_path, mod_info, padding=0, is_checksum=False, na
     
     # Parse Nested AMI UCP Structure
     if nested_uaf_off:
-        uaf_dir = os.path.join(extract_path, get_safe_name(uaf_tag + '_nested-UCP')) # Generate extraction directory
+        uaf_dir = os.path.join(extract_path, safe_name(uaf_tag + '_nested-UCP')) # Generate extraction directory
         
         ucp_extract(nested_uaf_bin, uaf_dir, nested_uaf_tag, padding + 4, is_checksum) # Call recursively
         

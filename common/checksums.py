@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 #coding=utf-8
 
+"""
+Copyright (C) 2022 Plato Mavropoulos
+"""
+
 # Get Checksum 16-bit
 def get_chk_16(data, value=0, order='little'):
     for idx in range(0, len(data), 2):

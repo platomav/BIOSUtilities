@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 #coding=utf-8
 
+"""
+Copyright (C) 2022 Plato Mavropoulos
+"""
+
 # Generate padding (spaces or tabs)
 def padder(padd_count, tab=False):
     return ('\t' if tab else ' ') * padd_count

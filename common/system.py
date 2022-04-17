@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 #coding=utf-8
 
+"""
+Copyright (C) 2022 Plato Mavropoulos
+"""
+
 import sys
 import ctypes
 import argparse

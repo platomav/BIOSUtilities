@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 #coding=utf-8
 
-# https://github.com/skochinsky/me-tools/blob/master/me_unpack.py by Igor Skochinsky
+"""
+Copyright (C) 2022 Plato Mavropoulos
+"""
 
 import ctypes
 
@@ -11,6 +13,7 @@ uint16_t = ctypes.c_ushort
 uint32_t = ctypes.c_uint
 uint64_t = ctypes.c_uint64
 
+# https://github.com/skochinsky/me-tools/blob/master/me_unpack.py by Igor Skochinsky
 def get_struct(buffer, start_offset, class_name, param_list=None):
     if param_list is None: param_list = []
 

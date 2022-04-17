@@ -1,10 +1,14 @@
 #!/usr/bin/env python3
 #coding=utf-8
 
+"""
+Copyright (C) 2022 Plato Mavropoulos
+"""
+
 import os
 import subprocess
 
-from common.path_ops import get_script_dir
+from common.path_ops import project_root, safe_path
 from common.system import get_os_ver
 from common.system import printer
 
@@ -25,22 +29,19 @@ def is_efi_compressed(data, strict=True):
     return check_diff and check_size
 
 # Get TianoCompress path
-def tianocompress_path():
+def get_tiano_path():
     exec_name = 'TianoCompress' + ('.exe' if get_os_ver()[1] else '')
     
-    exec_path = os.path.join(get_script_dir(), '..', 'external', exec_name)
-    
-    return exec_path
+    return safe_path(project_root(), ['external',exec_name])
 
 # EFI/Tiano Decompression via TianoCompress
-def efi_decompress(in_path, out_path, padding, comp_type='--uefi'):
+def efi_decompress(in_path, out_path, padding=0, comp_type='--uefi'):
     try:
-        subprocess.run([tianocompress_path(), '-d', in_path, '-o', out_path, '-q', comp_type], check=True, stdout=subprocess.DEVNULL)
+        subprocess.run([get_tiano_path(), '-d', in_path, '-o', out_path, '-q', comp_type], check=True, stdout=subprocess.DEVNULL)
         
         with open(in_path, 'rb') as file: _,size_orig = get_compress_sizes(file.read())
         
         if os.path.getsize(out_path) != size_orig: raise Exception('EFI_DECOMPRESS_ERROR')
-        
     except:
         printer('Error: TianoCompress could not extract file %s!' % in_path, padding)
         

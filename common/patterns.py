@@ -1,6 +1,10 @@
 #!/usr/bin/env python3
 #coding=utf-8
 
+"""
+Copyright (C) 2022 Plato Mavropoulos
+"""
+
 import re
 
 PAT_AMI_PFAT = re.compile(b'_AMIPFAT.AMI_BIOS_GUARD_FLASH_CONFIGURATIONS', re.DOTALL)

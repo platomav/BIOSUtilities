@@ -57,7 +57,7 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 
 4. Build/Freeze/Compile:
 
-> pyinstaller --noupx --onefile \<path-to-project\>\/Dell_PFS_Extract.py
+> pyinstaller --add-data="external/*;external/" --noupx --onefile \<path-to-project\>\/Dell_PFS_Extract.py
 
 You should find the final utility executable at "dist" folder
 
@@ -121,7 +121,7 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 
 4. Build/Freeze/Compile:
 
-> pyinstaller --noupx --onefile \<path-to-project\>\/AMI_UCP_Extract.py
+> pyinstaller --add-data="external/*;external/" --noupx --onefile \<path-to-project\>\/AMI_UCP_Extract.py
 
 You should find the final utility executable at "dist" folder
 
@@ -181,7 +181,7 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 
 4. Build/Freeze/Compile:
 
-> pyinstaller --noupx --onefile \<path-to-project\>\/AMI_PFAT_Extract.py
+> pyinstaller --add-data="external/*;external/" --noupx --onefile \<path-to-project\>\/AMI_PFAT_Extract.py
 
 You should find the final utility executable at "dist" folder
 

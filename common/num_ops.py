@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 #coding=utf-8
 
-# https://leancrew.com/all-this/2020/06/ordinals-in-python/ by Dr. Drang
+"""
+Copyright (C) 2022 Plato Mavropoulos
+"""
 
+# https://leancrew.com/all-this/2020/06/ordinals-in-python/ by Dr. Drang
 def get_ordinal(number):
     s = ('th', 'st', 'nd', 'rd') + ('th',) * 10
     

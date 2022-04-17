@@ -7,12 +7,11 @@ AMI BIOS Guard Extractor
 Copyright (C) 2018-2022 Plato Mavropoulos
 """
 
-title = 'AMI BIOS Guard Extractor v4.0_a6'
+title = 'AMI BIOS Guard Extractor v4.0_a7'
 
 import os
 import re
 import sys
-import shutil
 import ctypes
 
 # Stop __pycache__ generation
@@ -20,7 +19,7 @@ sys.dont_write_bytecode = True
 
 from common.externals import get_bgs_tool
 from common.num_ops import get_ordinal
-from common.path_ops import get_safe_name
+from common.path_ops import safe_name, make_dirs
 from common.patterns import PAT_AMI_PFAT
 from common.struct_ops import get_struct, char, uint8_t, uint16_t, uint32_t
 from common.system import script_init, argparse_init, printer
@@ -139,7 +138,7 @@ def get_ami_pfat(input_buffer):
     return match, buffer
 
 def get_file_name(index, title):
-    return get_safe_name('%0.2d -- %s' % (index, title))
+    return safe_name('%0.2d -- %s' % (index, title))
 
 def parse_bg_script(script_data, padding):
     is_opcode_div = len(script_data) % 8 == 0
@@ -226,9 +225,7 @@ def parse_pfat_file(buffer, output_path, padding):
     
     extract_path = os.path.join(output_path + '_extracted')
     
-    if os.path.isdir(extract_path): shutil.rmtree(extract_path)
-    
-    os.mkdir(extract_path)
+    make_dirs(extract_path, delete=True)
     
     block_all,block_off,file_count = parse_pfat_hdr(buffer, padding)
 

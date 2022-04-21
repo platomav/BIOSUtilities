@@ -17,3 +17,13 @@ def to_string(input_object, sep_char=''):
         output_string = str(input_object)
     
     return output_string
+
+# Get Bytes from given buffer or file path
+def file_to_bytes(in_object):
+    object_bytes = in_object
+    
+    if type(in_object).__name__ not in ('bytes','bytearray'):
+        with open(to_string(in_object), 'rb') as object_data:
+            object_bytes = object_data.read()
+    
+    return object_bytes

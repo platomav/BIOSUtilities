@@ -7,7 +7,7 @@ Dell PFS Update Extractor
 Copyright (C) 2018-2022 Plato Mavropoulos
 """
 
-title = 'Dell PFS Update Extractor v6.0_a6'
+title = 'Dell PFS Update Extractor v6.0_a7'
 
 import os
 import io
@@ -25,6 +25,7 @@ from common.path_ops import safe_name, make_dirs
 from common.patterns import PAT_DELL_HDR, PAT_DELL_FTR, PAT_DELL_PKG
 from common.struct_ops import get_struct, char, uint8_t, uint16_t, uint32_t, uint64_t
 from common.system import script_init, argparse_init, printer
+from common.text_ops import file_to_bytes
 
 from AMI_PFAT_Extract import IntelBiosGuardHeader, IntelBiosGuardSignature2k, parse_bg_script
 
@@ -205,8 +206,10 @@ def is_pfs_hdr(in_buffer):
 def is_pfs_ftr(in_buffer):
     return PAT_DELL_FTR.search(in_buffer)
 
-# Check if input buffer is Dell PFS/PKG image
-def is_dell_pfs(in_buffer):
+# Check if input path or buffer is Dell PFS/PKG image
+def is_dell_pfs(in_file):
+    in_buffer = file_to_bytes(in_file)
+    
     return bool(is_pfs_hdr(in_buffer) or is_pfs_pkg(in_buffer))
 
 # Get PFS ZLIB Section Offsets

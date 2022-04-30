@@ -10,13 +10,13 @@ def padder(padd_count, tab=False):
     return ('\t' if tab else ' ') * padd_count
 
 # Get String from given input object
-def to_string(input_object, sep_char=''):
-    if type(input_object).__name__ in ('list','tuple'):
-        output_string = sep_char.join(map(str, input_object))
+def to_string(in_object, sep_char=''):
+    if type(in_object).__name__ in ('list','tuple'):
+        out_string = sep_char.join(map(str, in_object))
     else:
-        output_string = str(input_object)
+        out_string = str(in_object)
     
-    return output_string
+    return out_string
 
 # Get Bytes from given buffer or file path
 def file_to_bytes(in_object):
@@ -27,3 +27,7 @@ def file_to_bytes(in_object):
             object_bytes = object_data.read()
     
     return object_bytes
+
+# Check if string starts and ends with given character(s)
+def is_encased(in_string, chars):
+    return in_string.startswith(chars) and in_string.endswith(chars)

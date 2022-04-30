@@ -11,7 +11,7 @@ import sys
 import shutil
 from pathlib import Path, PurePath
 
-from common.text_ops import to_string
+from common.text_ops import is_encased, to_string
 
 # Fix illegal/reserved Windows characters
 def safe_name(in_name):
@@ -95,6 +95,15 @@ def get_path_files(in_path):
     
     return path_files
 
+# Get path without leading/trailing quotes
+def get_dequoted_path(in_path):
+    out_path = to_string(in_path).strip()
+    
+    if len(out_path) >= 2 and is_encased(out_path, ("'",'"')):
+        out_path = out_path[1:-1]
+    
+    return out_path
+
 # Get absolute file path of argparse object
 def get_argparse_path(argparse_path):
     if not argparse_path:
@@ -127,11 +136,11 @@ def process_input_files(argparse_args, sys_argv=None):
         output_path = argparse_args.output_dir or argparse_args.input_dir or path_parent(input_files[0])
     else:
         # Script w/o parameters
-        input_path_user = input('\nEnter input directory path: ')
+        input_path_user = get_dequoted_path(input('\nEnter input directory path: '))
         input_path_full = get_argparse_path(input_path_user) if input_path_user else ''
         input_files = get_path_files(input_path_full)
         
-        output_path = input('\nEnter output directory path: ')
+        output_path = get_dequoted_path(input('\nEnter output directory path: '))
     
     output_path_final = get_argparse_path(output_path)
     

@@ -26,6 +26,7 @@ You can either Drag & Drop or manually enter Dell PFS Update images(s). Optional
 * -i or --input-dir : extract from given input directory
 * -o or --output-dir : extract in given output directory
 * -e or --auto-exit : skip press enter to exit prompts
+* --static : use static-built external dependencies
 * -a or --advanced : extract signatures and metadata
 * -s or --structure : show PFS structure information
 
@@ -86,6 +87,7 @@ You can either Drag & Drop or manually enter AMI UCP BIOS executable file(s). Op
 * -i or --input-dir : extract from given input directory
 * -o or --output-dir : extract in given output directory
 * -e or --auto-exit : skip press enter to exit prompts
+* --static : use static-built external dependencies
 * -c or --checksum : verify AMI UCP Checksums (slow)
 
 #### **Compatibility**
@@ -152,6 +154,7 @@ You can either Drag & Drop or manually enter AMI BIOS Guard (PFAT) image file(s)
 * -i or --input-dir : extract from given input directory
 * -o or --output-dir : extract in given output directory
 * -e or --auto-exit : skip press enter to exit prompts
+* --static : use static-built external dependencies
 
 #### **Compatibility**
 

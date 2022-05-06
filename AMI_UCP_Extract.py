@@ -7,7 +7,7 @@ AMI UCP BIOS Extractor
 Copyright (C) 2021-2022 Plato Mavropoulos
 """
 
-TITLE = 'AMI UCP BIOS Extractor v2.0_a11'
+TITLE = 'AMI UCP BIOS Extractor v2.0_a12'
 
 import os
 import re
@@ -208,7 +208,7 @@ def get_uaf_mod(buffer, uaf_off=0x0):
     return uaf_all
 
 # Parse & Extract AMI UCP structures
-def ucp_extract(buffer, out_path, ucp_tag='@UAF', padding=0, is_checksum=False):
+def ucp_extract(buffer, out_path, ucp_tag='@UAF', padding=0, is_checksum=False, is_static=False):
     nal_dict = {} # Initialize @NAL Dictionary per UCP
     
     printer('Utility Configuration Program', padding)
@@ -237,10 +237,10 @@ def ucp_extract(buffer, out_path, ucp_tag='@UAF', padding=0, is_checksum=False):
     uaf_all = get_uaf_mod(buffer, UAF_HDR_LEN)
     
     for mod_info in uaf_all:
-        nal_dict = uaf_extract(buffer, extract_path, mod_info, padding + 8, is_checksum, nal_dict)
+        nal_dict = uaf_extract(buffer, extract_path, mod_info, padding + 8, is_checksum, is_static, nal_dict)
 
 # Parse & Extract AMI UCP > @UAF|@HPU Module/Section
-def uaf_extract(buffer, extract_path, mod_info, padding=0, is_checksum=False, nal_dict=None):
+def uaf_extract(buffer, extract_path, mod_info, padding=0, is_checksum=False, is_static=False, nal_dict=None):
     if nal_dict is None: nal_dict = {}
     
     uaf_tag,uaf_off,uaf_hdr = mod_info
@@ -392,12 +392,12 @@ def uaf_extract(buffer, extract_path, mod_info, padding=0, is_checksum=False, na
             nal_dict[info_tag] = (info_path,info_name) # Assign a file path & name to each Tag
     
     # Parse Insyde BIOS @UAF|@HPU Module (@INS)
-    if uaf_tag == '@INS' and is_7z_supported(uaf_fname, padding + 4):
+    if uaf_tag == '@INS' and is_7z_supported(uaf_fname, padding + 4, static=is_static):
         ins_dir = os.path.join(extract_path, safe_name(uaf_tag + '_nested-SFX')) # Generate extraction directory
         
         printer('Insyde BIOS 7z SFX Archive:', padding + 4)
         
-        if a7z_decompress(uaf_fname, ins_dir, '7z SFX', padding + 8) == 0:
+        if a7z_decompress(uaf_fname, ins_dir, '7z SFX', padding + 8, static=is_static) == 0:
             os.remove(uaf_fname) # Successful extraction, delete @INS Module file/archive
     
     # Detect & Unpack AMI BIOS Guard (PFAT) BIOS image
@@ -422,7 +422,7 @@ def uaf_extract(buffer, extract_path, mod_info, padding=0, is_checksum=False, na
     if nested_uaf_off:
         uaf_dir = os.path.join(extract_path, safe_name(uaf_tag + '_nested-UCP')) # Generate extraction directory
         
-        ucp_extract(nested_uaf_bin, uaf_dir, nested_uaf_tag, padding + 4, is_checksum) # Call recursively
+        ucp_extract(nested_uaf_bin, uaf_dir, nested_uaf_tag, padding + 4, is_checksum, is_static) # Call recursively
         
         os.remove(uaf_fname) # Delete raw nested AMI UCP Structure after successful recursion/extraction
     
@@ -498,6 +498,7 @@ if __name__ == '__main__':
     arguments = argparser.parse_args()
     
     is_checksum = arguments.checksum # Set Checksum verification optional argument
+    is_static = arguments.static # Set Static dependencies usage optional argument
     
     # Initialize script (must be after argparse)
     exit_code,input_files,output_path,padding = script_init(TITLE, arguments, 4)
@@ -519,7 +520,7 @@ if __name__ == '__main__':
         
         extract_path = os.path.join(output_path, input_name)
         
-        ucp_extract(main_uaf_bin, extract_path, main_uaf_tag, padding, is_checksum)
+        ucp_extract(main_uaf_bin, extract_path, main_uaf_tag, padding, is_checksum, is_static)
         
         exit_code -= 1
     

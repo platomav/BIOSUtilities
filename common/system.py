@@ -67,6 +67,7 @@ def argparse_init():
     argparser.add_argument('-v', '--version', help='show utility name and version', action='store_true')
     argparser.add_argument('-o', '--output-dir', help='extract in given output directory')
     argparser.add_argument('-i', '--input-dir', help='extract from given input directory')
+    argparser.add_argument('--static', help='use static-built dependencies', action='store_true')
     
     return argparser
 

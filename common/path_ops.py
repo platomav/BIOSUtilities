@@ -132,8 +132,11 @@ def process_input_files(argparse_args, sys_argv=None):
         else:
             input_files = [file.name for file in argparse_args.files]
         
-        # Set output path via argparse Output Path or argparse Input Path or first input file Path
-        output_path = argparse_args.output_dir or argparse_args.input_dir or path_parent(input_files[0])
+        # Set output fallback value for missing argparse Output and Input Path
+        output_fallback = path_parent(input_files[0]) if input_files else None
+        
+        # Set output path via argparse Output path or argparse Input path or first input file path
+        output_path = argparse_args.output_dir or argparse_args.input_dir or output_fallback
     else:
         # Script w/o parameters
         input_path_user = get_dequoted_path(input('\nEnter input directory path: '))

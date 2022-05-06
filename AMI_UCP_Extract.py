@@ -7,7 +7,7 @@ AMI UCP BIOS Extractor
 Copyright (C) 2021-2022 Plato Mavropoulos
 """
 
-title = 'AMI UCP BIOS Extractor v2.0_a10'
+TITLE = 'AMI UCP BIOS Extractor v2.0_a11'
 
 import os
 import re
@@ -500,7 +500,7 @@ if __name__ == '__main__':
     is_checksum = arguments.checksum # Set Checksum verification optional argument
     
     # Initialize script (must be after argparse)
-    input_files,output_path,padding = script_init(title, arguments, 4)
+    exit_code,input_files,output_path,padding = script_init(TITLE, arguments, 4)
     
     for input_file in input_files:
         input_name = os.path.basename(input_file)
@@ -520,5 +520,9 @@ if __name__ == '__main__':
         extract_path = os.path.join(output_path, input_name)
         
         ucp_extract(main_uaf_bin, extract_path, main_uaf_tag, padding, is_checksum)
+        
+        exit_code -= 1
     
     printer('Done!', pause=True)
+    
+    sys.exit(exit_code)

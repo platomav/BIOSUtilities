@@ -31,7 +31,7 @@ You can either Drag & Drop or manually enter Dell PFS Update images(s). Optional
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.7 support.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.8 support.
 
 #### **Prerequisites**
 
@@ -43,7 +43,7 @@ Optionally, to decompile the Intel BIOS Guard (PFAT) Scripts, you must have the 
 
 PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
 
-1. Make sure Python 3.7.0 or newer is installed:
+1. Make sure Python 3.8.0 or newer is installed:
 
 > python --version
 
@@ -90,7 +90,7 @@ You can either Drag & Drop or manually enter AMI UCP BIOS executable file(s). Op
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.7 support.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.8 support.
 
 #### **Prerequisites**
 
@@ -107,7 +107,7 @@ Optionally, to decompile the AMI UCP \> AMI PFAT \> Intel BIOS Guard Scripts (wh
 
 PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
 
-1. Make sure Python 3.7.0 or newer is installed:
+1. Make sure Python 3.8.0 or newer is installed:
 
 > python --version
 
@@ -155,7 +155,7 @@ You can either Drag & Drop or manually enter AMI BIOS Guard (PFAT) image file(s)
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.7 support.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.8 support.
 
 #### **Prerequisites**
 
@@ -167,7 +167,7 @@ Optionally, to decompile the AMI PFAT \> Intel BIOS Guard Scripts, you must have
 
 PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
 
-1. Make sure Python 3.7.0 or newer is installed:
+1. Make sure Python 3.8.0 or newer is installed:
 
 > python --version
 

@@ -34,14 +34,14 @@ def is_auto_exit():
 def check_sys_py():
     sys_py = get_py_ver()
     
-    if sys_py < (3,7):
-        sys.stdout.write('\nError: Python >= 3.7 required, not %d.%d!' % (sys_py[0], sys_py[1]))
+    if sys_py < (3,8):
+        sys.stdout.write('\nError: Python >= 3.8 required, not %d.%d!' % (sys_py[0], sys_py[1]))
         
         if not is_auto_exit():
             # noinspection PyUnresolvedReferences
             (raw_input if sys_py[0] <= 2 else input)('\nPress enter to exit') # pylint: disable=E0602
         
-        sys.exit(1)
+        sys.exit(125)
 
 # Check OS Platform
 def check_sys_os():
@@ -53,7 +53,7 @@ def check_sys_os():
         if not is_auto_exit():
             input('\nPress enter to exit')
         
-        sys.exit(2) 
+        sys.exit(126) 
     
     # Fix Windows Unicode console redirection
     if os_win: sys.stdout.reconfigure(encoding='utf-8')
@@ -93,7 +93,10 @@ def script_init(title, arguments, padding=0):
     # Process input files and generate output path
     input_files,output_path = process_input_files(arguments, sys.argv)
     
-    return input_files, output_path, padding
+    # Count input files for exit code
+    input_count = len(input_files)
+    
+    return input_count, input_files, output_path, padding
 
 # https://stackoverflow.com/a/781074 by Torsten Marek
 def nice_exc_handler(exc_type, exc_value, tb):
@@ -107,7 +110,7 @@ def nice_exc_handler(exc_type, exc_value, tb):
     if not is_auto_exit():
         input('\nPress enter to exit')
 
-    sys.exit(3)
+    sys.exit(127)
 
 # Show message(s) while controlling padding, newline, pausing & separator
 def printer(in_message='', padd_count=0, new_line=True, pause=False, sep_char=' '):

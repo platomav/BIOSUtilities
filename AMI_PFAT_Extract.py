@@ -7,7 +7,7 @@ AMI BIOS Guard Extractor
 Copyright (C) 2018-2022 Plato Mavropoulos
 """
 
-title = 'AMI BIOS Guard Extractor v4.0_a8'
+TITLE = 'AMI BIOS Guard Extractor v4.0_a9'
 
 import os
 import re
@@ -140,8 +140,8 @@ def get_ami_pfat(input_buffer):
     
     return match, buffer
 
-def get_file_name(index, title):
-    return safe_name('%0.2d -- %s' % (index, title))
+def get_file_name(index, name):
+    return safe_name('%0.2d -- %s' % (index, name))
 
 def parse_bg_script(script_data, padding):
     is_opcode_div = len(script_data) % 8 == 0
@@ -310,7 +310,7 @@ if __name__ == '__main__':
     arguments = argparser.parse_args()
     
     # Initialize script (must be after argparse)
-    input_files,output_path,padding = script_init(title, arguments, 4)
+    exit_code,input_files,output_path,padding = script_init(TITLE, arguments, 4)
     
     for input_file in input_files:
         input_name = os.path.basename(input_file)
@@ -329,5 +329,9 @@ if __name__ == '__main__':
         extract_path = os.path.join(output_path, input_name)
         
         parse_pfat_file(pfat_buffer, extract_path, padding)
+        
+        exit_code -= 1
     
     printer('Done!', pause=True)
+    
+    sys.exit(exit_code)

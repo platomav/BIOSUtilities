@@ -7,7 +7,7 @@ Dell PFS Update Extractor
 Copyright (C) 2018-2022 Plato Mavropoulos
 """
 
-title = 'Dell PFS Update Extractor v6.0_a7'
+TITLE = 'Dell PFS Update Extractor v6.0_a8'
 
 import os
 import io
@@ -922,7 +922,7 @@ if __name__ == '__main__':
     is_structure = arguments.structure # Set Structure output mode optional argument
     
     # Initialize script (must be after argparse)
-    input_files,output_path,padding = script_init(title, arguments, 4)
+    exit_code,input_files,output_path,padding = script_init(TITLE, arguments, 4)
     
     for input_file in input_files:
         input_name = os.path.basename(input_file)
@@ -965,5 +965,9 @@ if __name__ == '__main__':
         for offset in pfs_zlib_offsets:
             # Call the PFS ZLIB Section Parser function
             pfs_section_parse(input_buffer, offset, extract_path, extract_name, 1, 1, False, padding, is_structure, is_advanced)
+        
+        exit_code -= 1
     
     printer('Done!', pause=True)
+    
+    sys.exit(exit_code)

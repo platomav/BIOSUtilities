@@ -46,19 +46,19 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 
 1. Make sure Python 3.8.0 or newer is installed:
 
-> python --version
+* python --version
 
 2. Use pip to install PyInstaller:
 
-> pip3 install pyinstaller
+* pip3 install pyinstaller
 
 3. Place prerequisites at the "external" project directory:
 
-> BIOS Guard Script Tool (optional)
+* BIOS Guard Script Tool (optional)
 
 4. Build/Freeze/Compile:
 
-> pyinstaller --add-data="external/*;external/" --noupx --onefile \<path-to-project\>\/Dell_PFS_Extract.py
+* pyinstaller --add-data="external/*;external/" --noupx --onefile \<path-to-project\>\/Dell_PFS_Extract.py
 
 You should find the final utility executable at "dist" folder
 
@@ -99,7 +99,7 @@ Should work at all Windows, Linux or macOS operating systems which have Python 3
 To run the utility, you must have the following 3rd party tools at the "external" project directory:
 
 * [TianoCompress](https://github.com/tianocore/edk2/tree/master/BaseTools/Source/C/TianoCompress/) (e.g. [TianoCompress.exe for Windows](https://github.com/tianocore/edk2-BaseTools-win32/) or TianoCompress)
-* [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zz|7zzs)
+* [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zz|7zzs for Linux)
 
 Optionally, to decompile the AMI UCP \> AMI PFAT \> Intel BIOS Guard Scripts (when applicable), you must have the following 3rd party utility at the "external" project directory:
 
@@ -111,21 +111,21 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 
 1. Make sure Python 3.8.0 or newer is installed:
 
-> python --version
+* python --version
 
 2. Use pip to install PyInstaller:
 
-> pip3 install pyinstaller
+* pip3 install pyinstaller
 
 3. Place prerequisites at the "external" project directory:
 
-> TianoCompress
-> \7-Zip Console
-> BIOS Guard Script Tool (optional)
+* TianoCompress
+* \7-Zip Console
+* BIOS Guard Script Tool (optional)
 
 4. Build/Freeze/Compile:
 
-> pyinstaller --add-data="external/*;external/" --noupx --onefile \<path-to-project\>\/AMI_UCP_Extract.py
+* pyinstaller --add-data="external/*;external/" --noupx --onefile \<path-to-project\>\/AMI_UCP_Extract.py
 
 You should find the final utility executable at "dist" folder
 
@@ -174,15 +174,15 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 
 1. Make sure Python 3.8.0 or newer is installed:
 
-> python --version
+* python --version
 
 2. Use pip to install PyInstaller:
 
-> pip3 install pyinstaller
+* pip3 install pyinstaller
 
 3. Place prerequisites at the "external" project directory:
 
-> BIOS Guard Script Tool (optional)
+* BIOS Guard Script Tool (optional)
 
 4. Build/Freeze/Compile:
 

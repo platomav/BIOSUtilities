@@ -1,4 +1,4 @@
-# BIOSUtilities
+# BIOSUtilities [Refactor - WIP]
 **Various BIOS Utilities for Modding/Research**
 
 [BIOS Utilities News Feed](https://twitter.com/platomaniac)
@@ -38,7 +38,7 @@ Should work at all Windows, Linux or macOS operating systems which have Python 3
 
 Optionally, to decompile the Intel BIOS Guard (PFAT) Scripts, you must have the following 3rd party utility at the "external" project directory:
 
-* [BIOS Guard Script Tool](https://github.com/allowitsme/big-tool/tree/sdk-compat) (i.e. big_script_tool.py)
+* [BIOS Guard Script Tool](https://github.com/platomav/BGScriptTool) (i.e. big_script_tool.py)
 
 #### **Build/Freeze/Compile with PyInstaller**
 
@@ -52,9 +52,9 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 
 > pip3 install pyinstaller
 
-3. Place any appropriate prerequisite at the project directory:
+3. Place prerequisites at the "external" project directory:
 
-> BIOS Guard Script Tool
+> BIOS Guard Script Tool (optional)
 
 4. Build/Freeze/Compile:
 
@@ -103,7 +103,7 @@ To run the utility, you must have the following 3rd party tools at the "external
 
 Optionally, to decompile the AMI UCP \> AMI PFAT \> Intel BIOS Guard Scripts (when applicable), you must have the following 3rd party utility at the "external" project directory:
 
-* [BIOS Guard Script Tool](https://github.com/allowitsme/big-tool/tree/sdk-compat) (i.e. big_script_tool.py)
+* [BIOS Guard Script Tool](https://github.com/platomav/BGScriptTool) (i.e. big_script_tool.py)
 
 #### **Build/Freeze/Compile with PyInstaller**
 
@@ -117,9 +117,11 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 
 > pip3 install pyinstaller
 
-3. Place any appropriate prerequisite at the project directory:
+3. Place prerequisites at the "external" project directory:
 
-> TianoCompress, 7-Zip Console, BIOS Guard Script Tool
+> TianoCompress
+> \7-Zip Console
+> BIOS Guard Script Tool (optional)
 
 4. Build/Freeze/Compile:
 
@@ -164,7 +166,7 @@ Should work at all Windows, Linux or macOS operating systems which have Python 3
 
 Optionally, to decompile the AMI PFAT \> Intel BIOS Guard Scripts, you must have the following 3rd party utility at the "external" project directory:
 
-* [BIOS Guard Script Tool](https://github.com/allowitsme/big-tool/tree/sdk-compat) (i.e. big_script_tool.py)
+* [BIOS Guard Script Tool](https://github.com/platomav/BGScriptTool) (i.e. big_script_tool.py)
 
 #### **Build/Freeze/Compile with PyInstaller**
 
@@ -178,9 +180,9 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 
 > pip3 install pyinstaller
 
-3. Place any appropriate prerequisite at the project directory:
+3. Place prerequisites at the "external" project directory:
 
-> BIOS Guard Script Tool
+> BIOS Guard Script Tool (optional)
 
 4. Build/Freeze/Compile:
 

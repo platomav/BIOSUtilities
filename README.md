@@ -8,6 +8,7 @@
 * [**Dell PFS Update Extractor**](#dell-pfs-update-extractor)
 * [**AMI UCP BIOS Extractor**](#ami-ucp-bios-extractor)
 * [**AMI BIOS Guard Extractor**](#ami-bios-guard-extractor)
+* [**Portwell EFI BIOS Extractor**](#portwell-efi-bios-extractor)
 
 ## **Dell PFS Update Extractor**
 
@@ -98,7 +99,7 @@ Should work at all Windows, Linux or macOS operating systems which have Python 3
 
 To run the utility, you must have the following 3rd party tools at the "external" project directory:
 
-* [TianoCompress](https://github.com/tianocore/edk2/tree/master/BaseTools/Source/C/TianoCompress/) (e.g. [TianoCompress.exe for Windows](https://github.com/tianocore/edk2-BaseTools-win32/) or TianoCompress)
+* [TianoCompress](https://github.com/tianocore/edk2/tree/master/BaseTools/Source/C/TianoCompress/) (e.g. [TianoCompress.exe for Windows](https://github.com/tianocore/edk2-BaseTools-win32/) or TianoCompress for Linux)
 * [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zz|7zzs for Linux)
 
 Optionally, to decompile the AMI UCP \> AMI PFAT \> Intel BIOS Guard Scripts (when applicable), you must have the following 3rd party utility at the "external" project directory:
@@ -187,6 +188,75 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 4. Build/Freeze/Compile:
 
 > pyinstaller --add-data="external/*;external/" --noupx --onefile \<path-to-project\>\/AMI_PFAT_Extract.py
+
+You should find the final utility executable at "dist" folder
+
+#### **Anti-Virus False Positives**
+
+Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
+
+#### **Pictures**
+
+![]()
+
+## **Portwell EFI BIOS Extractor**
+
+![]()
+
+#### **Description**
+
+Parses Portwell UEFI Unpacker EFI executables (usually named "Update.efi") and extracts their firmware (e.g. SPI, BIOS/UEFI, EC etc) and utilities (e.g. Flasher etc) components. It supports all known Portwell UEFI Unpacker revisions (v1.1, v1.2, v2.0) and formats (used, empty, null), including those which contain EFI compressed files. The output comprises only final firmware components and utilities which are directly usable by end users.
+
+#### **Usage**
+
+You can either Drag & Drop or manually enter Portwell UEFI Unpacker EFI executable file(s). Optional arguments:
+  
+* -h or --help : show help message and exit
+* -v or --version : show utility name and version
+* -i or --input-dir : extract from given input directory
+* -o or --output-dir : extract in given output directory
+* -e or --auto-exit : skip press enter to exit prompts
+* --static : use static-built external dependencies
+
+#### **Compatibility**
+
+Should work at all Windows, Linux or macOS operating systems which have Python 3.8 support.
+
+#### **Prerequisites**
+
+To run the utility, you must have the following 3rd party Python module installed:
+
+* [pefile](https://pypi.org/project/pefile/)
+
+> pip3 install pefile
+
+Moreover, you must have the following 3rd party tool at the "external" project directory:
+
+* [TianoCompress](https://github.com/tianocore/edk2/tree/master/BaseTools/Source/C/TianoCompress/) (e.g. [TianoCompress.exe for Windows](https://github.com/tianocore/edk2-BaseTools-win32/) or TianoCompress for Linux)
+
+#### **Build/Freeze/Compile with PyInstaller**
+
+PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
+
+1. Make sure Python 3.8.0 or newer is installed:
+
+> python --version
+
+2. Use pip to install PyInstaller:
+
+> pip3 install pyinstaller
+
+3. Use pip to install pefile:
+
+> pip3 install pefile
+
+4. Place prerequisite at the "external" project directory:
+
+> TianoCompress
+
+5. Build/Freeze/Compile:
+
+> pyinstaller --add-data="external/*;external/" --noupx --onefile \<path-to-project\>\/Portwell_EFI_Extract.py
 
 You should find the final utility executable at "dist" folder
 

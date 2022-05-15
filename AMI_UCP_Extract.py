@@ -159,7 +159,7 @@ def chk16_validate(data, tag, padd=0):
     else:
         printer('Checksum of UCP Module %s is valid!' % tag, padd)
 
-# Check if input path or buffer is AMI UCP image
+# Check if input is AMI UCP image
 def is_ami_ucp(in_file):
     buffer = file_to_bytes(in_file)
     

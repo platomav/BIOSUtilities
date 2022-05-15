@@ -7,7 +7,7 @@ Dell PFS Update Extractor
 Copyright (C) 2018-2022 Plato Mavropoulos
 """
 
-TITLE = 'Dell PFS Update Extractor v6.0_a8'
+TITLE = 'Dell PFS Update Extractor v6.0_a9'
 
 import os
 import io
@@ -206,7 +206,7 @@ def is_pfs_hdr(in_buffer):
 def is_pfs_ftr(in_buffer):
     return PAT_DELL_FTR.search(in_buffer)
 
-# Check if input path or buffer is Dell PFS/PKG image
+# Check if input is Dell PFS/PKG image
 def is_dell_pfs(in_file):
     in_buffer = file_to_bytes(in_file)
     
@@ -304,7 +304,7 @@ def pfs_section_parse(zlib_data, zlib_start, output_path, pfs_name, pfs_index, p
     
     # Decompress PFS ZLIB section payload
     try:
-        assert not is_zlib_error # ZLIB errors are critical
+        if is_zlib_error: raise Exception('ZLIB_ERROR') # ZLIB errors are critical
         section_data = zlib.decompress(compressed_data) # ZLIB decompression
     except:
         section_data = zlib_data # Fallback to raw ZLIB data upon critical error

@@ -47,6 +47,6 @@ def efi_decompress(in_path, out_path, padding=0, comp_type='--uefi'):
         
         return 1
     
-    printer('Succesfull EFI/Tiano decompression via TianoCompress!', padding)
+    printer('Succesfull EFI decompression via TianoCompress!', padding)
     
     return 0

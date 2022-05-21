@@ -35,7 +35,7 @@ def check_sys_py():
     sys_py = get_py_ver()
     
     if sys_py < (3,8):
-        sys.stdout.write('\nError: Python >= 3.8 required, not %d.%d!' % (sys_py[0], sys_py[1]))
+        sys.stdout.write(f'\nError: Python >= 3.8 required, not {sys_py[0]}.{sys_py[1]}!')
         
         if not is_auto_exit():
             # noinspection PyUnresolvedReferences
@@ -48,7 +48,7 @@ def check_sys_os():
     os_tag,os_win,os_sup = get_os_ver()
     
     if not os_sup:
-        printer('Error: Unsupported platform "%s"!' % os_tag)
+        printer(f'Error: Unsupported platform "{os_tag}"!')
         
         if not is_auto_exit():
             input('\nPress enter to exit')

@@ -3,11 +3,11 @@
 
 """
 Portwell EFI Extract
-Portwell EFI BIOS Extractor
+Portwell EFI Update Extractor
 Copyright (C) 2021-2022 Plato Mavropoulos
 """
 
-TITLE = 'Portwell EFI BIOS Extractor v2.0_a4'
+TITLE = 'Portwell EFI Update Extractor v2.0_a5'
 
 import os
 import sys
@@ -54,8 +54,8 @@ def get_portwell_pe(in_buffer):
     return pe_file, pe_data
 
 # Parse & Extract Portwell UEFI Unpacker
-def portwell_efi_extract(input_buffer, out_path, padding=0):
-    extract_path = os.path.join(out_path + '_extracted')
+def portwell_efi_extract(input_buffer, output_path, padding=0):
+    extract_path = os.path.join(f'{output_path}_extracted')
     
     make_dirs(extract_path, delete=True)
     

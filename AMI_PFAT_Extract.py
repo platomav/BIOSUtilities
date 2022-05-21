@@ -7,7 +7,7 @@ AMI BIOS Guard Extractor
 Copyright (C) 2018-2022 Plato Mavropoulos
 """
 
-TITLE = 'AMI BIOS Guard Extractor v4.0_a9'
+TITLE = 'AMI BIOS Guard Extractor v4.0_a10'
 
 import os
 import re
@@ -36,10 +36,10 @@ class AmiBiosGuardHeader(ctypes.LittleEndianStructure):
     ]
     
     def struct_print(self, p):
-        printer(['Size    :', '0x%X' % self.Size], p, False)
-        printer(['Checksum:', '0x%0.4X' % self.Checksum], p, False)
+        printer(['Size    :', f'0x{self.Size:X}'], p, False)
+        printer(['Checksum:', f'0x{self.Checksum:04X}'], p, False)
         printer(['Tag     :', self.Tag.decode('utf-8')], p, False)
-        printer(['Flags   :', '0x%0.2X' % self.Flags], p, False)
+        printer(['Flags   :', f'0x{self.Flags:02X}'], p, False)
 
 class IntelBiosGuardHeader(ctypes.LittleEndianStructure):
     _pack_ = 1
@@ -63,10 +63,10 @@ class IntelBiosGuardHeader(ctypes.LittleEndianStructure):
         
         id_text = re.sub(r'[\n\t\r\x00 ]', '', id_byte.decode('utf-8','ignore'))
         
-        id_hexs = '%0.*X' % (0x10 * 2, int.from_bytes(id_byte, 'big'))
-        id_guid = '{%s-%s-%s-%s-%s}' % (id_hexs[:8], id_hexs[8:12], id_hexs[12:16], id_hexs[16:20], id_hexs[20:])
+        id_hexs = f'{int.from_bytes(id_byte, "big"):0{0x10 * 2}X}'
+        id_guid = f'{{{id_hexs[:8]}-{id_hexs[8:12]}-{id_hexs[12:16]}-{id_hexs[16:20]}-{id_hexs[20:]}}}'
         
-        return '%s %s' % (id_text, id_guid)
+        return f'{id_text} {id_guid}'
     
     def get_flags(self):
         attr = IntelBiosGuardHeaderGetAttributes()
@@ -78,19 +78,19 @@ class IntelBiosGuardHeader(ctypes.LittleEndianStructure):
         no_yes = ['No','Yes']
         f1,f2,f3,f4,f5 = self.get_flags()
         
-        printer(['BIOS Guard Version          :', '%d.%d' % (self.BGVerMajor, self.BGVerMinor)], p, False)
+        printer(['BIOS Guard Version          :', f'{self.BGVerMajor}.{self.BGVerMinor}'], p, False)
         printer(['Platform Identity           :', self.get_platform_id()], p, False)
         printer(['Signed Flash Address Map    :', no_yes[f1]], p, False)
         printer(['Protected EC OpCodes        :', no_yes[f2]], p, False)
         printer(['Graphics Security Disable   :', no_yes[f3]], p, False)
         printer(['Fault Tolerant Update       :', no_yes[f4]], p, False)
-        printer(['Attributes Reserved         :', '0x%X' % f5], p, False)
-        printer(['Script Version              :', '%d.%d' % (self.ScriptVerMajor, self.ScriptVerMinor)], p, False)
-        printer(['Script Size                 :', '0x%X' % self.ScriptSize], p, False)
-        printer(['Data Size                   :', '0x%X' % self.DataSize], p, False)
-        printer(['BIOS Security Version Number:', '0x%X' % self.BIOSSVN], p, False)
-        printer(['EC Security Version Number  :', '0x%X' % self.ECSVN], p, False)
-        printer(['Vendor Information          :', '0x%X' % self.VendorInfo], p, False)
+        printer(['Attributes Reserved         :', f'0x{f5:X}'], p, False)
+        printer(['Script Version              :', f'{self.ScriptVerMajor}.{self.ScriptVerMinor}'], p, False)
+        printer(['Script Size                 :', f'0x{self.ScriptSize:X}'], p, False)
+        printer(['Data Size                   :', f'0x{self.DataSize:X}'], p, False)
+        printer(['BIOS Security Version Number:', f'0x{self.BIOSSVN:X}'], p, False)
+        printer(['EC Security Version Number  :', f'0x{self.ECSVN:X}'], p, False)
+        printer(['Vendor Information          :', f'0x{self.VendorInfo:X}'], p, False)
         
 class IntelBiosGuardHeaderAttributes(ctypes.LittleEndianStructure):
     _fields_ = [
@@ -119,14 +119,14 @@ class IntelBiosGuardSignature2k(ctypes.LittleEndianStructure):
     ]
     
     def struct_print(self, p):
-        Modulus = '%0.*X' % (0x100 * 2, int.from_bytes(self.Modulus, 'little'))
-        Signature = '%0.*X' % (0x100 * 2, int.from_bytes(self.Signature, 'little'))
+        Modulus = f'{int.from_bytes(self.Modulus, "little"):0{0x100 * 2}X}'
+        Signature = f'{int.from_bytes(self.Signature, "little"):0{0x100 * 2}X}'
         
-        printer(['Unknown 0:', '0x%X' % self.Unknown0], p, False)
-        printer(['Unknown 1:', '0x%X' % self.Unknown1], p, False)
-        printer(['Modulus  :', '%s [...]' % Modulus[:32]], p, False)
-        printer(['Exponent :', '0x%X' % self.Exponent], p, False)
-        printer(['Signature:', '%s [...]' % Signature[:32]], p, False)
+        printer(['Unknown 0:', f'0x{self.Unknown0:X}'], p, False)
+        printer(['Unknown 1:', f'0x{self.Unknown1:X}'], p, False)
+        printer(['Modulus  :', f'{Modulus[:32]} [...]'], p, False)
+        printer(['Exponent :', f'0x{self.Exponent:X}'], p, False)
+        printer(['Signature:', f'{Signature[:32]} [...]'], p, False)
 
 def is_ami_pfat(in_file):
     input_buffer = file_to_bytes(in_file)
@@ -141,7 +141,7 @@ def get_ami_pfat(input_buffer):
     return match, buffer
 
 def get_file_name(index, name):
-    return safe_name('%0.2d -- %s' % (index, name))
+    return safe_name(f'{index:02d} -- {name}')
 
 def parse_bg_script(script_data, padding):
     is_opcode_div = len(script_data) % 8 == 0
@@ -212,7 +212,7 @@ def parse_pfat_hdr(buffer, padding):
         
         order = get_ordinal((bgt_indexes[index] if bgt_indexes else index) + 1)
         
-        desc = '%s (Index: %0.2d, Flash: %s, Parameter: %s, Flags: 0x%X, Blocks: %d)' % (name, index + 1, order, param, flags, count)
+        desc = f'{name} (Index: {index + 1:02d}, Flash: {order}, Parameter: {param}, Flags: 0x{flags:X}, Blocks: {count})'
         
         block_all += [(desc, name, order, param, flags, index, i, count) for i in range(count)]
     
@@ -226,7 +226,7 @@ def parse_pfat_file(buffer, output_path, padding):
     
     extract_name = os.path.basename(output_path)
     
-    extract_path = os.path.join(output_path + '_extracted')
+    extract_path = os.path.join(f'{output_path}_extracted')
     
     make_dirs(extract_path, delete=True)
     
@@ -242,11 +242,11 @@ def parse_pfat_file(buffer, output_path, padding):
             
             all_blocks_dict[file_index] = b''
         
-        block_status = '%d/%d' % (block_index + 1, block_count)
+        block_status = f'{block_index + 1}/{block_count}'
         
         bg_hdr = get_struct(buffer, block_off, IntelBiosGuardHeader)
         
-        printer('Intel BIOS Guard %s Header:\n' % block_status, padding + 8)
+        printer(f'Intel BIOS Guard {block_status} Header:\n', padding + 8)
         
         bg_hdr.struct_print(padding + 12)
         
@@ -270,13 +270,13 @@ def parse_pfat_file(buffer, output_path, padding):
             if len(bg_sig_bin) == PFAT_BLK_S2K_LEN:
                 bg_sig = get_struct(bg_sig_bin, 0x0, IntelBiosGuardSignature2k)
                 
-                printer('Intel BIOS Guard %s Signature:\n' % block_status, padding + 8)
+                printer(f'Intel BIOS Guard {block_status} Signature:\n', padding + 8)
                 
                 bg_sig.struct_print(padding + 12)
 
             block_off = bg_sig_end # Adjust next block to start at data + signature end
         
-        printer('Intel BIOS Guard %s Script:\n' % block_status, padding + 8)
+        printer(f'Intel BIOS Guard {block_status} Script:\n', padding + 8)
         
         _ = parse_bg_script(bg_script_bin, padding + 12)
         
@@ -286,7 +286,9 @@ def parse_pfat_file(buffer, output_path, padding):
     
     pfat_oob_data = buffer[block_off:] # Store out-of-bounds data after the end of PFAT files
     
-    pfat_oob_path = os.path.join(extract_path, get_file_name(file_count + 1, extract_name + '_OOB.bin'))
+    pfat_oob_name = get_file_name(file_count + 1, f'{extract_name}_OOB.bin')
+    
+    pfat_oob_path = os.path.join(extract_path, pfat_oob_name)
     
     with open(pfat_oob_path, 'wb') as out_oob: out_oob.write(pfat_oob_data)
     
@@ -296,7 +298,9 @@ def parse_pfat_file(buffer, output_path, padding):
     
     in_all_data = b''.join([block[1] for block in sorted(all_blocks_dict.items())])
     
-    in_all_path = os.path.join(extract_path, get_file_name(0, extract_name + '_ALL.bin'))
+    in_all_name = get_file_name(0, f'{extract_name}_ALL.bin')
+    
+    in_all_path = os.path.join(extract_path, in_all_name)
     
     with open(in_all_path, 'wb') as out_all: out_all.write(in_all_data + pfat_oob_data)
 

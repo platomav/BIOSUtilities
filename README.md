@@ -6,9 +6,10 @@
 <a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=DJDZD3PRGCSCL"><img border="0" title="BIOS Utilities Donation via Paypal or Debit/Credit Card" alt="BIOS Utilities Donation via Paypal or Debit/Credit Card" src="https://user-images.githubusercontent.com/11527726/109392268-e0f68280-7923-11eb-83d8-0a63f0d20783.png"></a>
 
 * [**Dell PFS Update Extractor**](#dell-pfs-update-extractor)
-* [**AMI UCP BIOS Extractor**](#ami-ucp-bios-extractor)
+* [**AMI UCP Update Extractor**](#ami-ucp-update-extractor)
 * [**AMI BIOS Guard Extractor**](#ami-bios-guard-extractor)
-* [**Portwell EFI BIOS Extractor**](#portwell-efi-bios-extractor)
+* [**Phoenix TDK Packer Extractor**](#phoenix-tdk-packer-extractor)
+* [**Portwell EFI Update Extractor**](#portwell-efi-update-extractor)
 
 ## **Dell PFS Update Extractor**
 
@@ -71,17 +72,17 @@ Some Anti-Virus software may claim that the built/frozen/compiled executable con
 
 ![]()
 
-## **AMI UCP BIOS Extractor**
+## **AMI UCP Update Extractor**
 
 ![]()
 
 #### **Description**
 
-Parses AMI UCP (Utility Configuration Program) BIOS executables, extracts their firmware components (e.g. SPI/BIOS/UEFI, EC, ME etc) and shows all relevant info. It supports all AMI UCP revisions and formats, including those with nested AMI PFAT, AMI UCP or Insyde SFX structures. The output comprises only final firmware components and utilities which are directly usable by end users.
+Parses AMI UCP (Utility Configuration Program) Update executables, extracts their firmware components (e.g. SPI/BIOS/UEFI, EC, ME etc) and shows all relevant info. It supports all AMI UCP revisions and formats, including those with nested AMI PFAT, AMI UCP or Insyde SFX structures. The output comprises only final firmware components and utilities which are directly usable by end users.
 
 #### **Usage**
 
-You can either Drag & Drop or manually enter AMI UCP BIOS executable file(s). Optional arguments:
+You can either Drag & Drop or manually enter AMI UCP Update executable file(s). Optional arguments:
   
 * -h or --help : show help message and exit
 * -v or --version : show utility name and version
@@ -199,7 +200,60 @@ Some Anti-Virus software may claim that the built/frozen/compiled executable con
 
 ![]()
 
-## **Portwell EFI BIOS Extractor**
+## **Phoenix TDK Packer Extractor**
+
+![]()
+
+#### **Description**
+
+Parses Phoenix Tools Development Kit (TDK) Packer executables and extracts their firmware (e.g. SPI, BIOS/UEFI, EC etc) and utilities (e.g. WinFlash etc) components. It supports all Phoenix TDK Packer revisions and formats, including those which contain LZMA compressed files. The output comprises only final firmware components which are directly usable by end users.
+
+#### **Usage**
+
+You can either Drag & Drop or manually enter Phoenix Tools Development Kit (TDK) Packer executable file(s). Optional arguments:
+  
+* -h or --help : show help message and exit
+* -v or --version : show utility name and version
+* -i or --input-dir : extract from given input directory
+* -o or --output-dir : extract in given output directory
+* -e or --auto-exit : skip press enter to exit prompts
+* --static : use static-built external dependencies
+
+#### **Compatibility**
+
+Should work at all Windows, Linux or macOS operating systems which have Python 3.8 support.
+
+#### **Prerequisites**
+
+No prerequisites needed to run the utility.
+
+#### **Build/Freeze/Compile with PyInstaller**
+
+PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
+
+1. Make sure Python 3.8.0 or newer is installed:
+
+> python --version
+
+2. Use pip to install PyInstaller:
+
+> pip3 install pyinstaller
+
+3. Build/Freeze/Compile:
+
+> pyinstaller --noupx --onefile \<path-to-project\>\/Phoenix_TDK_Extract.py
+
+At dist folder you should find the final utility executable
+
+#### **Anti-Virus False Positives**
+
+Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
+
+#### **Pictures**
+
+![]()
+
+## **Portwell EFI Update Extractor**
 
 ![]()
 

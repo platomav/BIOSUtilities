@@ -23,7 +23,7 @@ def is_7z_supported(in_path, padding=0, static=False):
     try:
         subprocess.run([get_7z_path(static), 't', in_path, '-bso0', '-bse0', '-bsp0'], check=True)
     except:
-        printer('Error: 7-Zip could not check support for file %s!' % in_path, padding)
+        printer(f'Error: 7-Zip could not check support for file {in_path}!', padding)
         
         return False
     
@@ -38,10 +38,10 @@ def a7z_decompress(in_path, out_path, in_name, padding=0, static=False):
         
         if not os.path.isdir(out_path): raise Exception('EXTRACT_DIR_MISSING')
     except:
-        printer('Error: 7-Zip could not extract %s file %s!' % (in_name, in_path), padding)
+        printer(f'Error: 7-Zip could not extract {in_name} file {in_path}!', padding)
         
         return 1
     
-    printer('Succesfull %s decompression via 7-Zip!' % in_name, padding)
+    printer(f'Succesfull {in_name} decompression via 7-Zip!', padding)
     
     return 0

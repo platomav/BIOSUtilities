@@ -43,7 +43,7 @@ def efi_decompress(in_path, out_path, padding=0, comp_type='--uefi'):
         
         if os.path.getsize(out_path) != size_orig: raise Exception('EFI_DECOMPRESS_ERROR')
     except:
-        printer('Error: TianoCompress could not extract file %s!' % in_path, padding)
+        printer(f'Error: TianoCompress could not extract file {in_path}!', padding)
         
         return 1
     

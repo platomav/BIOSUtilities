@@ -7,7 +7,7 @@ Dell PFS Update Extractor
 Copyright (C) 2018-2022 Plato Mavropoulos
 """
 
-TITLE = 'Dell PFS Update Extractor v6.0_a9'
+TITLE = 'Dell PFS Update Extractor v6.0_a10'
 
 import os
 import io
@@ -42,7 +42,7 @@ class DellPfsHeader(ctypes.LittleEndianStructure):
     def struct_print(self, p):
         printer(['Header Tag    :', self.Tag.decode('utf-8')], p, False)
         printer(['Header Version:', self.HeaderVersion], p, False)
-        printer(['Payload Size  :', '0x%X' % self.PayloadSize], p, False)
+        printer(['Payload Size  :', f'0x{self.PayloadSize:X}'], p, False)
 
 # Dell PFS Footer Structure    
 class DellPfsFooter(ctypes.LittleEndianStructure):
@@ -55,8 +55,8 @@ class DellPfsFooter(ctypes.LittleEndianStructure):
     ]
     
     def struct_print(self, p):
-        printer(['Payload Size    :', '0x%X' % self.PayloadSize], p, False)
-        printer(['Payload Checksum:', '0x%0.8X' % self.Checksum], p, False)
+        printer(['Payload Size    :', f'0x{self.PayloadSize:X}'], p, False)
+        printer(['Payload Checksum:', f'0x{self.Checksum:08X}'], p, False)
         printer(['Footer Tag      :', self.Tag.decode('utf-8')], p, False)
 
 # Dell PFS Entry Base Structure
@@ -76,19 +76,19 @@ class DellPfsEntryBase(ctypes.LittleEndianStructure):
     ]
     
     def struct_print(self, p):
-        GUID = '%0.*X' % (0x10 * 2, int.from_bytes(self.GUID, 'little'))
-        Unknown = '%0.*X' % (len(self.Unknown) * 8, int.from_bytes(self.Unknown, 'little'))
+        GUID = f'{int.from_bytes(self.GUID, "little"):0{0x10 * 2}X}'
+        Unknown = f'{int.from_bytes(self.Unknown, "little"):0{len(self.Unknown) * 8}X}'
         Version = get_entry_ver(self.Version, self.VersionType)
         
         printer(['Entry GUID             :', GUID], p, False)
         printer(['Entry Version          :', self.HeaderVersion], p, False)
         printer(['Payload Version        :', Version], p, False)
-        printer(['Reserved               :', '0x%X' % self.Reserved], p, False)
-        printer(['Payload Data Size      :', '0x%X' % self.DataSize], p, False)
-        printer(['Payload Signature Size :', '0x%X' % self.DataSigSize], p, False)
-        printer(['Metadata Data Size     :', '0x%X' % self.DataMetSize], p, False)
-        printer(['Metadata Signature Size:', '0x%X' % self.DataMetSigSize], p, False)
-        printer(['Unknown                :', '0x%s' % Unknown], p, False)
+        printer(['Reserved               :', f'0x{self.Reserved:X}'], p, False)
+        printer(['Payload Data Size      :', f'0x{self.DataSize:X}'], p, False)
+        printer(['Payload Signature Size :', f'0x{self.DataSigSize:X}'], p, False)
+        printer(['Metadata Data Size     :', f'0x{self.DataMetSize:X}'], p, False)
+        printer(['Metadata Signature Size:', f'0x{self.DataMetSigSize:X}'], p, False)
+        printer(['Unknown                :', f'0x{Unknown}'], p, False)
 
 # Dell PFS Entry Revision 1 Structure
 class DellPfsEntryR1(DellPfsEntryBase):
@@ -116,7 +116,7 @@ class DellPfsInfo(ctypes.LittleEndianStructure):
     ]
     
     def struct_print(self, p):
-        GUID = '%0.*X' % (0x10 * 2, int.from_bytes(self.GUID, 'little'))
+        GUID = f'{int.from_bytes(self.GUID, "little"):0{0x10 * 2}X}'
         
         printer(['Info Version:', self.HeaderVersion], p, False)
         printer(['Entry GUID  :', GUID], p, False)
@@ -178,13 +178,13 @@ class DellPfsPfatMetadata(ctypes.LittleEndianStructure):
     ]
     
     def struct_print(self, p):
-        printer(['Offset Top :', '0x%X' % self.OffsetTop], p, False)
-        printer(['Unknown 0  :', '0x%X' % self.Unknown0], p, False)
-        printer(['Offset Base:', '0x%X' % self.OffsetBase], p, False)
-        printer(['Block Size :', '0x%X' % self.BlockSize], p, False)
-        printer(['Unknown 1  :', '0x%X' % self.Unknown1], p, False)
-        printer(['Unknown 2  :', '0x%X' % self.Unknown2], p, False)
-        printer(['Unknown 3  :', '0x%X' % self.Unknown3], p, False)
+        printer(['Offset Top :', f'0x{self.OffsetTop:X}'], p, False)
+        printer(['Unknown 0  :', f'0x{self.Unknown0:X}'], p, False)
+        printer(['Offset Base:', f'0x{self.OffsetBase:X}'], p, False)
+        printer(['Block Size :', f'0x{self.BlockSize:X}'], p, False)
+        printer(['Unknown 1  :', f'0x{self.Unknown1:X}'], p, False)
+        printer(['Unknown 2  :', f'0x{self.Unknown2:X}'], p, False)
+        printer(['Unknown 3  :', f'0x{self.Unknown3:X}'], p, False)
 
 # The Dell ThinOS PKG update images usually contain multiple sections.
 # Each section starts with a 0x30 header, which begins with pattern 72135500.
@@ -239,10 +239,10 @@ def pfs_section_parse(zlib_data, zlib_start, output_path, pfs_name, pfs_index, p
     is_zlib_error = False # Initialize PFS ZLIB-related error state
     
     section_type = zlib_data[zlib_start - 0x1] # Byte before PFS ZLIB Section pattern is Section Type (e.g. AA, BB)
-    section_name = {0xAA:'Firmware', 0xBB:'Utilities'}.get(section_type, 'Unknown (%0.2X)' % section_type)
+    section_name = {0xAA:'Firmware', 0xBB:'Utilities'}.get(section_type, f'Unknown ({section_type:02X})')
     
     # Show extraction complete message for each main PFS ZLIB Section
-    printer('Extracting Dell PFS %d >%s > %s' % (pfs_index, pfs_name, section_name), padding)
+    printer(f'Extracting Dell PFS {pfs_index} >{pfs_name} > {section_name}', padding)
     
     # Set PFS ZLIB Section extraction sub-directory path
     section_path = os.path.join(output_path, safe_name(section_name))
@@ -390,11 +390,11 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count, output_path, pfs_padd, i
         
         # Validate that a known PFS Information Header Version was encountered
         if entry_info_hdr.HeaderVersion != 1:
-            printer('Error: Unknown PFS Information Header Version %d!' % entry_info_hdr.HeaderVersion, pfs_padd + 8)
+            printer(f'Error: Unknown PFS Information Header Version {entry_info_hdr.HeaderVersion}!', pfs_padd + 8)
             break # Skip PFS Information Entries/Descriptors in case of unknown PFS Information Header Version
         
         # Get PFS Information Header GUID in Big Endian format to match each Info to the equivalent stored PFS Entry details
-        entry_guid = '%0.*X' % (0x10 * 2, int.from_bytes(entry_info_hdr.GUID, 'little'))
+        entry_guid = f'{int.from_bytes(entry_info_hdr.GUID, "little"):0{0x10 * 2}X}'
         
         # Get PFS FileName Structure values
         entry_info_mod = get_struct(filename_info, info_start + PFS_INFO_LEN, DellPfsName)
@@ -466,7 +466,7 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count, output_path, pfs_padd, i
         
         # Validate that a known PFS Information Header Version was encountered
         if entry_info_hdr.HeaderVersion != 1:
-            printer('Error: Unknown PFS Information Header Version %d!' % entry_info_hdr.HeaderVersion, pfs_padd + 8)
+            printer(f'Error: Unknown PFS Information Header Version {entry_info_hdr.HeaderVersion}!', pfs_padd + 8)
             break # Skip PFS Signature Entries/Descriptors in case of unknown Header Version
         
         # PFS Signature Entries/Descriptors have DellPfsInfo + DellPfsEntryR* + Sign Size [0x2] + Sign Data [Sig Size]
@@ -484,12 +484,12 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count, output_path, pfs_padd, i
         sign_info_start = sign_start + PFS_INFO_LEN + pfs_entry_size
         sign_size = int.from_bytes(signature_info[sign_info_start:sign_info_start + 0x2], 'little')
         sign_data_raw = signature_info[sign_info_start + 0x2:sign_info_start + 0x2 + sign_size]
-        sign_data_txt = '%0.*X' % (sign_size * 2, int.from_bytes(sign_data_raw, 'little'))
+        sign_data_txt = f'{int.from_bytes(sign_data_raw, "little"):0{sign_size * 2}X}'
         
         if is_structure:
             printer('Signature Information:\n', pfs_padd + 8)
-            printer('Signature Size: 0x%X' % sign_size, pfs_padd + 12, False)
-            printer('Signature Data: %s [...]' % sign_data_txt[:32], pfs_padd + 12, False)
+            printer(f'Signature Size: 0x{sign_size:X}', pfs_padd + 12, False)
+            printer(f'Signature Data: {sign_data_txt[:32]} [...]', pfs_padd + 12, False)
         
         # The next PFS Signature Entry/Descriptor starts after the previous Signature Data
         sign_start += (PFS_INFO_LEN + pfs_entry_size + 0x2 + sign_size)
@@ -533,7 +533,7 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count, output_path, pfs_padd, i
                 # its PFS Information should contain their names (CombineBiosNameX). Since the main/first
                 # full PFS structure has count/index 1, the rest start at 2+ and thus, their PFS Information
                 # names can be retrieved in order by subtracting 2 from the main/first PFS Information values
-                sub_pfs_name = ' %s v%s' % (info_all[pfs_count - 2][1], info_all[pfs_count - 2][2]) if info_all else ' UNKNOWN'
+                sub_pfs_name = f' {info_all[pfs_count - 2][1]} v{info_all[pfs_count - 2][2]}' if info_all else ' UNKNOWN'
                 
                 # Set the sub-PFS output path (create sub-folders for each sub-PFS and its ZLIB sections)
                 sub_pfs_path = os.path.join(output_path, str(pfs_count) + safe_name(sub_pfs_name))
@@ -597,7 +597,7 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count, output_path, pfs_padd, i
         
         # Write/Extract PFS Entry files
         for file in write_files:
-            full_name = '%d%s -- %d %s v%s' % (pfs_index, pfs_name, file_index, file_name, file_version) # Full PFS Entry Name
+            full_name = f'{pfs_index}{pfs_name} -- {file_index} {file_name} v{file_version}' # Full PFS Entry Name
             pfs_file_write(file[0], file[1], file_type, full_name, output_path, pfs_padd, is_structure, is_advanced)
     
     # Get PFS Footer Data after PFS Header Payload
@@ -621,13 +621,13 @@ def parse_pfs_entry(entry_buffer, entry_start, entry_size, entry_struct, text, p
     
     # Validate that the PFS Entry Reserved field is empty
     if pfs_entry.Reserved != 0:
-        printer('Error: Detected non-empty %s Reserved field!' % text, padding + 8)
+        printer(f'Error: Detected non-empty {text} Reserved field!', padding + 8)
     
     # Get PFS Entry Version string via "Version" and "VersionType" fields
     entry_version = get_entry_ver(pfs_entry.Version, pfs_entry.VersionType)
     
     # Get PFS Entry GUID in Big Endian format
-    entry_guid = '%0.*X' % (0x10 * 2, int.from_bytes(pfs_entry.GUID, 'little'))
+    entry_guid = f'{int.from_bytes(pfs_entry.GUID, "little"):0{0x10 * 2}X}'
     
     # PFS Entry Data starts after the PFS Entry Structure
     entry_data_start = entry_start + entry_size
@@ -694,7 +694,7 @@ def parse_pfat_pfs(entry_hdr, entry_data, padding, is_structure=True):
         
         # Show sub-PFS PFAT Header Structure info
         if is_structure:
-            printer('PFAT Block %d Header:\n' % pfat_entry_index, padding + 12)
+            printer(f'PFAT Block {pfat_entry_index} Header:\n', padding + 12)
             pfat_hdr.struct_print(padding + 16)
         
         pfat_script_start = pfat_hdr_off + PFAT_HDR_LEN # PFAT Block Script Start
@@ -719,12 +719,12 @@ def parse_pfat_pfs(entry_hdr, entry_data, padding, is_structure=True):
             
             # Show sub-PFS PFAT Signature Structure info
             if is_structure:
-                printer('PFAT Block %d Signature:\n' % pfat_entry_index, padding + 12)
+                printer(f'PFAT Block {pfat_entry_index} Signature:\n', padding + 12)
                 pfat_sig.struct_print(padding + 16)
         
         # Show PFAT Script via BIOS Guard Script Tool
         if is_structure:
-            printer('PFAT Block %d Script:\n' % pfat_entry_index, padding + 12)
+            printer(f'PFAT Block {pfat_entry_index} Script:\n', padding + 12)
             
             # https://github.com/allowitsme/big-tool by Dmitry Frolov
             _ = parse_bg_script(pfat_script_data, padding + 16)
@@ -741,7 +741,7 @@ def parse_pfat_pfs(entry_hdr, entry_data, padding, is_structure=True):
             
             # Show sub-PFS PFAT Metadata Structure info
             if is_structure:
-                printer('PFAT Block %d Metadata:\n' % pfat_entry_index, padding + 12)
+                printer(f'PFAT Block {pfat_entry_index} Metadata:\n', padding + 12)
                 pfat_met.struct_print(padding + 16)
             
             # Another way to get each PFAT Entry payload's Order is from its Metadata at 0x8-0xC, if applicable
@@ -801,10 +801,10 @@ def get_entry_ver(version_fields, version_types):
     for index,field in enumerate(version_fields):
         eol = '' if index == len(version_fields) - 1 else '.'
         
-        if version_types[index] == 65: version += '%X%s' % (field, eol) # 0x41 = ASCII
-        elif version_types[index] == 78: version += '%d%s' % (field, eol) # 0x4E = Number
+        if version_types[index] == 65: version += f'{field:X}{eol}' # 0x41 = ASCII
+        elif version_types[index] == 78: version += f'{field:d}{eol}' # 0x4E = Number
         elif version_types[index] in (0, 32): version = version.strip('.') # 0x00 or 0x20 = Unused
-        else: version += '%X%s' % (field, eol) # Unknown
+        else: version += f'{field:X}{eol}' # Unknown
             
     return version
 
@@ -812,7 +812,7 @@ def get_entry_ver(version_fields, version_types):
 def chk_hdr_ver(version, text, padding):
     if version in (1,2): return
     
-    printer('Error: Unknown %s Header Version %d!' % (text, version), padding)
+    printer(f'Error: Unknown {text} Header Version {version}!', padding)
 
 # Analyze Dell PFS Footer Structure
 def chk_pfs_ftr(footer_buffer, data_buffer, data_size, text, padding, is_structure=True):    
@@ -826,24 +826,24 @@ def chk_pfs_ftr(footer_buffer, data_buffer, data_size, text, padding, is_structu
             printer('PFS Footer:\n', padding + 4)
             pfs_ftr.struct_print(padding + 8)
     else:
-        printer('Error: %s Footer could not be found!' % text, padding + 4)
+        printer(f'Error: {text} Footer could not be found!', padding + 4)
     
     # Validate that PFS Header Payload Size matches the one at PFS Footer
     if data_size != pfs_ftr.PayloadSize:
-        printer('Error: %s Header & Footer Payload Size mismatch!' % text, padding + 4)
+        printer(f'Error: {text} Header & Footer Payload Size mismatch!', padding + 4)
     
     # Calculate the PFS Payload Data CRC-32 w/ Vector 0
     pfs_ftr_crc = ~zlib.crc32(data_buffer, 0) & 0xFFFFFFFF
     
     # Validate PFS Payload Data Checksum via PFS Footer
     if pfs_ftr.Checksum != pfs_ftr_crc:
-        printer('Error: Invalid %s Footer Payload Checksum!' % text, padding + 4)
+        printer(f'Error: Invalid {text} Footer Payload Checksum!', padding + 4)
 
 # Write/Extract Dell PFS Entry Files (Data, Metadata, Signature)
 def pfs_file_write(bin_buff, bin_name, bin_type, full_name, out_path, padding, is_structure=True, is_advanced=True):
     # Store Data/Metadata Signature (advanced users only)
     if bin_name.startswith('sign'):
-        final_name = '%s.%s.sig' % (safe_name(full_name), bin_name.split('_')[1])
+        final_name = f'{safe_name(full_name)}.{bin_name.split("_")[1]}.sig'
         final_path = os.path.join(out_path, final_name)
         
         with open(final_path, 'wb') as pfs_out: pfs_out.write(bin_buff) # Write final Data/Metadata Signature
@@ -851,12 +851,12 @@ def pfs_file_write(bin_buff, bin_name, bin_type, full_name, out_path, padding, i
         return # Skip further processing for Signatures
     
     # Store Data/Metadata Payload
-    bin_ext = '.%s.bin' % bin_name if is_advanced else '.bin' # Simpler Data/Metadata Extension for non-advanced users
+    bin_ext = f'.{bin_name}.bin' if is_advanced else '.bin' # Simpler Data/Metadata Extension for non-advanced users
     
     # Some Data may be Text or XML files with useful information for non-advanced users
     is_text,final_data,file_ext,write_mode = bin_is_text(bin_buff, bin_type, bin_name == 'meta', padding, is_structure, is_advanced)
     
-    final_name = '%s%s' % (safe_name(full_name), bin_ext[:-4] + file_ext if is_text else bin_ext)
+    final_name = f'{safe_name(full_name)}{bin_ext[:-4] + file_ext if is_text else bin_ext}'
     final_path = os.path.join(out_path, final_name)
     
     with open(final_path, write_mode) as pfs_out: pfs_out.write(final_data) # Write final Data/Metadata Payload
@@ -893,7 +893,7 @@ def bin_is_text(buffer, file_type, is_metadata, pfs_padd, is_structure=True, is_
     
     # Show Model/PCR XML Information, if applicable
     if is_structure and is_text and not is_metadata: # Metadata is shown at initial DellPfsMetadata analysis
-        printer('PFS %s Information:\n' % {'.txt': 'Model', '.xml': 'PCR XML'}[extension], pfs_padd + 8)
+        printer(f'PFS { {".txt": "Model", ".xml": "PCR XML"}[extension] } Information:\n', pfs_padd + 8)
         _ = [printer(line.strip('\r'), pfs_padd + 12, False) for line in buffer.split('\n') if line]
     
     # Only for non-advanced users due to signature (.sig) invalidation
@@ -957,7 +957,7 @@ if __name__ == '__main__':
             
             continue # Next input file
         
-        extract_path = os.path.join(output_path, input_name + '_extracted')
+        extract_path = os.path.join(output_path, f'{input_name}_extracted')
         
         extract_name = ' ' + os.path.splitext(input_name)[0]
         

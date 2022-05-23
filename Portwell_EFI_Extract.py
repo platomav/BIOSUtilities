@@ -7,7 +7,7 @@ Portwell EFI Update Extractor
 Copyright (C) 2021-2022 Plato Mavropoulos
 """
 
-TITLE = 'Portwell EFI Update Extractor v2.0_a5'
+TITLE = 'Portwell EFI Update Extractor v2.0_a6'
 
 import os
 import sys
@@ -18,12 +18,9 @@ sys.dont_write_bytecode = True
 
 from common.efi_comp import efi_decompress, is_efi_compressed
 from common.path_ops import safe_name, make_dirs
+from common.patterns import PAT_PORTWELL_EFI, PAT_MICROSOFT_MZ
 from common.system import script_init, argparse_init, printer
 from common.text_ops import file_to_bytes
-
-PEFI_MAGIC = br'MZ'
-
-FILE_MAGIC = br'<UU>'
 
 FILE_NAMES = {
     0 : 'Flash.efi',
@@ -40,8 +37,8 @@ def is_portwell_efi(in_file):
     try: pe_buffer = get_portwell_pe(in_buffer)[1]
     except: pe_buffer = b''
     
-    is_mz = in_buffer.startswith(PEFI_MAGIC) # EFI images start with PE Header MZ
-    is_uu = pe_buffer.startswith(FILE_MAGIC) # Portwell EFI files start with <UU>
+    is_mz = in_buffer.startswith(PAT_MICROSOFT_MZ.pattern) # EFI images start with PE Header MZ
+    is_uu = pe_buffer.startswith(PAT_PORTWELL_EFI.pattern) # Portwell EFI files start with <UU>
     
     return is_mz and is_uu
 
@@ -65,7 +62,7 @@ def portwell_efi_extract(input_buffer, output_path, padding=0):
     
     printer(efi_title, padding)
     
-    efi_files = pe_data.split(FILE_MAGIC) # Split EFI Payload into <UU> file chunks
+    efi_files = pe_data.split(PAT_PORTWELL_EFI.pattern) # Split EFI Payload into <UU> file chunks
     
     parse_efi_files(extract_path, efi_files[1:], padding)
     

@@ -225,7 +225,9 @@ Should work at all Windows, Linux or macOS operating systems which have Python 3
 
 #### **Prerequisites**
 
-No prerequisites needed to run the utility.
+To run the utility, you must have the following 3rd party Python module installed:
+
+* [pefile](https://pypi.org/project/pefile/)
 
 #### **Build/Freeze/Compile with PyInstaller**
 
@@ -239,7 +241,11 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 
 > pip3 install pyinstaller
 
-3. Build/Freeze/Compile:
+3. Use pip to install pefile:
+
+> pip3 install pefile
+
+4. Build/Freeze/Compile:
 
 > pyinstaller --noupx --onefile \<path-to-project\>\/Phoenix_TDK_Extract.py
 

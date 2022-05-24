@@ -7,7 +7,7 @@ Portwell EFI Update Extractor
 Copyright (C) 2021-2022 Plato Mavropoulos
 """
 
-TITLE = 'Portwell EFI Update Extractor v2.0_a6'
+TITLE = 'Portwell EFI Update Extractor v2.0_a7'
 
 import os
 import sys
@@ -37,8 +37,8 @@ def is_portwell_efi(in_file):
     try: pe_buffer = get_portwell_pe(in_buffer)[1]
     except: pe_buffer = b''
     
-    is_mz = in_buffer.startswith(PAT_MICROSOFT_MZ.pattern) # EFI images start with PE Header MZ
-    is_uu = pe_buffer.startswith(PAT_PORTWELL_EFI.pattern) # Portwell EFI files start with <UU>
+    is_mz = PAT_MICROSOFT_MZ.search(in_buffer[:0x2]) # EFI images start with PE Header MZ
+    is_uu = PAT_PORTWELL_EFI.search(pe_buffer[:0x4]) # Portwell EFI files start with <UU>
     
     return is_mz and is_uu
 
@@ -52,6 +52,8 @@ def get_portwell_pe(in_buffer):
 
 # Parse & Extract Portwell UEFI Unpacker
 def portwell_efi_extract(input_buffer, output_path, padding=0):
+    efi_files = [] # Initialize EFI Payload file chunks
+    
     extract_path = os.path.join(f'{output_path}_extracted')
     
     make_dirs(extract_path, delete=True)
@@ -62,9 +64,14 @@ def portwell_efi_extract(input_buffer, output_path, padding=0):
     
     printer(efi_title, padding)
     
-    efi_files = pe_data.split(PAT_PORTWELL_EFI.pattern) # Split EFI Payload into <UU> file chunks
+    # Split EFI Payload into <UU> file chunks
+    efi_list = list(PAT_PORTWELL_EFI.finditer(pe_data))
+    for i,_ in enumerate(efi_list):
+        efi_bgn = efi_list[i].end()
+        efi_end = len(pe_data) if i == len(efi_list) - 1 else efi_list[i + 1].start()
+        efi_files.append(pe_data[efi_bgn:efi_end])
     
-    parse_efi_files(extract_path, efi_files[1:], padding)
+    parse_efi_files(extract_path, efi_files, padding)
     
 # Get Portwell UEFI Unpacker tag
 def get_unpacker_tag(input_buffer, pe_file):

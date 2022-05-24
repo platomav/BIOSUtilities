@@ -7,7 +7,7 @@ Phoenix TDK Packer Extractor
 Copyright (C) 2021-2022 Plato Mavropoulos
 """
 
-TITLE = 'Phoenix TDK Packer Extractor v2.0_a5'
+TITLE = 'Phoenix TDK Packer Extractor v2.0_a6'
 
 import os
 import sys
@@ -92,29 +92,36 @@ def get_tdk_base(in_buffer, pack_off):
     for mz in mz_ord:
         mz_off = mz.start()
         
-        # MZ (DOS) > PE (NT) image offset is found at offset 0x3C-0x40 relative to MZ base 
+        # MZ (DOS) > PE (NT) image Offset is found at offset 0x3C-0x40 relative to MZ base 
         pe_off = mz_off + int.from_bytes(in_buffer[mz_off + 0x3C:mz_off + 0x40], 'little')
+        
+        # Skip MZ (DOS) with bad PE (NT) image Offset
+        if pe_off == mz_off or pe_off >= pack_off:
+            continue
         
         # Check if potential MZ > PE image magic value is valid
         if PAT_MICROSOFT_PE.search(in_buffer[pe_off:pe_off + 0x4]):
             try:
-                # Analyze detected MZ > PE image buffer
-                pe_file = pefile.PE(data=in_buffer[mz_off:])
+                # Analyze detected MZ > PE image buffer quickly (fast_load)
+                pe_file = pefile.PE(data=in_buffer[mz_off:], fast_load=True)
+                
+                # Since fast_load is used, IMAGE_DIRECTORY_ENTRY_RESOURCE must be parsed for FileInfo > StringTable
+                pe_file.parse_data_directories(directories=[pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_RESOURCE']])
                 
                 # Attempt to retrieve the PE > "Product Name" version string value
-                pe_name = pe_file.FileInfo[0][0].StringTable[0].entries[b'ProductName']  
+                pe_name = pe_file.FileInfo[0][0].StringTable[0].entries[b'ProductName'].upper()
             except:
                 # Any error means no PE > "Product Name" retrieved
                 pe_name = b''
             
             # Check for valid Phoenix TDK Packer PE > "Product Name"
             # Expected value is "TDK Packer (Extractor for Windows)"
-            if pe_name.upper().startswith(b'TDK PACKER'):
+            if pe_name.startswith(b'TDK PACKER'):
                 # Set TDK Base Offset to valid TDK Packer MZ offset
                 tdk_base_off = mz_off
         
         # Stop parsing detected MZ once TDK Base Offset is found
-        if tdk_base_off:
+        if tdk_base_off is not None:
             break
     else:
         # No TDK Base Offset could be found, assume 0x0

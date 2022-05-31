@@ -7,7 +7,7 @@ Portwell EFI Update Extractor
 Copyright (C) 2021-2022 Plato Mavropoulos
 """
 
-TITLE = 'Portwell EFI Update Extractor v2.0_a7'
+TITLE = 'Portwell EFI Update Extractor v2.0_a8'
 
 import os
 import sys
@@ -16,7 +16,7 @@ import pefile
 # Stop __pycache__ generation
 sys.dont_write_bytecode = True
 
-from common.efi_comp import efi_decompress, is_efi_compressed
+from common.comp_efi import efi_decompress, is_efi_compressed
 from common.path_ops import safe_name, make_dirs
 from common.patterns import PAT_PORTWELL_EFI, PAT_MICROSOFT_MZ
 from common.system import script_init, argparse_init, printer

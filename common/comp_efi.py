@@ -30,7 +30,7 @@ def is_efi_compressed(data, strict=True):
 
 # Get TianoCompress path
 def get_tiano_path():
-    exec_name = 'TianoCompress' + ('.exe' if get_os_ver()[1] else '')
+    exec_name = f'TianoCompress{".exe" if get_os_ver()[1] else ""}'
     
     return safe_path(project_root(), ['external',exec_name])
 

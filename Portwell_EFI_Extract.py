@@ -7,7 +7,7 @@ Portwell EFI Update Extractor
 Copyright (C) 2021-2022 Plato Mavropoulos
 """
 
-TITLE = 'Portwell EFI Update Extractor v2.0_a8'
+TITLE = 'Portwell EFI Update Extractor v2.0_a9'
 
 import os
 import sys
@@ -40,7 +40,7 @@ def is_portwell_efi(in_file):
     is_mz = PAT_MICROSOFT_MZ.search(in_buffer[:0x2]) # EFI images start with PE Header MZ
     is_uu = PAT_PORTWELL_EFI.search(pe_buffer[:0x4]) # Portwell EFI files start with <UU>
     
-    return is_mz and is_uu
+    return bool(is_mz and is_uu)
 
 # Get PE of Portwell EFI executable
 def get_portwell_pe(in_buffer):

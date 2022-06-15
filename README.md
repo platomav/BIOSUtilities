@@ -3,8 +3,6 @@
 
 [BIOS Utilities News Feed](https://twitter.com/platomaniac)
 
-<a href="https://www.paypal.com/cgi-bin/webscr?cmd=_s-xclick&hosted_button_id=DJDZD3PRGCSCL"><img border="0" title="BIOS Utilities Donation via Paypal or Debit/Credit Card" alt="BIOS Utilities Donation via Paypal or Debit/Credit Card" src="https://user-images.githubusercontent.com/11527726/109392268-e0f68280-7923-11eb-83d8-0a63f0d20783.png"></a>
-
 * [**AMI BIOS Guard Extractor**](#ami-bios-guard-extractor)
 * [**AMI UCP Update Extractor**](#ami-ucp-update-extractor)
 * [**Dell PFS Update Extractor**](#dell-pfs-update-extractor)
@@ -100,7 +98,7 @@ Should work at all Windows, Linux or macOS operating systems which have Python 3
 To run the utility, you must have the following 3rd party tools at the "external" project directory:
 
 * [TianoCompress](https://github.com/tianocore/edk2/tree/master/BaseTools/Source/C/TianoCompress/) (e.g. [TianoCompress.exe for Windows](https://github.com/tianocore/edk2-BaseTools-win32/) or TianoCompress for Linux)
-* [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zz|7zzs for Linux)
+* [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zzs for Linux)
 
 Optionally, to decompile the AMI UCP \> AMI PFAT \> Intel BIOS Guard Scripts (when applicable), you must have the following 3rd party utility at the "external" project directory:
 
@@ -364,7 +362,7 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 
 3. Build/Freeze/Compile:
 
-> pyinstaller --noupx --onefile \<path-to-project\>\/Phoenix_TDK_Extract.py
+> pyinstaller --noupx --onefile \<path-to-project\>\/VAIO_Package_Extract.py
 
 At dist folder you should find the final utility executable
 
@@ -375,6 +373,3 @@ Some Anti-Virus software may claim that the built/frozen/compiled executable con
 #### **Pictures**
 
 ![]()
-
-###### _Donate Button Card Image: [Credit and Loan Pack](https://flaticon.com/free-icon/credit-card_3898076) by **Freepik** under Flaticon license_
-###### _Donate Button Paypal Image: [Credit Cards Pack](https://flaticon.com/free-icon/paypal_349278) by **Freepik** under Flaticon license_

@@ -7,7 +7,7 @@ Phoenix TDK Packer Extractor
 Copyright (C) 2021-2022 Plato Mavropoulos
 """
 
-TITLE = 'Phoenix TDK Packer Extractor v2.0_a6'
+TITLE = 'Phoenix TDK Packer Extractor v2.0_a7'
 
 import os
 import sys
@@ -149,7 +149,7 @@ def get_phoenix_tdk(in_buffer):
 def is_phoenix_tdk(in_file):
     buffer = file_to_bytes(in_file)
     
-    return bool(get_phoenix_tdk(buffer)[1])
+    return bool(get_phoenix_tdk(buffer)[1] != None)
 
 # Parse & Extract Phoenix Tools Development Kit (TDK) Packer
 def phoenix_tdk_extract(input_buffer, output_path, pack_off, base_off=0, padding=0):
@@ -253,7 +253,7 @@ if __name__ == '__main__':
         tdk_base_off,tdk_pack_off = get_phoenix_tdk(input_buffer)
         
         # Check if Phoenix TDK Packer pattern was found on executable
-        if not tdk_pack_off:
+        if tdk_pack_off == None:
             printer('Error: This is not a Phoenix TDK Packer executable!', padding)
             
             continue # Next input file

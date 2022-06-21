@@ -7,18 +7,18 @@ Phoenix TDK Packer Extractor
 Copyright (C) 2021-2022 Plato Mavropoulos
 """
 
-TITLE = 'Phoenix TDK Packer Extractor v2.0_a7'
+TITLE = 'Phoenix TDK Packer Extractor v2.0_a8'
 
 import os
 import sys
 import lzma
-import pefile
 import ctypes
 
 # Stop __pycache__ generation
 sys.dont_write_bytecode = True
 
 from common.path_ops import safe_name, make_dirs
+from common.pe_ops import get_pe_file, get_pe_info
 from common.patterns import PAT_PHOENIX_TDK, PAT_MICROSOFT_MZ, PAT_MICROSOFT_PE
 from common.struct_ops import get_struct, char, uint32_t
 from common.system import script_init, argparse_init, printer
@@ -102,21 +102,21 @@ def get_tdk_base(in_buffer, pack_off):
         # Check if potential MZ > PE image magic value is valid
         if PAT_MICROSOFT_PE.search(in_buffer[pe_off:pe_off + 0x4]):
             try:
-                # Analyze detected MZ > PE image buffer quickly (fast_load)
-                pe_file = pefile.PE(data=in_buffer[mz_off:], fast_load=True)
+                # Parse detected MZ > PE > Image, quickly (fast_load)
+                pe_file = get_pe_file(in_buffer[mz_off:], fast=True)
                 
-                # Since fast_load is used, IMAGE_DIRECTORY_ENTRY_RESOURCE must be parsed for FileInfo > StringTable
-                pe_file.parse_data_directories(directories=[pefile.DIRECTORY_ENTRY['IMAGE_DIRECTORY_ENTRY_RESOURCE']])
+                # Parse detected MZ > PE > Info
+                pe_info = get_pe_info(pe_file)
                 
-                # Attempt to retrieve the PE > "Product Name" version string value
-                pe_name = pe_file.FileInfo[0][0].StringTable[0].entries[b'ProductName'].upper()
+                # Parse detected MZ > PE > Info > Product Name
+                pe_name = pe_info.get(b'ProductName',b'')
             except:
-                # Any error means no PE > "Product Name" retrieved
+                # Any error means no MZ > PE > Info > Product Name
                 pe_name = b''
             
-            # Check for valid Phoenix TDK Packer PE > "Product Name"
+            # Check for valid Phoenix TDK Packer PE > Product Name
             # Expected value is "TDK Packer (Extractor for Windows)"
-            if pe_name.startswith(b'TDK PACKER'):
+            if pe_name.upper().startswith(b'TDK PACKER'):
                 # Set TDK Base Offset to valid TDK Packer MZ offset
                 tdk_base_off = mz_off
         
@@ -149,7 +149,7 @@ def get_phoenix_tdk(in_buffer):
 def is_phoenix_tdk(in_file):
     buffer = file_to_bytes(in_file)
     
-    return bool(get_phoenix_tdk(buffer)[1] != None)
+    return bool(get_phoenix_tdk(buffer)[1] is not None)
 
 # Parse & Extract Phoenix Tools Development Kit (TDK) Packer
 def phoenix_tdk_extract(input_buffer, output_path, pack_off, base_off=0, padding=0):
@@ -253,7 +253,7 @@ if __name__ == '__main__':
         tdk_base_off,tdk_pack_off = get_phoenix_tdk(input_buffer)
         
         # Check if Phoenix TDK Packer pattern was found on executable
-        if tdk_pack_off == None:
+        if tdk_pack_off is None:
             printer('Error: This is not a Phoenix TDK Packer executable!', padding)
             
             continue # Next input file

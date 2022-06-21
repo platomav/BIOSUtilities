@@ -35,7 +35,7 @@ def get_tiano_path():
     return safe_path(project_root(), ['external',exec_name])
 
 # EFI/Tiano Decompression via TianoCompress
-def efi_decompress(in_path, out_path, padding=0, comp_type='--uefi'):
+def efi_decompress(in_path, out_path, padding=0, silent=False, comp_type='--uefi'):
     try:
         subprocess.run([get_tiano_path(), '-d', in_path, '-o', out_path, '-q', comp_type], check=True, stdout=subprocess.DEVNULL)
         
@@ -43,10 +43,12 @@ def efi_decompress(in_path, out_path, padding=0, comp_type='--uefi'):
         
         if os.path.getsize(out_path) != size_orig: raise Exception('EFI_DECOMPRESS_ERROR')
     except:
-        printer(f'Error: TianoCompress could not extract file {in_path}!', padding)
+        if not silent:
+            printer(f'Error: TianoCompress could not extract file {in_path}!', padding)
         
         return 1
     
-    printer('Succesfull EFI decompression via TianoCompress!', padding)
+    if not silent:
+        printer('Succesfull EFI decompression via TianoCompress!', padding)
     
     return 0

@@ -6,6 +6,7 @@
 * [**AMI BIOS Guard Extractor**](#ami-bios-guard-extractor)
 * [**AMI UCP Update Extractor**](#ami-ucp-update-extractor)
 * [**Dell PFS Update Extractor**](#dell-pfs-update-extractor)
+* [**Panasonic BIOS Package Extractor**](#panasonic-bios-package-extractor)
 * [**Phoenix TDK Packer Extractor**](#phoenix-tdk-packer-extractor)
 * [**Portwell EFI Update Extractor**](#portwell-efi-update-extractor)
 * [**VAIO Packaging Manager Extractor**](#vaio-packaging-manager-extractor)
@@ -187,6 +188,73 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 > pyinstaller --add-data="external/*;external/" --noupx --onefile \<path-to-project\>\/Dell_PFS_Extract.py
 
 You should find the final utility executable at "dist" folder
+
+#### **Anti-Virus False Positives**
+
+Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
+
+#### **Pictures**
+
+![]()
+
+## **Panasonic BIOS Package Extractor**
+
+![]()
+
+#### **Description**
+
+Parses Panasonic BIOS Package executables and extracts their firmware (e.g. SPI, BIOS/UEFI, EC etc) and utilities (e.g. winprom, configuration etc) components. It supports all Panasonic BIOS Package revisions and formats, including those which contain LZNT1 compressed files. The output comprises only final firmware components which are directly usable by end users.
+
+#### **Usage**
+
+You can either Drag & Drop or manually enter Panasonic BIOS Package executable file(s). Optional arguments:
+  
+* -h or --help : show help message and exit
+* -v or --version : show utility name and version
+* -i or --input-dir : extract from given input directory
+* -o or --output-dir : extract in given output directory
+* -e or --auto-exit : skip press enter to exit prompts
+
+#### **Compatibility**
+
+Should work at all Windows, Linux or macOS operating systems which have Python 3.8 support.
+
+#### **Prerequisites**
+
+To run the utility, you must have the following 3rd party Python modules installed:
+
+* [pefile](https://pypi.org/project/pefile/)
+* [lznt1](https://pypi.org/project/lznt1/)
+
+Moreover, you must have the following 3rd party tool at the "external" project directory:
+
+* [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zzs for Linux)
+
+#### **Build/Freeze/Compile with PyInstaller**
+
+PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
+
+1. Make sure Python 3.8.0 or newer is installed:
+
+> python --version
+
+2. Use pip to install PyInstaller:
+
+> pip3 install pyinstaller
+
+3. Use pip to install pefile and lznt1:
+
+> pip3 install pefile lznt1
+
+4. Place prerequisite at the "external" project directory:
+
+> 7-Zip Console
+
+5. Build/Freeze/Compile:
+
+> pyinstaller --add-data="external/*;external/" --noupx --onefile \<path-to-project\>\/Panasonic_BIOS_Extract.py
+
+At dist folder you should find the final utility executable
 
 #### **Anti-Virus False Positives**
 

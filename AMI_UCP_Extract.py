@@ -7,7 +7,7 @@ AMI UCP Update Extractor
 Copyright (C) 2021-2022 Plato Mavropoulos
 """
 
-TITLE = 'AMI UCP Update Extractor v2.0_a15'
+TITLE = 'AMI UCP Update Extractor v2.0_a16'
 
 import os
 import re
@@ -163,7 +163,7 @@ def chk16_validate(data, tag, padd=0):
 def is_ami_ucp(in_file):
     buffer = file_to_bytes(in_file)
     
-    return bool(get_ami_ucp(buffer)[0] != None)
+    return bool(get_ami_ucp(buffer)[0] is not None)
 
 # Get all input file AMI UCP patterns
 def get_ami_ucp(buffer):
@@ -419,7 +419,7 @@ def uaf_extract(buffer, extract_path, mod_info, padding=0, is_checksum=False, na
     nested_uaf_off,nested_uaf_bin,nested_uaf_tag = get_ami_ucp(uaf_data_raw)
     
     # Parse Nested AMI UCP Structure
-    if nested_uaf_off != None:
+    if nested_uaf_off is not None:
         uaf_dir = os.path.join(extract_path, safe_name(f'{uaf_tag}_nested-UCP')) # Generate extraction directory
         
         ucp_extract(nested_uaf_bin, uaf_dir, nested_uaf_tag, padding + 4, is_checksum) # Call recursively
@@ -512,7 +512,7 @@ if __name__ == '__main__':
         # Get best AMI UCP Pattern match based on @UAF|@HPU Size
         main_uaf_off,main_uaf_bin,main_uaf_tag = get_ami_ucp(input_buffer)
         
-        if main_uaf_off == None:
+        if main_uaf_off is None:
             printer('Error: This is not an AMI UCP Update executable!', padding)
             
             continue # Next input file

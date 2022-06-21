@@ -70,6 +70,10 @@ def agnostic_path(in_path):
 def path_parent(in_path):
     return Path(in_path).parent.absolute()
 
+# Get final path component, w/o suffix
+def path_stem(in_path):
+    return PurePath(in_path).stem
+
 # Check if path is absolute
 def is_path_absolute(in_path):
     return Path(in_path).is_absolute()

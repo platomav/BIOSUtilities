@@ -7,17 +7,17 @@ Portwell EFI Update Extractor
 Copyright (C) 2021-2022 Plato Mavropoulos
 """
 
-TITLE = 'Portwell EFI Update Extractor v2.0_a9'
+TITLE = 'Portwell EFI Update Extractor v2.0_a10'
 
 import os
 import sys
-import pefile
 
 # Stop __pycache__ generation
 sys.dont_write_bytecode = True
 
 from common.comp_efi import efi_decompress, is_efi_compressed
 from common.path_ops import safe_name, make_dirs
+from common.pe_ops import get_pe_file
 from common.patterns import PAT_PORTWELL_EFI, PAT_MICROSOFT_MZ
 from common.system import script_init, argparse_init, printer
 from common.text_ops import file_to_bytes
@@ -43,8 +43,8 @@ def is_portwell_efi(in_file):
     return bool(is_mz and is_uu)
 
 # Get PE of Portwell EFI executable
-def get_portwell_pe(in_buffer):
-    pe_file = pefile.PE(data=in_buffer, fast_load=True) # Analyze EFI Portable Executable (PE)
+def get_portwell_pe(in_buffer):    
+    pe_file = get_pe_file(in_buffer, fast=True) # Analyze EFI Portable Executable (PE)
     
     pe_data = in_buffer[pe_file.OPTIONAL_HEADER.SizeOfImage:] # Skip EFI executable (pylint: disable=E1101)
     
@@ -66,9 +66,9 @@ def portwell_efi_extract(input_buffer, output_path, padding=0):
     
     # Split EFI Payload into <UU> file chunks
     efi_list = list(PAT_PORTWELL_EFI.finditer(pe_data))
-    for i,_ in enumerate(efi_list):
-        efi_bgn = efi_list[i].end()
-        efi_end = len(pe_data) if i == len(efi_list) - 1 else efi_list[i + 1].start()
+    for idx,val in enumerate(efi_list):
+        efi_bgn = val.end()
+        efi_end = len(pe_data) if idx == len(efi_list) - 1 else efi_list[idx + 1].start()
         efi_files.append(pe_data[efi_bgn:efi_end])
     
     parse_efi_files(extract_path, efi_files, padding)
@@ -108,7 +108,7 @@ def parse_efi_files(extract_path, efi_files, padding):
         
         file_name = FILE_NAMES.get(file_index, f'Unknown_{file_index}.bin') # Assign Name to EFI file  
         
-        printer(file_name, padding + 4) # Print EFI file name, indicate progress
+        printer(f'[{file_index}] {file_name}', padding + 4) # Print EFI file name, indicate progress
         
         if file_name.startswith('Unknown_'):
             printer(f'Note: Detected new Portwell EFI file ID {file_index}!', padding + 8, pause=True) # Report new EFI files

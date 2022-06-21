@@ -19,18 +19,19 @@ def get_szip_path():
     return safe_path(project_root(), ['external',exec_name])
 
 # Check if file is 7-Zip supported
-def is_szip_supported(in_path, padding=0):
+def is_szip_supported(in_path, padding=0, silent=False):
     try:
         subprocess.run([get_szip_path(), 't', in_path, '-bso0', '-bse0', '-bsp0'], check=True)
     except:
-        printer(f'Error: 7-Zip could not check support for file {in_path}!', padding)
+        if not silent:
+            printer(f'Error: 7-Zip could not check support for file {in_path}!', padding)
         
         return False
     
     return True
 
 # Archive decompression via 7-Zip
-def szip_decompress(in_path, out_path, in_name, padding=0):
+def szip_decompress(in_path, out_path, in_name, padding=0, silent=False):
     if not in_name: in_name = 'archive'
     
     try:
@@ -38,10 +39,12 @@ def szip_decompress(in_path, out_path, in_name, padding=0):
         
         if not os.path.isdir(out_path): raise Exception('EXTRACT_DIR_MISSING')
     except:
-        printer(f'Error: 7-Zip could not extract {in_name} file {in_path}!', padding)
+        if not silent:
+            printer(f'Error: 7-Zip could not extract {in_name} file {in_path}!', padding)
         
         return 1
     
-    printer(f'Succesfull {in_name} decompression via 7-Zip!', padding)
+    if not silent:
+        printer(f'Succesfull {in_name} decompression via 7-Zip!', padding)
     
     return 0

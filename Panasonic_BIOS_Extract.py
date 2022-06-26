@@ -7,7 +7,7 @@ Panasonic BIOS Package Extractor
 Copyright (C) 2018-2022 Plato Mavropoulos
 """
 
-TITLE = 'Panasonic BIOS Package Extractor v2.0_a7'
+TITLE = 'Panasonic BIOS Package Extractor v2.0_a8'
 
 import os
 import io
@@ -64,10 +64,10 @@ def panasonic_cab_extract(buffer, extract_path, padding=0):
     with open(cab_path, 'wb') as cab_file:
         cab_file.write(cab_bin) # Store CAB archive
     
-    if is_szip_supported(cab_path, padding):
+    if is_szip_supported(cab_path, padding, check=True):
         printer(f'Panasonic BIOS Package > PE > CAB {cab_tag}', padding)
         
-        if szip_decompress(cab_path, extract_path, 'CAB', padding + 4) == 0:
+        if szip_decompress(cab_path, extract_path, 'CAB', padding + 4, check=True) == 0:
             os.remove(cab_path) # Successful extraction, delete CAB archive
         else:
             return pe_path, pe_file, pe_info

@@ -7,7 +7,7 @@ AMI UCP Update Extractor
 Copyright (C) 2021-2022 Plato Mavropoulos
 """
 
-TITLE = 'AMI UCP Update Extractor v2.0_a16'
+TITLE = 'AMI UCP Update Extractor v2.0_a17'
 
 import os
 import re
@@ -392,12 +392,12 @@ def uaf_extract(buffer, extract_path, mod_info, padding=0, is_checksum=False, na
             nal_dict[info_tag] = (info_path,info_name) # Assign a file path & name to each Tag
     
     # Parse Insyde BIOS @UAF|@HPU Module (@INS)
-    if uaf_tag == '@INS' and is_szip_supported(uaf_fname, padding + 4):
+    if uaf_tag == '@INS' and is_szip_supported(uaf_fname, padding + 4, check=True):
         ins_dir = os.path.join(extract_path, safe_name(f'{uaf_tag}_nested-SFX')) # Generate extraction directory
         
         printer('Insyde BIOS 7z SFX Archive:', padding + 4)
         
-        if szip_decompress(uaf_fname, ins_dir, '7z SFX', padding + 8) == 0:
+        if szip_decompress(uaf_fname, ins_dir, '7z SFX', padding + 8, check=True) == 0:
             os.remove(uaf_fname) # Successful extraction, delete @INS Module file/archive
     
     # Detect & Unpack AMI BIOS Guard (PFAT) BIOS image

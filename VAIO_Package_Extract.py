@@ -7,7 +7,7 @@ VAIO Packaging Manager Extractor
 Copyright (C) 2019-2022 Plato Mavropoulos
 """
 
-TITLE = 'VAIO Packaging Manager Extractor v3.0_a5'
+TITLE = 'VAIO Packaging Manager Extractor v3.0_a6'
 
 import os
 import sys
@@ -53,8 +53,8 @@ def vaio_cabinet(name, buffer, extract_path, padding=0):
     
     with open(cab_path, 'wb') as cab_file: cab_file.write(cab_data) # Create temporary CAB archive
     
-    if is_szip_supported(cab_path, padding + 8):
-        if szip_decompress(cab_path, extract_path, 'CAB', padding + 8) == 0:
+    if is_szip_supported(cab_path, padding + 8, check=True):
+        if szip_decompress(cab_path, extract_path, 'CAB', padding + 8, check=True) == 0:
             os.remove(cab_path) # Successful extraction, delete temporary CAB archive
         else:
             return 3

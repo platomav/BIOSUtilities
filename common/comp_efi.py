@@ -9,8 +9,7 @@ import os
 import subprocess
 
 from common.path_ops import project_root, safe_path
-from common.system import get_os_ver
-from common.system import printer
+from common.system import get_os_ver, printer
 
 def get_compress_sizes(data):    
     size_compress = int.from_bytes(data[0x0:0x4], 'little')

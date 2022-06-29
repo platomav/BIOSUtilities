@@ -8,9 +8,11 @@
 * [**Award BIOS Module Extractor**](#award-bios-module-extractor)
 * [**Dell PFS Update Extractor**](#dell-pfs-update-extractor)
 * [**Fujitsu UPC BIOS Extractor**](#fujitsu-upc-bios-extractor)
+* [**Insyde iFlash Update Extractor**](#insyde-iflash-update-extractor)
 * [**Panasonic BIOS Package Extractor**](#panasonic-bios-package-extractor)
 * [**Phoenix TDK Packer Extractor**](#phoenix-tdk-packer-extractor)
 * [**Portwell EFI Update Extractor**](#portwell-efi-update-extractor)
+* [**Toshiba BIOS COM Extractor**](#toshiba-bios-com-extractor)
 * [**VAIO Packaging Manager Extractor**](#vaio-packaging-manager-extractor)
 
 ## **AMI BIOS Guard Extractor**
@@ -263,11 +265,11 @@ Some Anti-Virus software may claim that the built/frozen/compiled executable con
 
 #### **Description**
 
-Parses Fujitsu UPC images and extracts their EFI compressed SPI/BIOS/UEFI firmware component. The output comprises only a final firmware component which is directly usable by end users.
+Parses Fujitsu UPC BIOS images and extracts their EFI compressed SPI/BIOS/UEFI firmware component. The output comprises only a final firmware component which is directly usable by end users.
 
 #### **Usage**
 
-You can either Drag & Drop or manually enter Panasonic BIOS Package executable file(s). Optional arguments:
+You can either Drag & Drop or manually enter Fujitsu UPC BIOS image file(s). Optional arguments:
   
 * -h or --help : show help message and exit
 * -v or --version : show utility name and version
@@ -306,6 +308,58 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 > pyinstaller --add-data="external/*;external/" --noupx --onefile \<path-to-project\>\/Fujitsu_UPC_Extract.py
 
 You should find the final utility executable at "dist" folder
+
+#### **Anti-Virus False Positives**
+
+Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
+
+#### **Pictures**
+
+![]()
+
+## **Insyde iFlash Update Extractor**
+
+![]()
+
+#### **Description**
+
+Parses Insyde iFlash Update images and extracts their firmware (e.g. SPI, BIOS/UEFI, EC, ME etc) and utilities (e.g. Flasher, Configuration etc) components. The output comprises only final firmware components which are directly usable by end users.
+
+#### **Usage**
+
+You can either Drag & Drop or manually enter Insyde iFlash Update image file(s). Optional arguments:
+  
+* -h or --help : show help message and exit
+* -v or --version : show utility name and version
+* -i or --input-dir : extract from given input directory
+* -o or --output-dir : extract in given output directory
+* -e or --auto-exit : skip press enter to exit prompts
+
+#### **Compatibility**
+
+Should work at all Windows, Linux or macOS operating systems which have Python 3.8 support.
+
+#### **Prerequisites**
+
+To run the utility, you do not need any prerequisites.
+
+#### **Build/Freeze/Compile with PyInstaller**
+
+PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
+
+1. Make sure Python 3.8.0 or newer is installed:
+
+> python --version
+
+2. Use pip to install PyInstaller:
+
+> pip3 install pyinstaller
+
+3. Build/Freeze/Compile:
+
+> pyinstaller --noupx --onefile \<path-to-project\>\/Insyde_iFlash_Extract.py
+
+At dist folder you should find the final utility executable
 
 #### **Anti-Virus False Positives**
 
@@ -497,6 +551,64 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 5. Build/Freeze/Compile:
 
 > pyinstaller --add-data="external/*;external/" --noupx --onefile \<path-to-project\>\/Portwell_EFI_Extract.py
+
+You should find the final utility executable at "dist" folder
+
+#### **Anti-Virus False Positives**
+
+Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
+
+#### **Pictures**
+
+![]()
+
+## **Toshiba BIOS COM Extractor**
+
+![]()
+
+#### **Description**
+
+Parses Toshiba BIOS COM images and extracts their raw or compressed SPI/BIOS/UEFI firmware component. This utility is basically an easy to use python wrapper around [ToshibaComExtractor by LongSoft](https://github.com/LongSoft/ToshibaComExtractor). The output comprises only a final firmware component which is directly usable by end users.
+
+#### **Usage**
+
+You can either Drag & Drop or manually enter Toshiba BIOS COM image file(s). Optional arguments:
+  
+* -h or --help : show help message and exit
+* -v or --version : show utility name and version
+* -i or --input-dir : extract from given input directory
+* -o or --output-dir : extract in given output directory
+* -e or --auto-exit : skip press enter to exit prompts
+
+#### **Compatibility**
+
+Should work at all Windows, Linux or macOS operating systems which have Python 3.8 support.
+
+#### **Prerequisites**
+
+To run the utility, you must have the following 3rd party tool at the "external" project directory:
+
+* [ToshibaComExtractor](https://github.com/LongSoft/ToshibaComExtractor) (e.g. comextract.exe for Windows or comextract for Linux)
+
+#### **Build/Freeze/Compile with PyInstaller**
+
+PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
+
+1. Make sure Python 3.8.0 or newer is installed:
+
+> python --version
+
+2. Use pip to install PyInstaller:
+
+> pip3 install pyinstaller
+
+3. Place prerequisite at the "external" project directory:
+
+> ToshibaComExtractor
+
+4. Build/Freeze/Compile:
+
+> pyinstaller --add-data="external/*;external/" --noupx --onefile \<path-to-project\>\/Toshiba_COM_Extract.py
 
 You should find the final utility executable at "dist" folder
 

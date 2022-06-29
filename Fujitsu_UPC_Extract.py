@@ -7,7 +7,7 @@ Fujitsu UPC BIOS Extractor
 Copyright (C) 2021-2022 Plato Mavropoulos
 """
 
-TITLE = 'Fujitsu UPC BIOS Extractor v2.0_a2'
+TITLE = 'Fujitsu UPC BIOS Extractor v2.0_a3'
 
 import os
 import sys
@@ -17,18 +17,18 @@ sys.dont_write_bytecode = True
 
 from common.comp_efi import efi_decompress, is_efi_compressed
 from common.path_ops import make_dirs, path_suffixes
-from common.system import script_init, argparse_init, printer
+from common.system import argparse_init, printer, script_init
 from common.text_ops import file_to_bytes
 
 # Check if input is Fujitsu UPC image
 def is_fujitsu_upc(in_file):
     in_buffer = file_to_bytes(in_file)
     
-    is_upc = path_suffixes(in_file)[-1].upper() == '.UPC' if os.path.isfile(in_file) else True
+    is_ext = path_suffixes(in_file)[-1].upper() == '.UPC' if os.path.isfile(in_file) else True
     
     is_efi = is_efi_compressed(in_buffer)
     
-    return is_upc and is_efi
+    return is_ext and is_efi
 
 # Parse & Extract Fujitsu UPC image
 def fujitsu_upc_extract(input_file, output_path, padding=0):

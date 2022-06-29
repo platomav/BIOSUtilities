@@ -9,8 +9,7 @@ import os
 import subprocess
 
 from common.path_ops import project_root, safe_path
-from common.system import get_os_ver
-from common.system import printer
+from common.system import get_os_ver, printer
 
 # Get 7-Zip path
 def get_szip_path():

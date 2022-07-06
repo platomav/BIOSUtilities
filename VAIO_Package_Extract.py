@@ -7,7 +7,7 @@ VAIO Packaging Manager Extractor
 Copyright (C) 2019-2022 Plato Mavropoulos
 """
 
-TITLE = 'VAIO Packaging Manager Extractor v3.0_a6'
+TITLE = 'VAIO Packaging Manager Extractor v3.0_a7'
 
 import os
 import sys
@@ -17,8 +17,8 @@ sys.dont_write_bytecode = True
 
 from common.comp_szip import is_szip_supported, szip_decompress
 from common.path_ops import make_dirs
-from common.patterns import PAT_VAIO_CFG, PAT_VAIO_CHK, PAT_VAIO_EXT, PAT_VAIO_CAB
-from common.system import script_init, argparse_init, printer
+from common.patterns import PAT_VAIO_CAB, PAT_VAIO_CFG, PAT_VAIO_CHK, PAT_VAIO_EXT
+from common.system import argparse_init, printer, script_init
 from common.text_ops import file_to_bytes
 
 # Check if input is VAIO Packaging Manager
@@ -31,7 +31,8 @@ def is_vaio_pkg(in_file):
 def vaio_cabinet(name, buffer, extract_path, padding=0):
     match_cab = PAT_VAIO_CAB.search(buffer) # Microsoft CAB Header XOR 0xFF
     
-    if not match_cab: return 1
+    if not match_cab:
+        return 1
     
     printer('Detected obfuscated CAB archive!', padding)
     
@@ -51,7 +52,8 @@ def vaio_cabinet(name, buffer, extract_path, padding=0):
     
     cab_path = os.path.join(extract_path, f'{name}_Temporary.cab')
     
-    with open(cab_path, 'wb') as cab_file: cab_file.write(cab_data) # Create temporary CAB archive
+    with open(cab_path, 'wb') as cab_file:
+        cab_file.write(cab_data) # Create temporary CAB archive
     
     if is_szip_supported(cab_path, padding + 8, check=True):
         if szip_decompress(cab_path, extract_path, 'CAB', padding + 8, check=True) == 0:
@@ -67,7 +69,8 @@ def vaio_cabinet(name, buffer, extract_path, padding=0):
 def vaio_unlock(name, buffer, extract_path, padding=0):
     match_cfg = PAT_VAIO_CFG.search(buffer)
     
-    if not match_cfg: return 1
+    if not match_cfg:
+        return 1
     
     printer('Attempting to Unlock executable!', padding)
     
@@ -116,7 +119,8 @@ def vaio_unlock(name, buffer, extract_path, padding=0):
     # Store Unlocked VAIO Packaging Manager executable
     if vaio_check and user_path:
         unlock_path = os.path.join(extract_path, f'{name}_Unlocked.exe')
-        with open(unlock_path, 'wb') as unl_file: unl_file.write(buffer)
+        with open(unlock_path, 'wb') as unl_file:
+            unl_file.write(buffer)
     
     return 0
 
@@ -149,7 +153,8 @@ if __name__ == '__main__':
         
         printer(['***', input_name], padding - 4)
         
-        with open(input_file, 'rb') as in_file: input_buffer = in_file.read()
+        with open(input_file, 'rb') as in_file:
+            input_buffer = in_file.read()
         
         # Check if VAIO Packaging Manager pattern was found on executable
         if not is_vaio_pkg(input_buffer):

@@ -84,7 +84,8 @@ def is_path_absolute(in_path):
 
 # Create folder(s), controlling parents, existence and prior deletion
 def make_dirs(in_path, parents=True, exist_ok=False, delete=False):
-    if delete: del_dirs(in_path)
+    if delete:
+        del_dirs(in_path)
     
     Path.mkdir(Path(in_path), parents=parents, exist_ok=exist_ok)
 
@@ -129,7 +130,8 @@ def get_argparse_path(argparse_path):
 
 # Process input files (argparse object)
 def process_input_files(argparse_args, sys_argv=None):
-    if sys_argv is None: sys_argv = []
+    if sys_argv is None:
+        sys_argv = []
     
     if len(sys_argv) >= 2:
         # Drag & Drop or CLI

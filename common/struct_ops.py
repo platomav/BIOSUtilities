@@ -15,7 +15,8 @@ uint64_t = ctypes.c_uint64
 
 # https://github.com/skochinsky/me-tools/blob/master/me_unpack.py by Igor Skochinsky
 def get_struct(buffer, start_offset, class_name, param_list=None):
-    if param_list is None: param_list = []
+    if param_list is None:
+        param_list = []
 
     structure = class_name(*param_list) # Unpack parameter list
     struct_len = ctypes.sizeof(structure)

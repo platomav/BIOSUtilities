@@ -7,7 +7,7 @@ Phoenix TDK Packer Extractor
 Copyright (C) 2021-2022 Plato Mavropoulos
 """
 
-TITLE = 'Phoenix TDK Packer Extractor v2.0_a8'
+TITLE = 'Phoenix TDK Packer Extractor v2.0_a9'
 
 import os
 import sys
@@ -17,11 +17,11 @@ import ctypes
 # Stop __pycache__ generation
 sys.dont_write_bytecode = True
 
-from common.path_ops import safe_name, make_dirs
+from common.path_ops import make_dirs, safe_name
 from common.pe_ops import get_pe_file, get_pe_info
-from common.patterns import PAT_PHOENIX_TDK, PAT_MICROSOFT_MZ, PAT_MICROSOFT_PE
-from common.struct_ops import get_struct, char, uint32_t
-from common.system import script_init, argparse_init, printer
+from common.patterns import PAT_MICROSOFT_MZ, PAT_MICROSOFT_PE, PAT_PHOENIX_TDK
+from common.struct_ops import char, get_struct, uint32_t
+from common.system import argparse_init, printer, script_init
 from common.text_ops import file_to_bytes
 
 class PhoenixTdkHeader(ctypes.LittleEndianStructure):
@@ -152,7 +152,9 @@ def is_phoenix_tdk(in_file):
     return bool(get_phoenix_tdk(buffer)[1] is not None)
 
 # Parse & Extract Phoenix Tools Development Kit (TDK) Packer
-def phoenix_tdk_extract(input_buffer, output_path, pack_off, base_off=0, padding=0):
+def phoenix_tdk_extract(input_file, output_path, padding=0):
+    input_buffer = file_to_bytes(input_file)
+    
     exit_code = 0
     
     extract_path = os.path.join(f'{output_path}_extracted')
@@ -160,6 +162,8 @@ def phoenix_tdk_extract(input_buffer, output_path, pack_off, base_off=0, padding
     make_dirs(extract_path, delete=True)
     
     printer('Phoenix Tools Development Kit Packer', padding)
+    
+    base_off,pack_off = get_phoenix_tdk(input_buffer)
     
     # Parse TDK Header structure
     tdk_hdr = get_struct(input_buffer, pack_off, PhoenixTdkHeader)
@@ -224,7 +228,8 @@ def phoenix_tdk_extract(input_buffer, output_path, pack_off, base_off=0, padding
         if os.path.isfile(mod_file): mod_file += f'_{entry_index + 1:02d}'
         
         # Save TDK Entry data to output file
-        with open(mod_file, 'wb') as out_file: out_file.write(mod_data)
+        with open(mod_file, 'wb') as out_file:
+            out_file.write(mod_data)
     
     return exit_code
 
@@ -248,19 +253,18 @@ if __name__ == '__main__':
         
         printer(['***', input_name], padding - 4)
         
-        with open(input_file, 'rb') as in_file: input_buffer = in_file.read()
-        
-        tdk_base_off,tdk_pack_off = get_phoenix_tdk(input_buffer)
+        with open(input_file, 'rb') as in_file:
+            input_buffer = in_file.read()
         
         # Check if Phoenix TDK Packer pattern was found on executable
-        if tdk_pack_off is None:
+        if not is_phoenix_tdk(input_buffer):
             printer('Error: This is not a Phoenix TDK Packer executable!', padding)
             
             continue # Next input file
         
         extract_path = os.path.join(output_path, input_name)
         
-        if phoenix_tdk_extract(input_buffer, extract_path, tdk_pack_off, tdk_base_off, padding) == 0:
+        if phoenix_tdk_extract(input_buffer, extract_path, padding) == 0:
             exit_code -= 1
     
     printer('Done!', pause=True)

@@ -22,8 +22,10 @@ def is_efi_compressed(data, strict=True):
     
     check_diff = size_comp < size_orig
     
-    if strict: check_size = size_comp + 0x8 == len(data)
-    else: check_size = size_comp + 0x8 <= len(data)
+    if strict:
+        check_size = size_comp + 0x8 == len(data)
+    else:
+        check_size = size_comp + 0x8 <= len(data)
     
     return check_diff and check_size
 
@@ -38,9 +40,11 @@ def efi_decompress(in_path, out_path, padding=0, silent=False, comp_type='--uefi
     try:
         subprocess.run([get_tiano_path(), '-d', in_path, '-o', out_path, '-q', comp_type], check=True, stdout=subprocess.DEVNULL)
         
-        with open(in_path, 'rb') as file: _,size_orig = get_compress_sizes(file.read())
+        with open(in_path, 'rb') as file:
+            _,size_orig = get_compress_sizes(file.read())
         
-        if os.path.getsize(out_path) != size_orig: raise Exception('EFI_DECOMPRESS_ERROR')
+        if os.path.getsize(out_path) != size_orig:
+            raise Exception('EFI_DECOMPRESS_ERROR')
     except:
         if not silent:
             printer(f'Error: TianoCompress could not extract file {in_path}!', padding)

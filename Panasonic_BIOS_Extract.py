@@ -7,7 +7,7 @@ Panasonic BIOS Package Extractor
 Copyright (C) 2018-2022 Plato Mavropoulos
 """
 
-TITLE = 'Panasonic BIOS Package Extractor v2.0_a8'
+TITLE = 'Panasonic BIOS Package Extractor v2.0_a9'
 
 import os
 import io
@@ -22,10 +22,10 @@ from common.comp_szip import is_szip_supported, szip_decompress
 from common.path_ops import get_path_files, make_dirs, path_stem, safe_name
 from common.pe_ops import get_pe_file, get_pe_info, is_pe_file, show_pe_info
 from common.patterns import PAT_MICROSOFT_CAB
-from common.system import script_init, argparse_init, printer
+from common.system import argparse_init, printer, script_init
 from common.text_ops import file_to_bytes
 
-from AMI_PFAT_Extract import get_ami_pfat, parse_pfat_file
+from AMI_PFAT_Extract import is_ami_pfat, parse_pfat_file
 
 # Check if input is Panasonic BIOS Package PE
 def is_panasonic_pkg(in_file):
@@ -117,12 +117,10 @@ def panasonic_res_extract(pe_name, pe_file, extract_path, padding=0):
                     printer('Succesfull PE Resource extraction!', padding + 8)
                 
                 # Detect & Unpack AMI BIOS Guard (PFAT) BIOS image
-                pfat_match,pfat_buffer = get_ami_pfat(res_raw)
-                
-                if pfat_match:
+                if is_ami_pfat(res_raw):
                     pfat_dir = os.path.join(extract_path, res_tag)
                     
-                    parse_pfat_file(pfat_buffer, pfat_dir, padding + 12)
+                    parse_pfat_file(res_raw, pfat_dir, padding + 12)
                 else:
                     if is_pe_file(res_raw):
                         res_ext = 'exe'
@@ -219,7 +217,8 @@ if __name__ == '__main__':
         
         printer(['***', input_name], padding - 4)
         
-        with open(input_file, 'rb') as in_file: input_buffer = in_file.read()
+        with open(input_file, 'rb') as in_file:
+            input_buffer = in_file.read()
         
         # Check if Panasonic BIOS Package pattern was found on executable
         if not is_panasonic_pkg(input_buffer):

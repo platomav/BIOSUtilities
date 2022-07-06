@@ -56,7 +56,8 @@ def check_sys_os():
         sys.exit(126) 
     
     # Fix Windows Unicode console redirection
-    if os_win: sys.stdout.reconfigure(encoding='utf-8')
+    if os_win:
+        sys.stdout.reconfigure(encoding='utf-8')
 
 # Initialize common argparse arguments
 def argparse_init():
@@ -85,10 +86,12 @@ def script_init(title, arguments, padding=0):
     printer(title, new_line=False)
     
     # Show Utility Version on demand
-    if arguments.version: sys.exit(0)
+    if arguments.version:
+        sys.exit(0)
     
     # Set console/terminal window title (Windows only)
-    if get_os_ver()[1]: ctypes.windll.kernel32.SetConsoleTitleW(title)
+    if get_os_ver()[1]:
+        ctypes.windll.kernel32.SetConsoleTitleW(title)
     
     # Process input files and generate output path
     input_files,output_path = process_input_files(arguments, sys.argv)

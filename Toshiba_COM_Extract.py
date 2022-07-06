@@ -7,7 +7,7 @@ Toshiba BIOS COM Extractor
 Copyright (C) 2018-2022 Plato Mavropoulos
 """
 
-TITLE = 'Toshiba BIOS COM Extractor v2.0_a2'
+TITLE = 'Toshiba BIOS COM Extractor v2.0_a3'
 
 import os
 import sys
@@ -49,7 +49,8 @@ def toshiba_com_extract(input_file, output_path, padding=0):
     try:
         subprocess.run([get_comextract_path(), input_file, output_file], check=True, stdout=subprocess.DEVNULL)
         
-        if not os.path.isfile(output_file): raise Exception('EXTRACT_FILE_MISSING')
+        if not os.path.isfile(output_file):
+            raise Exception('EXTRACT_FILE_MISSING')
     except:
         printer(f'Error: ToshibaComExtractor could not extract file {input_file}!', padding)
         
@@ -72,7 +73,8 @@ if __name__ == '__main__':
         
         printer(['***', input_name], padding - 4)
         
-        with open(input_file, 'rb') as in_file: input_buffer = in_file.read()
+        with open(input_file, 'rb') as in_file:
+            input_buffer = in_file.read()
         
         if not is_toshiba_com(input_file):
             printer('Error: This is not a Toshiba BIOS COM image!', padding)

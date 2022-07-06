@@ -7,7 +7,7 @@ Portwell EFI Update Extractor
 Copyright (C) 2021-2022 Plato Mavropoulos
 """
 
-TITLE = 'Portwell EFI Update Extractor v2.0_a10'
+TITLE = 'Portwell EFI Update Extractor v2.0_a11'
 
 import os
 import sys
@@ -16,10 +16,10 @@ import sys
 sys.dont_write_bytecode = True
 
 from common.comp_efi import efi_decompress, is_efi_compressed
-from common.path_ops import safe_name, make_dirs
+from common.path_ops import make_dirs, safe_name
 from common.pe_ops import get_pe_file
-from common.patterns import PAT_PORTWELL_EFI, PAT_MICROSOFT_MZ
-from common.system import script_init, argparse_init, printer
+from common.patterns import PAT_MICROSOFT_MZ, PAT_PORTWELL_EFI
+from common.system import argparse_init, printer, script_init
 from common.text_ops import file_to_bytes
 
 FILE_NAMES = {
@@ -34,10 +34,13 @@ FILE_NAMES = {
 def is_portwell_efi(in_file):
     in_buffer = file_to_bytes(in_file)
     
-    try: pe_buffer = get_portwell_pe(in_buffer)[1]
-    except: pe_buffer = b''
+    try:
+        pe_buffer = get_portwell_pe(in_buffer)[1]
+    except:
+        pe_buffer = b''
     
     is_mz = PAT_MICROSOFT_MZ.search(in_buffer[:0x2]) # EFI images start with PE Header MZ
+    
     is_uu = PAT_PORTWELL_EFI.search(pe_buffer[:0x4]) # Portwell EFI files start with <UU>
     
     return bool(is_mz and is_uu)
@@ -104,7 +107,8 @@ def get_unpacker_tag(input_buffer, pe_file):
 # Process Portwell UEFI Unpacker payload files
 def parse_efi_files(extract_path, efi_files, padding):
     for file_index,file_data in enumerate(efi_files):
-        if file_data in (b'', b'NULL'): continue # Skip empty/unused files
+        if file_data in (b'', b'NULL'):
+            continue # Skip empty/unused files
         
         file_name = FILE_NAMES.get(file_index, f'Unknown_{file_index}.bin') # Assign Name to EFI file  
         
@@ -115,7 +119,8 @@ def parse_efi_files(extract_path, efi_files, padding):
         
         file_path = os.path.join(extract_path, safe_name(file_name)) # Store EFI file output path
         
-        with open(file_path, 'wb') as out_file: out_file.write(file_data) # Store EFI file data to drive
+        with open(file_path, 'wb') as out_file:
+            out_file.write(file_data) # Store EFI file data to drive
         
         # Attempt to detect EFI compression & decompress when applicable
         if is_efi_compressed(file_data):
@@ -139,7 +144,8 @@ if __name__ == '__main__':
         
         printer(['***', input_name], padding - 4)
         
-        with open(input_file, 'rb') as in_file: input_buffer = in_file.read()
+        with open(input_file, 'rb') as in_file:
+            input_buffer = in_file.read()
         
         if not is_portwell_efi(input_buffer):
             printer('Error: This is not a Portwell EFI Update Package!', padding)

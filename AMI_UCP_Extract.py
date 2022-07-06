@@ -7,7 +7,7 @@ AMI UCP Update Extractor
 Copyright (C) 2021-2022 Plato Mavropoulos
 """
 
-TITLE = 'AMI UCP Update Extractor v2.0_a17'
+TITLE = 'AMI UCP Update Extractor v2.0_a18'
 
 import os
 import re
@@ -21,14 +21,14 @@ sys.dont_write_bytecode = True
 
 from common.checksums import get_chk_16
 from common.comp_efi import efi_decompress, is_efi_compressed
-from common.comp_szip import is_szip_supported, szip_decompress
-from common.path_ops import agnostic_path, safe_name, safe_path, make_dirs
+from common.path_ops import agnostic_path, make_dirs, safe_name, safe_path
 from common.patterns import PAT_AMI_UCP, PAT_INTEL_ENG
-from common.struct_ops import get_struct, char, uint8_t, uint16_t, uint32_t
-from common.system import script_init, argparse_init, printer
+from common.struct_ops import char, get_struct, uint8_t, uint16_t, uint32_t
+from common.system import argparse_init, printer, script_init
 from common.text_ops import file_to_bytes, to_string
 
-from AMI_PFAT_Extract import get_ami_pfat, parse_pfat_file
+from AMI_PFAT_Extract import is_ami_pfat, parse_pfat_file
+from Insyde_IFD_Extract import insyde_ifd_extract, is_insyde_ifd
 
 class UafHeader(ctypes.LittleEndianStructure):
     _pack_ = 1
@@ -166,9 +166,10 @@ def is_ami_ucp(in_file):
     return bool(get_ami_ucp(buffer)[0] is not None)
 
 # Get all input file AMI UCP patterns
-def get_ami_ucp(buffer):
+def get_ami_ucp(in_file):
+    buffer = file_to_bytes(in_file)
+    
     uaf_len_max = 0x0 # Length of largest detected @UAF|@HPU
-    uaf_hdr_off = None # Offset of largest detected @UAF|@HPU
     uaf_buf_bin = None # Buffer of largest detected @UAF|@HPU
     uaf_buf_tag = '@UAF' # Tag of largest detected @UAF|@HPU
     
@@ -181,7 +182,7 @@ def get_ami_ucp(buffer):
             uaf_buf_bin = buffer[uaf_hdr_off:uaf_hdr_off + uaf_len_max]
             uaf_buf_tag = uaf.group(0)[:4].decode('utf-8','ignore')
     
-    return uaf_hdr_off, uaf_buf_bin, uaf_buf_tag
+    return uaf_buf_bin, uaf_buf_tag
 
 # Get list of @UAF|@HPU Modules
 def get_uaf_mod(buffer, uaf_off=0x0):
@@ -196,19 +197,23 @@ def get_uaf_mod(buffer, uaf_off=0x0):
         
         uaf_off += uaf_hdr.ModuleSize # Adjust to next @UAF|@HPU Module offset
         
-        if uaf_off >= len(buffer): break # Stop parsing at EOF
+        if uaf_off >= len(buffer):
+            break # Stop parsing at EOF
     
     # Check if @UAF|@HPU Module @NAL exists and place it first
     # Parsing @NAL first allows naming all @UAF|@HPU Modules
     for mod_idx,mod_val in enumerate(uaf_all):
         if mod_val[0] == '@NAL':
             uaf_all.insert(1, uaf_all.pop(mod_idx)) # After UII for visual purposes
+            
             break # @NAL found, skip the rest
     
     return uaf_all
 
 # Parse & Extract AMI UCP structures
-def ucp_extract(buffer, out_path, ucp_tag='@UAF', padding=0, is_checksum=False):
+def ucp_extract(in_file, out_path, padding=0, checksum=False):
+    input_buffer = file_to_bytes(in_file)
+    
     nal_dict = {} # Initialize @NAL Dictionary per UCP
     
     printer('Utility Configuration Program', padding)
@@ -217,13 +222,16 @@ def ucp_extract(buffer, out_path, ucp_tag='@UAF', padding=0, is_checksum=False):
     
     make_dirs(extract_path, delete=True)
     
-    uaf_hdr = get_struct(buffer, 0, UafHeader) # Parse @UAF|@HPU Header Structure
+    # Get best AMI UCP Pattern match based on @UAF|@HPU Size
+    ucp_buffer,ucp_tag = get_ami_ucp(input_buffer)
+    
+    uaf_hdr = get_struct(ucp_buffer, 0, UafHeader) # Parse @UAF|@HPU Header Structure
     
     printer(f'Utility Auxiliary File > {ucp_tag}:\n', padding + 4)
     
     uaf_hdr.struct_print(padding + 8)
     
-    fake = struct.pack('<II', len(buffer), len(buffer)) # Generate UafModule Structure
+    fake = struct.pack('<II', len(ucp_buffer), len(ucp_buffer)) # Generate UafModule Structure
     
     uaf_mod = get_struct(fake, 0x0, UafModule) # Parse @UAF|@HPU Module EFI Structure
     
@@ -232,16 +240,18 @@ def ucp_extract(buffer, out_path, ucp_tag='@UAF', padding=0, is_checksum=False):
     
     uaf_mod.struct_print(padding + 8, uaf_name, uaf_desc) # Print @UAF|@HPU Module EFI Info
     
-    if is_checksum: chk16_validate(buffer, ucp_tag, padding + 8)
+    if checksum:
+        chk16_validate(ucp_buffer, ucp_tag, padding + 8)
     
-    uaf_all = get_uaf_mod(buffer, UAF_HDR_LEN)
+    uaf_all = get_uaf_mod(ucp_buffer, UAF_HDR_LEN)
     
     for mod_info in uaf_all:
-        nal_dict = uaf_extract(buffer, extract_path, mod_info, padding + 8, is_checksum, nal_dict)
+        nal_dict = uaf_extract(ucp_buffer, extract_path, mod_info, padding + 8, checksum, nal_dict)
 
 # Parse & Extract AMI UCP > @UAF|@HPU Module/Section
-def uaf_extract(buffer, extract_path, mod_info, padding=0, is_checksum=False, nal_dict=None):
-    if nal_dict is None: nal_dict = {}
+def uaf_extract(buffer, extract_path, mod_info, padding=0, checksum=False, nal_dict=None):
+    if nal_dict is None:
+        nal_dict = {}
     
     uaf_tag,uaf_off,uaf_hdr = mod_info
     
@@ -259,16 +269,26 @@ def uaf_extract(buffer, extract_path, mod_info, padding=0, is_checksum=False, na
     
     is_comp = uaf_mod.CompressSize != uaf_mod.OriginalSize # Detect @UAF|@HPU Module EFI Compression
     
-    if uaf_tag in nal_dict: uaf_name = nal_dict[uaf_tag][1] # Always prefer @NAL naming first
-    elif uaf_tag in UAF_TAG_DICT: uaf_name = UAF_TAG_DICT[uaf_tag][0] # Otherwise use built-in naming
-    elif uaf_tag == '@ROM': uaf_name = 'BIOS.bin' # BIOS/PFAT Firmware (w/o Signature)
-    elif uaf_tag.startswith('@R0'): uaf_name = f'BIOS_0{uaf_tag[3:]}.bin' # BIOS/PFAT Firmware
-    elif uaf_tag.startswith('@S0'): uaf_name = f'BIOS_0{uaf_tag[3:]}.sig' # BIOS/PFAT Signature
-    elif uaf_tag.startswith('@DR'): uaf_name = f'DROM_0{uaf_tag[3:]}.bin' # Thunderbolt Retimer Firmware
-    elif uaf_tag.startswith('@DS'): uaf_name = f'DROM_0{uaf_tag[3:]}.sig' # Thunderbolt Retimer Signature
-    elif uaf_tag.startswith('@EC'): uaf_name = f'EC_0{uaf_tag[3:]}.bin' # Embedded Controller Firmware
-    elif uaf_tag.startswith('@ME'): uaf_name = f'ME_0{uaf_tag[3:]}.bin' # Management Engine Firmware
-    else: uaf_name = uaf_tag # Could not name the @UAF|@HPU Module, use Tag instead
+    if uaf_tag in nal_dict:
+        uaf_name = nal_dict[uaf_tag][1] # Always prefer @NAL naming first
+    elif uaf_tag in UAF_TAG_DICT:
+        uaf_name = UAF_TAG_DICT[uaf_tag][0] # Otherwise use built-in naming
+    elif uaf_tag == '@ROM':
+        uaf_name = 'BIOS.bin' # BIOS/PFAT Firmware (w/o Signature)
+    elif uaf_tag.startswith('@R0'):
+        uaf_name = f'BIOS_0{uaf_tag[3:]}.bin' # BIOS/PFAT Firmware
+    elif uaf_tag.startswith('@S0'):
+        uaf_name = f'BIOS_0{uaf_tag[3:]}.sig' # BIOS/PFAT Signature
+    elif uaf_tag.startswith('@DR'):
+        uaf_name = f'DROM_0{uaf_tag[3:]}.bin' # Thunderbolt Retimer Firmware
+    elif uaf_tag.startswith('@DS'):
+        uaf_name = f'DROM_0{uaf_tag[3:]}.sig' # Thunderbolt Retimer Signature
+    elif uaf_tag.startswith('@EC'):
+        uaf_name = f'EC_0{uaf_tag[3:]}.bin' # Embedded Controller Firmware
+    elif uaf_tag.startswith('@ME'):
+        uaf_name = f'ME_0{uaf_tag[3:]}.bin' # Management Engine Firmware
+    else:
+        uaf_name = uaf_tag # Could not name the @UAF|@HPU Module, use Tag instead
     
     uaf_fext = '' if uaf_name != uaf_tag else '.bin'
     
@@ -289,7 +309,8 @@ def uaf_extract(buffer, extract_path, mod_info, padding=0, is_checksum=False, na
     else:
         uaf_fname = safe_path(extract_path, uaf_sname)
     
-    if is_checksum: chk16_validate(uaf_data_all, uaf_tag, padding + 4)
+    if checksum:
+        chk16_validate(uaf_data_all, uaf_tag, padding + 4)
     
     # Parse Utility Identification Information @UAF|@HPU Module (@UII)
     if uaf_tag == '@UII':
@@ -304,7 +325,8 @@ def uaf_extract(buffer, extract_path, mod_info, padding=0, is_checksum=False, na
         
         info_hdr.struct_print(padding + 8, info_desc) # Print @UII Module Info
         
-        if is_checksum: chk16_validate(uaf_data_raw, '@UII > Info', padding + 8)
+        if checksum:
+            chk16_validate(uaf_data_raw, '@UII > Info', padding + 8)
         
         # Store/Save @UII Module Info in file
         with open(uaf_fname[:-4] + '.txt', 'a', encoding='utf-8') as uii_out:
@@ -324,14 +346,16 @@ def uaf_extract(buffer, extract_path, mod_info, padding=0, is_checksum=False, na
     
     # Store/Save @UAF|@HPU Module file
     if uaf_tag != '@UII': # Skip @UII binary, already parsed
-        with open(uaf_fname, 'wb') as uaf_out: uaf_out.write(uaf_data_raw)
+        with open(uaf_fname, 'wb') as uaf_out:
+            uaf_out.write(uaf_data_raw)
     
     # @UAF|@HPU Module EFI/Tiano Decompression
     if is_comp and is_efi_compressed(uaf_data_raw, False):
         dec_fname = uaf_fname.replace('.temp', uaf_fext) # Decompressed @UAF|@HPU Module file path
         
         if efi_decompress(uaf_fname, dec_fname, padding + 4) == 0:
-            with open(dec_fname, 'rb') as dec: uaf_data_raw = dec.read() # Read back the @UAF|@HPU Module decompressed Raw data
+            with open(dec_fname, 'rb') as dec:
+                uaf_data_raw = dec.read() # Read back the @UAF|@HPU Module decompressed Raw data
             
             os.remove(uaf_fname) # Successful decompression, delete compressed @UAF|@HPU Module file
             
@@ -392,39 +416,32 @@ def uaf_extract(buffer, extract_path, mod_info, padding=0, is_checksum=False, na
             nal_dict[info_tag] = (info_path,info_name) # Assign a file path & name to each Tag
     
     # Parse Insyde BIOS @UAF|@HPU Module (@INS)
-    if uaf_tag == '@INS' and is_szip_supported(uaf_fname, padding + 4, check=True):
-        ins_dir = os.path.join(extract_path, safe_name(f'{uaf_tag}_nested-SFX')) # Generate extraction directory
+    if uaf_tag == '@INS' and is_insyde_ifd(uaf_fname):
+        ins_dir = os.path.join(extract_path, safe_name(f'{uaf_tag}_nested-IFD')) # Generate extraction directory
         
-        printer('Insyde BIOS 7z SFX Archive:', padding + 4)
-        
-        if szip_decompress(uaf_fname, ins_dir, '7z SFX', padding + 8, check=True) == 0:
-            os.remove(uaf_fname) # Successful extraction, delete @INS Module file/archive
+        if insyde_ifd_extract(uaf_fname, ins_dir, padding + 4) == 0:
+            os.remove(uaf_fname) # Delete raw nested Insyde IFD image after successful extraction
     
     # Detect & Unpack AMI BIOS Guard (PFAT) BIOS image
-    pfat_match,pfat_buffer = get_ami_pfat(uaf_data_raw)
-    
-    if pfat_match:
+    if is_ami_pfat(uaf_data_raw):
         pfat_dir = os.path.join(extract_path, safe_name(uaf_name))
         
-        parse_pfat_file(pfat_buffer, pfat_dir, padding + 4)
+        parse_pfat_file(uaf_data_raw, pfat_dir, padding + 4)
         
-        os.remove(uaf_fname) # Delete PFAT Module file after extraction
+        os.remove(uaf_fname) # Delete raw PFAT BIOS image after successful extraction
     
     # Detect Intel Engine firmware image and show ME Analyzer advice
     if uaf_tag.startswith('@ME') and PAT_INTEL_ENG.search(uaf_data_raw):
         printer('Intel Management Engine (ME) Firmware:\n', padding + 4)
         printer('Use "ME Analyzer" from https://github.com/platomav/MEAnalyzer', padding + 8, False)
     
-    # Get best Nested AMI UCP Pattern match based on @UAF|@HPU Size
-    nested_uaf_off,nested_uaf_bin,nested_uaf_tag = get_ami_ucp(uaf_data_raw)
-    
-    # Parse Nested AMI UCP Structure
-    if nested_uaf_off is not None:
+    # Parse Nested AMI UCP image
+    if is_ami_ucp(uaf_data_raw):
         uaf_dir = os.path.join(extract_path, safe_name(f'{uaf_tag}_nested-UCP')) # Generate extraction directory
         
-        ucp_extract(nested_uaf_bin, uaf_dir, nested_uaf_tag, padding + 4, is_checksum) # Call recursively
+        ucp_extract(uaf_data_raw, uaf_dir, padding + 4, checksum) # Call recursively
         
-        os.remove(uaf_fname) # Delete raw nested AMI UCP Structure after successful recursion/extraction
+        os.remove(uaf_fname) # Delete raw nested AMI UCP image after successful extraction
     
     return nal_dict
 
@@ -497,7 +514,7 @@ if __name__ == '__main__':
     argparser.add_argument('-c', '--checksum', help='verify AMI UCP Checksums (slow)', action='store_true')
     arguments = argparser.parse_args()
     
-    is_checksum = arguments.checksum # Set Checksum verification optional argument
+    checksum = arguments.checksum # Set Checksum verification optional argument
     
     # Initialize script (must be after argparse)
     exit_code,input_files,output_path,padding = script_init(TITLE, arguments, 4)
@@ -507,19 +524,17 @@ if __name__ == '__main__':
         
         printer(['***', input_name], padding - 4)
         
-        with open(input_file, 'rb') as in_file: input_buffer = in_file.read()
+        with open(input_file, 'rb') as in_file:
+            input_buffer = in_file.read()
         
-        # Get best AMI UCP Pattern match based on @UAF|@HPU Size
-        main_uaf_off,main_uaf_bin,main_uaf_tag = get_ami_ucp(input_buffer)
-        
-        if main_uaf_off is None:
+        if not is_ami_ucp(input_buffer):
             printer('Error: This is not an AMI UCP Update executable!', padding)
             
             continue # Next input file
         
         extract_path = os.path.join(output_path, input_name)
         
-        ucp_extract(main_uaf_bin, extract_path, main_uaf_tag, padding, is_checksum)
+        ucp_extract(input_buffer, extract_path, padding, checksum)
         
         exit_code -= 1
     

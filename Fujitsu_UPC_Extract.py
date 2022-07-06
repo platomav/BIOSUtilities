@@ -7,7 +7,7 @@ Fujitsu UPC BIOS Extractor
 Copyright (C) 2021-2022 Plato Mavropoulos
 """
 
-TITLE = 'Fujitsu UPC BIOS Extractor v2.0_a3'
+TITLE = 'Fujitsu UPC BIOS Extractor v2.0_a4'
 
 import os
 import sys
@@ -55,7 +55,8 @@ if __name__ == '__main__':
         
         printer(['***', input_name], padding - 4)
         
-        with open(input_file, 'rb') as in_file: input_buffer = in_file.read()
+        with open(input_file, 'rb') as in_file:
+            input_buffer = in_file.read()
         
         if not is_fujitsu_upc(input_buffer):
             printer('Error: This is not a Fujitsu UPC BIOS image!', padding)

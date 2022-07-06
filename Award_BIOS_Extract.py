@@ -7,7 +7,7 @@ Award BIOS Module Extractor
 Copyright (C) 2018-2022 Plato Mavropoulos
 """
 
-TITLE = 'Award BIOS Module Extractor v2.0_a3'
+TITLE = 'Award BIOS Module Extractor v2.0_a4'
 
 import os
 import sys
@@ -18,7 +18,7 @@ sys.dont_write_bytecode = True
 from common.comp_szip import szip_decompress
 from common.path_ops import make_dirs, safe_name
 from common.patterns import PAT_AWARD_LZH
-from common.system import script_init, argparse_init, printer
+from common.system import argparse_init, printer, script_init
 from common.text_ops import file_to_bytes
 
 # Check if input is Award BIOS image
@@ -84,7 +84,8 @@ if __name__ == '__main__':
         
         printer(['***', input_name], padding - 4)
         
-        with open(input_file, 'rb') as in_file: input_buffer = in_file.read()
+        with open(input_file, 'rb') as in_file:
+            input_buffer = in_file.read()
         
         if not is_award_bios(input_buffer):
             printer('Error: This is not an Award BIOS image!', padding)

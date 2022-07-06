@@ -6,9 +6,9 @@
 * [**AMI BIOS Guard Extractor**](#ami-bios-guard-extractor)
 * [**AMI UCP Update Extractor**](#ami-ucp-update-extractor)
 * [**Award BIOS Module Extractor**](#award-bios-module-extractor)
-* [**Dell PFS Update Extractor**](#dell-pfs-update-extractor)
+* [**Dell PFS/PKG Update Extractor**](#dell-pfs-pkg-update-extractor)
 * [**Fujitsu UPC BIOS Extractor**](#fujitsu-upc-bios-extractor)
-* [**Insyde iFlash Update Extractor**](#insyde-iflash-update-extractor)
+* [**Insyde iFlash/iFdPacker Extractor**](#insyde-iflash-ifdpacker-update-extractor)
 * [**Panasonic BIOS Package Extractor**](#panasonic-bios-package-extractor)
 * [**Phoenix TDK Packer Extractor**](#phoenix-tdk-packer-extractor)
 * [**Portwell EFI Update Extractor**](#portwell-efi-update-extractor)
@@ -37,7 +37,7 @@ You can either Drag & Drop or manually enter AMI BIOS Guard (PFAT) image file(s)
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.8 support.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.10 support.
 
 #### **Prerequisites**
 
@@ -49,7 +49,7 @@ Optionally, to decompile the AMI PFAT \> Intel BIOS Guard Scripts, you must have
 
 PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
 
-1. Make sure Python 3.8.0 or newer is installed:
+1. Make sure Python 3.10.0 or newer is installed:
 
 > python --version
 
@@ -81,7 +81,7 @@ Some Anti-Virus software may claim that the built/frozen/compiled executable con
 
 #### **Description**
 
-Parses AMI UCP (Utility Configuration Program) Update executables, extracts their firmware components (e.g. SPI/BIOS/UEFI, EC, ME etc) and shows all relevant info. It supports all AMI UCP revisions and formats, including those with nested AMI PFAT, AMI UCP or Insyde SFX structures. The output comprises only final firmware components and utilities which are directly usable by end users.
+Parses AMI UCP (Utility Configuration Program) Update executables, extracts their firmware components (e.g. SPI/BIOS/UEFI, EC, ME etc) and shows all relevant info. It supports all AMI UCP revisions and formats, including those with nested AMI PFAT, AMI UCP or Insyde iFlash/iFdPacker structures. The output comprises only final firmware components and utilities which are directly usable by end users.
 
 #### **Usage**
 
@@ -96,7 +96,7 @@ You can either Drag & Drop or manually enter AMI UCP Update executable file(s). 
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.8 support.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.10 support.
 
 #### **Prerequisites**
 
@@ -113,7 +113,7 @@ Optionally, to decompile the AMI UCP \> AMI PFAT \> Intel BIOS Guard Scripts (wh
 
 PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
 
-1. Make sure Python 3.8.0 or newer is installed:
+1. Make sure Python 3.10.0 or newer is installed:
 
 > python --version
 
@@ -161,7 +161,7 @@ You can either Drag & Drop or manually enter Award BIOS image file(s). Optional 
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.8 support.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.10 support.
 
 #### **Prerequisites**
 
@@ -173,7 +173,7 @@ To run the utility, you must have the following 3rd party tool at the "external"
 
 PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
 
-1. Make sure Python 3.8.0 or newer is installed:
+1. Make sure Python 3.10.0 or newer is installed:
 
 > python --version
 
@@ -199,17 +199,17 @@ Some Anti-Virus software may claim that the built/frozen/compiled executable con
 
 ![]()
 
-## **Dell PFS Update Extractor**
+## **Dell PFS/PKG Update Extractor**
 
 ![]()
 
 #### **Description**
 
-Parses Dell PFS Update images and extracts their Firmware (e.g. SPI, BIOS/UEFI, EC, ME etc) and Utilities (e.g. Flasher etc) component sections. It supports all Dell PFS revisions and formats, including those which are originally LZMA compressed in ThinOS packages, ZLIB compressed or Intel BIOS Guard (PFAT) protected. The output comprises only final firmware components which are directly usable by end users.
+Parses Dell PFS/PKG Update images and extracts their Firmware (e.g. SPI, BIOS/UEFI, EC, ME etc) and Utilities (e.g. Flasher etc) component sections. It supports all Dell PFS/PKG revisions and formats, including those which are originally LZMA compressed in ThinOS packages, ZLIB compressed or Intel BIOS Guard (PFAT) protected. The output comprises only final firmware components which are directly usable by end users.
 
 #### **Usage**
 
-You can either Drag & Drop or manually enter Dell PFS Update images(s). Optional arguments:
+You can either Drag & Drop or manually enter Dell PFS/PKG Update images(s). Optional arguments:
   
 * -h or --help : show help message and exit
 * -v or --version : show utility name and version
@@ -221,7 +221,7 @@ You can either Drag & Drop or manually enter Dell PFS Update images(s). Optional
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.8 support.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.10 support.
 
 #### **Prerequisites**
 
@@ -233,7 +233,7 @@ Optionally, to decompile the Intel BIOS Guard (PFAT) Scripts, you must have the 
 
 PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
 
-1. Make sure Python 3.8.0 or newer is installed:
+1. Make sure Python 3.10.0 or newer is installed:
 
 > python --version
 
@@ -279,7 +279,7 @@ You can either Drag & Drop or manually enter Fujitsu UPC BIOS image file(s). Opt
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.8 support.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.10 support.
 
 #### **Prerequisites**
 
@@ -291,7 +291,7 @@ To run the utility, you must have the following 3rd party tool at the "external"
 
 PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
 
-1. Make sure Python 3.8.0 or newer is installed:
+1. Make sure Python 3.10.0 or newer is installed:
 
 > python --version
 
@@ -317,17 +317,17 @@ Some Anti-Virus software may claim that the built/frozen/compiled executable con
 
 ![]()
 
-## **Insyde iFlash Update Extractor**
+## **Insyde iFlash/iFdPacker Extractor**
 
 ![]()
 
 #### **Description**
 
-Parses Insyde iFlash Update images and extracts their firmware (e.g. SPI, BIOS/UEFI, EC, ME etc) and utilities (e.g. Flasher, Configuration etc) components. The output comprises only final firmware components which are directly usable by end users.
+Parses Insyde iFlash/iFdPacker Update images and extracts their firmware (e.g. SPI, BIOS/UEFI, EC, ME etc) and utilities (e.g. Flasher, Configuration etc) components. It supports all Insyde iFlash/iFdPacker revisions and formats, including those which are \7-Zip SFX 7z compressed in raw or obfuscated form. The output comprises only final firmware components which are directly usable by end users.
 
 #### **Usage**
 
-You can either Drag & Drop or manually enter Insyde iFlash Update image file(s). Optional arguments:
+You can either Drag & Drop or manually enter Insyde iFlash/iFdPacker Update image file(s). Optional arguments:
   
 * -h or --help : show help message and exit
 * -v or --version : show utility name and version
@@ -337,7 +337,7 @@ You can either Drag & Drop or manually enter Insyde iFlash Update image file(s).
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.8 support.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.10 support.
 
 #### **Prerequisites**
 
@@ -347,7 +347,7 @@ To run the utility, you do not need any prerequisites.
 
 PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
 
-1. Make sure Python 3.8.0 or newer is installed:
+1. Make sure Python 3.10.0 or newer is installed:
 
 > python --version
 
@@ -357,7 +357,7 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 
 3. Build/Freeze/Compile:
 
-> pyinstaller --noupx --onefile \<path-to-project\>\/Insyde_iFlash_Extract.py
+> pyinstaller --noupx --onefile \<path-to-project\>\/Insyde_IFD_Extract.py
 
 At dist folder you should find the final utility executable
 
@@ -389,7 +389,7 @@ You can either Drag & Drop or manually enter Panasonic BIOS Package executable f
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.8 support.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.10 support.
 
 #### **Prerequisites**
 
@@ -406,7 +406,7 @@ Moreover, you must have the following 3rd party tool at the "external" project d
 
 PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
 
-1. Make sure Python 3.8.0 or newer is installed:
+1. Make sure Python 3.10.0 or newer is installed:
 
 > python --version
 
@@ -456,7 +456,7 @@ You can either Drag & Drop or manually enter Phoenix Tools Development Kit (TDK)
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.8 support.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.10 support.
 
 #### **Prerequisites**
 
@@ -468,7 +468,7 @@ To run the utility, you must have the following 3rd party Python module installe
 
 PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
 
-1. Make sure Python 3.8.0 or newer is installed:
+1. Make sure Python 3.10.0 or newer is installed:
 
 > python --version
 
@@ -514,7 +514,7 @@ You can either Drag & Drop or manually enter Portwell UEFI Unpacker EFI executab
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.8 support.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.10 support.
 
 #### **Prerequisites**
 
@@ -532,7 +532,7 @@ Moreover, you must have the following 3rd party tool at the "external" project d
 
 PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
 
-1. Make sure Python 3.8.0 or newer is installed:
+1. Make sure Python 3.10.0 or newer is installed:
 
 > python --version
 
@@ -582,7 +582,7 @@ You can either Drag & Drop or manually enter Toshiba BIOS COM image file(s). Opt
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.8 support.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.10 support.
 
 #### **Prerequisites**
 
@@ -594,7 +594,7 @@ To run the utility, you must have the following 3rd party tool at the "external"
 
 PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
 
-1. Make sure Python 3.8.0 or newer is installed:
+1. Make sure Python 3.10.0 or newer is installed:
 
 > python --version
 
@@ -640,7 +640,7 @@ You can either Drag & Drop or manually enter VAIO Packaging Manager executable f
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.8 support.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.10 support.
 
 #### **Prerequisites**
 
@@ -650,7 +650,7 @@ To run the utility, you do not need any prerequisites.
 
 PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
 
-1. Make sure Python 3.8.0 or newer is installed:
+1. Make sure Python 3.10.0 or newer is installed:
 
 > python --version
 

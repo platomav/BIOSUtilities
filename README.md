@@ -323,7 +323,7 @@ Some Anti-Virus software may claim that the built/frozen/compiled executable con
 
 #### **Description**
 
-Parses Insyde iFlash/iFdPacker Update images and extracts their firmware (e.g. SPI, BIOS/UEFI, EC, ME etc) and utilities (e.g. Flasher, Configuration etc) components. It supports all Insyde iFlash/iFdPacker revisions and formats, including those which are \7-Zip SFX 7z compressed in raw or obfuscated form. The output comprises only final firmware components which are directly usable by end users.
+Parses Insyde iFlash/iFdPacker Update images and extracts their firmware (e.g. SPI, BIOS/UEFI, EC, ME etc) and utilities (e.g. H2OFFT, FlsHook, iscflash, platform.ini etc) components. It supports all Insyde iFlash/iFdPacker revisions and formats, including those which are 7-Zip SFX 7z compressed in raw or obfuscated form. The output comprises only final firmware components which are directly usable by end users.
 
 #### **Usage**
 

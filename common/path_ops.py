@@ -8,6 +8,7 @@ Copyright (C) 2022 Plato Mavropoulos
 import os
 import re
 import sys
+import stat
 import shutil
 from pathlib import Path, PurePath
 
@@ -92,7 +93,12 @@ def make_dirs(in_path, parents=True, exist_ok=False, delete=False):
 # Delete folder(s), if present
 def del_dirs(in_path):
     if Path(in_path).is_dir():
-        shutil.rmtree(in_path)
+        shutil.rmtree(in_path, onerror=clear_readonly)
+
+# Clear read-only file attribute (on shutil.rmtree error)
+def clear_readonly(in_func, in_path, _):
+    os.chmod(in_path, stat.S_IWRITE)
+    in_func(in_path)
 
 # Walk path to get all files
 def get_path_files(in_path):

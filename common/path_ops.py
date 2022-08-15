@@ -136,6 +136,8 @@ def get_argparse_path(argparse_path):
 
 # Process input files (argparse object)
 def process_input_files(argparse_args, sys_argv=None):
+    input_files = []
+    
     if sys_argv is None:
         sys_argv = []
     
@@ -146,7 +148,12 @@ def process_input_files(argparse_args, sys_argv=None):
             input_path_full = get_argparse_path(input_path_user) if input_path_user else ''
             input_files = get_path_files(input_path_full)
         else:
-            input_files = [file.name for file in argparse_args.files]
+            # Parse list of input files (i.e. argparse FileType objects)
+            for file_object in argparse_args.files:
+                # Store each argparse FileType object's name (i.e. path)
+                input_files.append(file_object.name)
+                # Close each argparse FileType object (i.e. allow input file changes)
+                file_object.close()
         
         # Set output fallback value for missing argparse Output and Input Path
         output_fallback = path_parent(input_files[0]) if input_files else None

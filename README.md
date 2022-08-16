@@ -5,6 +5,7 @@
 
 * [**AMI BIOS Guard Extractor**](#ami-bios-guard-extractor)
 * [**AMI UCP Update Extractor**](#ami-ucp-update-extractor)
+* [**Apple EFI IM4P Splitter**](#apple-efi-im4p-splitter)
 * [**Apple EFI Image Identifier**](#apple-efi-image-identifier)
 * [**Award BIOS Module Extractor**](#award-bios-module-extractor)
 * [**Dell PFS/PKG Update Extractor**](#dell-pfspkg-update-extractor)
@@ -134,6 +135,58 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 > pyinstaller --add-data="external/*;external/" --noupx --onefile \<path-to-project\>\/AMI_UCP_Extract.py
 
 You should find the final utility executable at "dist" folder
+
+#### **Anti-Virus False Positives**
+
+Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
+
+#### **Pictures**
+
+![]()
+
+## **Apple EFI IM4P Splitter**
+
+![]()
+
+#### **Description**
+
+Parses Apple IM4P multi-EFI files and splits all detected EFI firmware into separate Intel SPI/BIOS images.
+
+#### **Usage**
+
+You can either Drag & Drop or manually enter Apple EFI IM4P file(s). Optional arguments:
+  
+* -h or --help : show help message and exit
+* -v or --version : show utility name and version
+* -i or --input-dir : extract from given input directory
+* -o or --output-dir : extract in given output directory
+* -e or --auto-exit : skip press enter to exit prompts
+
+#### **Compatibility**
+
+Should work at all Windows, Linux or macOS operating systems which have Python 3.10 support.
+
+#### **Prerequisites**
+
+To run the utility, you do not need any prerequisites.
+
+#### **Build/Freeze/Compile with PyInstaller**
+
+PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
+
+1. Make sure Python 3.10.0 or newer is installed:
+
+> python --version
+
+2. Use pip to install PyInstaller:
+
+> pip3 install pyinstaller
+
+3. Build/Freeze/Compile:
+
+> pyinstaller --noupx --onefile \<path-to-project\>\/Apple_EFI_Split.py
+
+At dist folder you should find the final utility executable
 
 #### **Anti-Virus False Positives**
 

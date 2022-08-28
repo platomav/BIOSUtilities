@@ -2,12 +2,12 @@
 #coding=utf-8
 
 """
-Apple EFI Split
+Apple EFI IM4P
 Apple EFI IM4P Splitter
 Copyright (C) 2018-2022 Plato Mavropoulos
 """
 
-TITLE = 'Apple EFI IM4P Splitter v3.0_a2'
+TITLE = 'Apple EFI IM4P Splitter v3.0_a4'
 
 import os
 import sys
@@ -32,6 +32,8 @@ def is_apple_im4p(input_file):
 
 # Parse & Split Apple EFI IM4P image
 def apple_im4p_split(input_file, output_path, padding=0):    
+    exit_codes = []
+    
     input_buffer = file_to_bytes(input_file)
     
     extract_path = os.path.join(f'{output_path}_extracted')
@@ -48,7 +50,7 @@ def apple_im4p_split(input_file, output_path, padding=0):
     mefi_data_bgn = im4p_match.start() + input_buffer[im4p_match.start() - 0x1]
     
     # IM4P mefi payload size
-    mefi_data_len = int.from_bytes(input_buffer[im4p_match.end() + 0x9:im4p_match.end() + 0xD], 'big')
+    mefi_data_len = int.from_bytes(input_buffer[im4p_match.end() + 0x5:im4p_match.end() + 0x9], 'big')
     
     # Check if mefi is followed by _MEFIBIN
     mefibin_exist = input_buffer[mefi_data_bgn:mefi_data_bgn + 0x8] == b'_MEFIBIN'
@@ -119,6 +121,8 @@ def apple_im4p_split(input_file, output_path, padding=0):
         
         output_data = input_buffer[ifd_data_bgn:ifd_data_end]
         
+        output_size = len(output_data)
+        
         output_name = path_stem(input_file) if os.path.isfile(input_file) else 'Part'
         
         output_path = os.path.join(extract_path, f'{output_name}_[{ifd_data_txt}].fd')
@@ -127,6 +131,13 @@ def apple_im4p_split(input_file, output_path, padding=0):
             output_image.write(output_data)
         
         printer(f'Split Apple EFI image at {ifd_data_txt}!', padding)
+        
+        if output_size != ifd_comp_all_size:
+            printer(f'Error: Bad image size 0x{output_size:07X}, expected 0x{ifd_comp_all_size:07X}!', padding + 4)
+            
+            exit_codes.append(1)
+    
+    return sum(exit_codes)
 
 # Intel Flash Descriptor Component Sizes (4MB, 8MB, 16MB and 32MB)
 IFD_COMP_LEN = {3: 0x400000, 4: 0x800000, 5: 0x1000000, 6: 0x2000000}
@@ -151,9 +162,8 @@ if __name__ == '__main__':
         
         extract_path = os.path.join(output_path, input_name)
         
-        apple_im4p_split(input_file, extract_path, padding)
-        
-        exit_code -= 1
+        if apple_im4p_split(input_file, extract_path, padding) == 0:
+            exit_code -= 1
     
     printer('Done!', pause=True)
     

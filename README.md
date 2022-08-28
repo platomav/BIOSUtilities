@@ -7,6 +7,8 @@
 * [**AMI UCP Update Extractor**](#ami-ucp-update-extractor)
 * [**Apple EFI IM4P Splitter**](#apple-efi-im4p-splitter)
 * [**Apple EFI Image Identifier**](#apple-efi-image-identifier)
+* [**Apple EFI Package Extractor**](#apple-efi-package-extractor)
+* [**Apple EFI PBZX Extractor**](#apple-efi-pbzx-extractor)
 * [**Award BIOS Module Extractor**](#award-bios-module-extractor)
 * [**Dell PFS/PKG Update Extractor**](#dell-pfspkg-update-extractor)
 * [**Fujitsu SFX BIOS Extractor**](#fujitsu-sfx-bios-extractor)
@@ -150,7 +152,7 @@ Some Anti-Virus software may claim that the built/frozen/compiled executable con
 
 #### **Description**
 
-Parses Apple IM4P multi-EFI files and splits all detected EFI firmware into separate Intel SPI/BIOS images.
+Parses Apple IM4P multi-EFI files and splits all detected EFI firmware into separate Intel SPI/BIOS images. The output comprises only final firmware components and utilities which are directly usable by end users.
 
 #### **Usage**
 
@@ -184,7 +186,7 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 
 3. Build/Freeze/Compile:
 
-> pyinstaller --noupx --onefile \<path-to-project\>\/Apple_EFI_Split.py
+> pyinstaller --noupx --onefile \<path-to-project\>\/Apple_EFI_IM4P.py
 
 At dist folder you should find the final utility executable
 
@@ -245,7 +247,123 @@ PyInstaller can build/freeze/compile the utility at all three supported platform
 
 4. Build/Freeze/Compile:
 
-> pyinstaller --add-data="external/*;external/" --noupx --onefile \<path-to-project\>\/Apple_EFI_Identify.py
+> pyinstaller --add-data="external/*;external/" --noupx --onefile \<path-to-project\>\/Apple_EFI_ID.py
+
+You should find the final utility executable at "dist" folder
+
+#### **Anti-Virus False Positives**
+
+Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
+
+#### **Pictures**
+
+![]()
+
+## **Apple EFI Package Extractor**
+
+![]()
+
+#### **Description**
+
+Parses Apple EFI PKG firmware packages (i.e. FirmwareUpdate.pkg, BridgeOSUpdateCustomer.pkg), extracts their EFI images, splits those in IM4P format and identifies/renames the final Intel SPI/BIOS images accordingly. The output comprises only final firmware components which are directly usable by end users.
+
+#### **Usage**
+
+You can either Drag & Drop or manually enter Apple EFI PKG package file(s). Optional arguments:
+
+* -h or --help : show help message and exit
+* -v or --version : show utility name and version
+* -i or --input-dir : extract from given input directory
+* -o or --output-dir : extract in given output directory
+* -e or --auto-exit : skip press enter to exit prompts
+
+#### **Compatibility**
+
+Should work at all Windows, Linux or macOS operating systems which have Python 3.10 support.
+
+#### **Prerequisites**
+
+To run the utility, you must have the following 3rd party tools at the "external" project directory:
+
+* [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zzs for Linux)
+
+#### **Build/Freeze/Compile with PyInstaller**
+
+PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
+
+1. Make sure Python 3.10.0 or newer is installed:
+
+> python --version
+
+2. Use pip to install PyInstaller:
+
+> pip3 install pyinstaller
+
+3. Place prerequisites at the "external" project directory:
+
+> 7-Zip Console
+
+4. Build/Freeze/Compile:
+
+> pyinstaller --add-data="external/*;external/" --noupx --onefile \<path-to-project\>\/Apple_EFI_PKG.py
+
+You should find the final utility executable at "dist" folder
+
+#### **Anti-Virus False Positives**
+
+Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
+
+#### **Pictures**
+
+![]()
+
+## **Apple EFI PBZX Extractor**
+
+![]()
+
+#### **Description**
+
+Parses Apple EFI PBZX images, re-assembles their CPIO payload and extracts its firmware components (e.g. IM4P, EFI, Utilities, Scripts etc). It supports CPIO re-assembly from both Raw and XZ compressed PBZX Chunks. The output comprises only final firmware components and utilities which are directly usable by end users.
+
+#### **Usage**
+
+You can either Drag & Drop or manually enter Apple EFI PBZX image file(s). Optional arguments:
+
+* -h or --help : show help message and exit
+* -v or --version : show utility name and version
+* -i or --input-dir : extract from given input directory
+* -o or --output-dir : extract in given output directory
+* -e or --auto-exit : skip press enter to exit prompts
+
+#### **Compatibility**
+
+Should work at all Windows, Linux or macOS operating systems which have Python 3.10 support.
+
+#### **Prerequisites**
+
+To run the utility, you must have the following 3rd party tools at the "external" project directory:
+
+* [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zzs for Linux)
+
+#### **Build/Freeze/Compile with PyInstaller**
+
+PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
+
+1. Make sure Python 3.10.0 or newer is installed:
+
+> python --version
+
+2. Use pip to install PyInstaller:
+
+> pip3 install pyinstaller
+
+3. Place prerequisites at the "external" project directory:
+
+> 7-Zip Console
+
+4. Build/Freeze/Compile:
+
+> pyinstaller --add-data="external/*;external/" --noupx --onefile \<path-to-project\>\/Apple_EFI_PBZX.py
 
 You should find the final utility executable at "dist" folder
 

@@ -71,6 +71,10 @@ def agnostic_path(in_path):
 def path_parent(in_path):
     return Path(in_path).parent.absolute()
 
+# Get final path component, with suffix
+def path_name(in_path):
+    return PurePath(in_path).name
+
 # Get final path component, w/o suffix
 def path_stem(in_path):
     return PurePath(in_path).stem
@@ -94,6 +98,13 @@ def make_dirs(in_path, parents=True, exist_ok=False, delete=False):
 def del_dirs(in_path):
     if Path(in_path).is_dir():
         shutil.rmtree(in_path, onerror=clear_readonly)
+
+# Copy file to path with or w/o metadata
+def copy_file(in_path, out_path, meta=False):
+    if meta:
+        shutil.copy2(in_path, out_path)
+    else:
+        shutil.copy(in_path, out_path)
 
 # Clear read-only file attribute (on shutil.rmtree error)
 def clear_readonly(in_func, in_path, _):

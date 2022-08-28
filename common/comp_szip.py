@@ -23,9 +23,12 @@ def check_bad_exit_code(exit_code):
         raise Exception(f'BAD_EXIT_CODE_{exit_code}')
 
 # Check if file is 7-Zip supported
-def is_szip_supported(in_path, padding=0, password='', check=False, silent=False):
+def is_szip_supported(in_path, padding=0, args=None, check=False, silent=False):
     try:
-        szip_c = [get_szip_path(), 't', in_path, f'-p{password}', '-bso0', '-bse0', '-bsp0']
+        if args is None:
+            args = []
+        
+        szip_c = [get_szip_path(), 't', in_path, *args, '-bso0', '-bse0', '-bsp0']
         
         szip_t = subprocess.run(szip_c, check=False)
         
@@ -40,12 +43,15 @@ def is_szip_supported(in_path, padding=0, password='', check=False, silent=False
     return True
 
 # Archive decompression via 7-Zip
-def szip_decompress(in_path, out_path, in_name, padding=0, password='', check=False, silent=False):
+def szip_decompress(in_path, out_path, in_name, padding=0, args=None, check=False, silent=False):
     if not in_name:
         in_name = 'archive'
     
     try:
-        szip_c = [get_szip_path(), 'x', f'-p{password}', '-aou', '-bso0', '-bse0', '-bsp0', f'-o{out_path}', in_path]
+        if args is None:
+            args = []
+        
+        szip_c = [get_szip_path(), 'x', *args, '-aou', '-bso0', '-bse0', '-bsp0', f'-o{out_path}', in_path]
         
         szip_x = subprocess.run(szip_c, check=False)
         

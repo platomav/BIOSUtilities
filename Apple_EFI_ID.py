@@ -2,12 +2,12 @@
 #coding=utf-8
 
 """
-Apple EFI Identify
+Apple EFI ID
 Apple EFI Image Identifier
 Copyright (C) 2018-2022 Plato Mavropoulos
 """
 
-TITLE = 'Apple EFI Image Identifier v2.0_a3'
+TITLE = 'Apple EFI Image Identifier v2.0_a4'
 
 import os
 import sys
@@ -143,7 +143,7 @@ def apple_efi_identify(input_file, output_path, padding=0, rename=False):
     if rename:
         input_parent = path_parent(input_file)
         
-        input_suffix = path_suffixes(input_file)[0]
+        input_suffix = path_suffixes(input_file)[-1]
         
         input_adler32 = zlib.adler32(input_buffer)
         
@@ -156,7 +156,7 @@ def apple_efi_identify(input_file, output_path, padding=0, rename=False):
         if not os.path.isfile(output_file):
             os.replace(input_file, output_file) # Rename input file based on its EFI tag
         
-        printer(f'Renamed input to {output_name}', padding)
+        printer(f'Renamed to {output_name}', padding)
     
     return 0
 

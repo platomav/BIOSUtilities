@@ -7,7 +7,7 @@ Insyde iFlash/iFdPacker Extractor
 Copyright (C) 2022 Plato Mavropoulos
 """
 
-TITLE = 'Insyde iFlash/iFdPacker Extractor v2.0_a9'
+TITLE = 'Insyde iFlash/iFdPacker Extractor v2.0_a10'
 
 import os
 import sys
@@ -175,9 +175,9 @@ def insyde_packer_extract(input_buffer, extract_path, padding=0):
     with open(sfx_path, 'wb') as sfx_file:
         sfx_file.write(sfx_buffer)
     
-    if is_szip_supported(sfx_path, padding + 8, password=INS_SFX_PWD, check=True):
+    if is_szip_supported(sfx_path, padding + 8, args=[f'-p{INS_SFX_PWD}'], check=True):
         if szip_decompress(sfx_path, extract_path, 'Insyde iFdPacker > 7-Zip SFX',
-        padding + 8, password=INS_SFX_PWD, check=True) == 0:
+        padding + 8, args=[f'-p{INS_SFX_PWD}'], check=True) == 0:
             os.remove(sfx_path)
         else:
             return 125

@@ -7,7 +7,7 @@ AMI UCP Update Extractor
 Copyright (C) 2021-2022 Plato Mavropoulos
 """
 
-TITLE = 'AMI UCP Update Extractor v2.0_a18'
+TITLE = 'AMI UCP Update Extractor v2.0_a19'
 
 import os
 import re
@@ -470,6 +470,8 @@ UAF_TAG_DICT = {
     '@BME' : ['BiosMgmt.efi', 'BiosMgmt.efi', ''],
     '@CKV' : ['Check_Version.txt', 'Check Version', 'Text'],
     '@CMD' : ['AFU_Command.txt', 'AMI AFU Command', 'Text'],
+    '@CML' : ['CMOSD4.txt', 'CMOS Item Number-Value (MSI)', 'Text'],
+    '@CMS' : ['CMOSD4.exe', 'Get or Set CMOS Item (MSI)', ''],
     '@CPM' : ['AC_Message.txt', 'Confirm Power Message', ''],
     '@DCT' : ['DevCon32.exe', 'Device Console WIN32', ''],
     '@DCX' : ['DevCon64.exe', 'Device Console WIN64', ''],

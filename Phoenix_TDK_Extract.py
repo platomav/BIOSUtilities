@@ -7,7 +7,7 @@ Phoenix TDK Packer Extractor
 Copyright (C) 2021-2022 Plato Mavropoulos
 """
 
-TITLE = 'Phoenix TDK Packer Extractor v2.0_a9'
+TITLE = 'Phoenix TDK Packer Extractor v2.0_a10'
 
 import os
 import sys
@@ -21,7 +21,8 @@ from common.path_ops import make_dirs, safe_name
 from common.pe_ops import get_pe_file, get_pe_info
 from common.patterns import PAT_MICROSOFT_MZ, PAT_MICROSOFT_PE, PAT_PHOENIX_TDK
 from common.struct_ops import char, get_struct, uint32_t
-from common.system import argparse_init, printer, script_init
+from common.system import printer
+from common.templates import BIOSUtility
 from common.text_ops import file_to_bytes
 
 class PhoenixTdkHeader(ctypes.LittleEndianStructure):
@@ -110,7 +111,7 @@ def get_tdk_base(in_buffer, pack_off):
                 
                 # Parse detected MZ > PE > Info > Product Name
                 pe_name = pe_info.get(b'ProductName',b'')
-            except:
+            except Exception:
                 # Any error means no MZ > PE > Info > Product Name
                 pe_name = b''
             
@@ -152,12 +153,10 @@ def is_phoenix_tdk(in_file):
     return bool(get_phoenix_tdk(buffer)[1] is not None)
 
 # Parse & Extract Phoenix Tools Development Kit (TDK) Packer
-def phoenix_tdk_extract(input_file, output_path, padding=0):
-    input_buffer = file_to_bytes(input_file)
-    
+def phoenix_tdk_extract(input_file, extract_path, padding=0):
     exit_code = 0
     
-    extract_path = os.path.join(f'{output_path}_extracted')
+    input_buffer = file_to_bytes(input_file)
     
     make_dirs(extract_path, delete=True)
     
@@ -214,7 +213,7 @@ def phoenix_tdk_extract(input_file, output_path, padding=0):
         if tdk_mod.get_compression() == 'LZMA':
             try:
                 mod_data = lzma.LZMADecompressor().decompress(mod_data)
-            except:
+            except Exception:
                 printer('Error: Phoenix TDK Entry > LZMA decompression failed!\n', padding + 12, pause=True)
                 exit_code = 5
         
@@ -241,32 +240,4 @@ TDK_MOD_LEN = ctypes.sizeof(PhoenixTdkEntry)
 TDK_DUMMY_LEN = 0x200
 
 if __name__ == '__main__':
-    # Set argparse Arguments    
-    argparser = argparse_init()
-    arguments = argparser.parse_args()
-    
-    # Initialize script (must be after argparse)
-    exit_code,input_files,output_path,padding = script_init(TITLE, arguments, 4)
-    
-    for input_file in input_files:
-        input_name = os.path.basename(input_file)
-        
-        printer(['***', input_name], padding - 4)
-        
-        with open(input_file, 'rb') as in_file:
-            input_buffer = in_file.read()
-        
-        # Check if Phoenix TDK Packer pattern was found on executable
-        if not is_phoenix_tdk(input_buffer):
-            printer('Error: This is not a Phoenix TDK Packer executable!', padding)
-            
-            continue # Next input file
-        
-        extract_path = os.path.join(output_path, input_name)
-        
-        if phoenix_tdk_extract(input_buffer, extract_path, padding) == 0:
-            exit_code -= 1
-    
-    printer('Done!', pause=True)
-    
-    sys.exit(exit_code)
+    BIOSUtility(TITLE, is_phoenix_tdk, phoenix_tdk_extract).run_utility()

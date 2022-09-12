@@ -7,7 +7,7 @@ AMI BIOS Guard Extractor
 Copyright (C) 2018-2022 Plato Mavropoulos
 """
 
-TITLE = 'AMI BIOS Guard Extractor v4.0_a11'
+TITLE = 'AMI BIOS Guard Extractor v4.0_a12'
 
 import os
 import re
@@ -19,10 +19,11 @@ sys.dont_write_bytecode = True
 
 from common.externals import get_bgs_tool
 from common.num_ops import get_ordinal
-from common.path_ops import make_dirs, safe_name
+from common.path_ops import make_dirs, safe_name, get_extract_path, extract_suffix
 from common.patterns import PAT_AMI_PFAT
 from common.struct_ops import char, get_struct, uint8_t, uint16_t, uint32_t
-from common.system import argparse_init, printer, script_init
+from common.system import printer
+from common.templates import BIOSUtility
 from common.text_ops import file_to_bytes
 
 class AmiBiosGuardHeader(ctypes.LittleEndianStructure):
@@ -147,7 +148,7 @@ def parse_bg_script(script_data, padding=0):
     is_opcode_div = len(script_data) % 8 == 0
     
     if not is_opcode_div:
-        printer('Error: Script not divisible by OpCode length!', padding, False)
+        printer('Error: Script is not divisible by OpCode length!', padding, False)
         
         return 1
     
@@ -161,7 +162,7 @@ def parse_bg_script(script_data, padding=0):
     BigScript = get_bgs_tool()
     
     if not BigScript:
-        printer('Error: BIOS Guard Script Tool dependency missing!', padding, False)
+        printer('Note: BIOS Guard Script Tool optional dependency is missing!', padding, False)
         
         return 3
     
@@ -220,7 +221,7 @@ def parse_pfat_hdr(buffer, padding=0):
     
     return block_all, hdr_size, files_count
 
-def parse_pfat_file(input_file, output_path, padding=0):
+def parse_pfat_file(input_file, extract_path, padding=0):
     input_buffer = file_to_bytes(input_file)
     
     pfat_buffer = get_ami_pfat(input_buffer)
@@ -228,9 +229,7 @@ def parse_pfat_file(input_file, output_path, padding=0):
     file_path = ''
     all_blocks_dict = {}
     
-    extract_name = os.path.basename(output_path)
-    
-    extract_path = os.path.join(f'{output_path}_extracted')
+    extract_name = os.path.basename(extract_path).rstrip(extract_suffix())
     
     make_dirs(extract_path, delete=True)
     
@@ -299,7 +298,7 @@ def parse_pfat_file(input_file, output_path, padding=0):
         out_oob.write(pfat_oob_data)
     
     if is_ami_pfat(pfat_oob_data):
-        parse_pfat_file(pfat_oob_data, pfat_oob_path, padding)
+        parse_pfat_file(pfat_oob_data, get_extract_path(pfat_oob_path), padding)
     
     in_all_data = b''.join([block[1] for block in sorted(all_blocks_dict.items())])
     
@@ -317,32 +316,4 @@ PFAT_BLK_HDR_LEN = ctypes.sizeof(IntelBiosGuardHeader)
 PFAT_BLK_S2K_LEN = ctypes.sizeof(IntelBiosGuardSignature2k)
 
 if __name__ == '__main__':
-    # Set argparse Arguments    
-    argparser = argparse_init()
-    arguments = argparser.parse_args()
-    
-    # Initialize script (must be after argparse)
-    exit_code,input_files,output_path,padding = script_init(TITLE, arguments, 4)
-    
-    for input_file in input_files:
-        input_name = os.path.basename(input_file)
-        
-        printer(['***', input_name], padding - 4)
-        
-        with open(input_file, 'rb') as in_file:
-            input_buffer = in_file.read()
-        
-        if not is_ami_pfat(input_buffer):
-            printer('Error: This is not an AMI BIOS Guard (PFAT) image!', padding)
-            
-            continue # Next input file
-        
-        extract_path = os.path.join(output_path, input_name)
-        
-        parse_pfat_file(input_buffer, extract_path, padding)
-        
-        exit_code -= 1
-    
-    printer('Done!', pause=True)
-    
-    sys.exit(exit_code)
+    BIOSUtility(TITLE, is_ami_pfat, parse_pfat_file).run_utility()

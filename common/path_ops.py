@@ -130,58 +130,13 @@ def get_dequoted_path(in_path):
     
     return out_path
 
-# Get absolute file path of argparse object
-def get_argparse_path(argparse_path):
-    if not argparse_path:
-        # Use runtime directory if no user path is specified
-        absolute_path = runtime_root()
-    else:
-        # Check if user specified path is absolute
-        if is_path_absolute(argparse_path):
-            absolute_path = argparse_path
-        # Otherwise, make it runtime directory relative
-        else:
-            absolute_path = safe_path(runtime_root(), argparse_path)
-    
-    return absolute_path
+# Set utility extraction stem
+def extract_suffix():
+    return '_extracted'
 
-# Process input files (argparse object)
-def process_input_files(argparse_args, sys_argv=None):
-    input_files = []
-    
-    if sys_argv is None:
-        sys_argv = []
-    
-    if len(sys_argv) >= 2:
-        # Drag & Drop or CLI
-        if argparse_args.input_dir:
-            input_path_user = argparse_args.input_dir
-            input_path_full = get_argparse_path(input_path_user) if input_path_user else ''
-            input_files = get_path_files(input_path_full)
-        else:
-            # Parse list of input files (i.e. argparse FileType objects)
-            for file_object in argparse_args.files:
-                # Store each argparse FileType object's name (i.e. path)
-                input_files.append(file_object.name)
-                # Close each argparse FileType object (i.e. allow input file changes)
-                file_object.close()
-        
-        # Set output fallback value for missing argparse Output and Input Path
-        output_fallback = path_parent(input_files[0]) if input_files else None
-        
-        # Set output path via argparse Output path or argparse Input path or first input file path
-        output_path = argparse_args.output_dir or argparse_args.input_dir or output_fallback
-    else:
-        # Script w/o parameters
-        input_path_user = get_dequoted_path(input('\nEnter input directory path: '))
-        input_path_full = get_argparse_path(input_path_user) if input_path_user else ''
-        input_files = get_path_files(input_path_full)
-        
-        output_path = get_dequoted_path(input('\nEnter output directory path: '))
-    
-    output_path_final = get_argparse_path(output_path)
-    
-    return input_files, output_path_final
+# Get utility extraction path
+def get_extract_path(in_path, suffix=extract_suffix()):
+    return f'{in_path}{suffix}'
 
 # Get project's root directory
 def project_root():

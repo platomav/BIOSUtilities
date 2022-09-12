@@ -7,7 +7,7 @@ Apple EFI IM4P Splitter
 Copyright (C) 2018-2022 Plato Mavropoulos
 """
 
-TITLE = 'Apple EFI IM4P Splitter v3.0_a4'
+TITLE = 'Apple EFI IM4P Splitter v3.0_a5'
 
 import os
 import sys
@@ -17,7 +17,8 @@ sys.dont_write_bytecode = True
 
 from common.path_ops import make_dirs, path_stem
 from common.patterns import PAT_APPLE_IM4P, PAT_INTEL_IFD
-from common.system import argparse_init, printer, script_init
+from common.system import printer
+from common.templates import BIOSUtility
 from common.text_ops import file_to_bytes
 
 # Check if input is Apple EFI IM4P image
@@ -31,12 +32,10 @@ def is_apple_im4p(input_file):
     return bool(is_im4p and is_ifd)
 
 # Parse & Split Apple EFI IM4P image
-def apple_im4p_split(input_file, output_path, padding=0):    
+def apple_im4p_split(input_file, extract_path, padding=0):    
     exit_codes = []
     
     input_buffer = file_to_bytes(input_file)
-    
-    extract_path = os.path.join(f'{output_path}_extracted')
     
     make_dirs(extract_path, delete=True)
     
@@ -143,28 +142,4 @@ def apple_im4p_split(input_file, output_path, padding=0):
 IFD_COMP_LEN = {3: 0x400000, 4: 0x800000, 5: 0x1000000, 6: 0x2000000}
 
 if __name__ == '__main__':
-    # Set argparse Arguments    
-    argparser = argparse_init()
-    arguments = argparser.parse_args()
-    
-    # Initialize script (must be after argparse)
-    exit_code,input_files,output_path,padding = script_init(TITLE, arguments, 4)
-    
-    for input_file in input_files:
-        input_name = os.path.basename(input_file)
-        
-        printer(['***', input_name], padding - 4)
-        
-        if not is_apple_im4p(input_file):
-            printer('Error: This is not an Apple EFI IM4P image!', padding)
-            
-            continue # Next input file
-        
-        extract_path = os.path.join(output_path, input_name)
-        
-        if apple_im4p_split(input_file, extract_path, padding) == 0:
-            exit_code -= 1
-    
-    printer('Done!', pause=True)
-    
-    sys.exit(exit_code)
+    BIOSUtility(TITLE, is_apple_im4p, apple_im4p_split).run_utility()

@@ -7,7 +7,7 @@ Fujitsu UPC BIOS Extractor
 Copyright (C) 2021-2022 Plato Mavropoulos
 """
 
-TITLE = 'Fujitsu UPC BIOS Extractor v2.0_a4'
+TITLE = 'Fujitsu UPC BIOS Extractor v2.0_a5'
 
 import os
 import sys
@@ -17,7 +17,7 @@ sys.dont_write_bytecode = True
 
 from common.comp_efi import efi_decompress, is_efi_compressed
 from common.path_ops import make_dirs, path_suffixes
-from common.system import argparse_init, printer, script_init
+from common.templates import BIOSUtility
 from common.text_ops import file_to_bytes
 
 # Check if input is Fujitsu UPC image
@@ -31,9 +31,7 @@ def is_fujitsu_upc(in_file):
     return is_ext and is_efi
 
 # Parse & Extract Fujitsu UPC image
-def fujitsu_upc_extract(input_file, output_path, padding=0):
-    extract_path = os.path.join(f'{output_path}_extracted')
-    
+def fujitsu_upc_extract(input_file, extract_path, padding=0):
     make_dirs(extract_path, delete=True)
     
     image_base = os.path.basename(input_file)
@@ -43,31 +41,4 @@ def fujitsu_upc_extract(input_file, output_path, padding=0):
     return efi_decompress(input_file, image_path, padding)
     
 if __name__ == '__main__':
-    # Set argparse Arguments    
-    argparser = argparse_init()
-    arguments = argparser.parse_args()
-    
-    # Initialize script (must be after argparse)
-    exit_code,input_files,output_path,padding = script_init(TITLE, arguments, 4)
-    
-    for input_file in input_files:
-        input_name = os.path.basename(input_file)
-        
-        printer(['***', input_name], padding - 4)
-        
-        with open(input_file, 'rb') as in_file:
-            input_buffer = in_file.read()
-        
-        if not is_fujitsu_upc(input_buffer):
-            printer('Error: This is not a Fujitsu UPC BIOS image!', padding)
-            
-            continue # Next input file
-        
-        extract_path = os.path.join(output_path, input_name)
-        
-        if fujitsu_upc_extract(input_file, extract_path, padding) == 0:
-            exit_code -= 1
-    
-    printer('Done!', pause=True)
-    
-    sys.exit(exit_code)
+    BIOSUtility(TITLE, is_fujitsu_upc, fujitsu_upc_extract).run_utility()

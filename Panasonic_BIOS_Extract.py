@@ -7,7 +7,7 @@ Panasonic BIOS Package Extractor
 Copyright (C) 2018-2022 Plato Mavropoulos
 """
 
-TITLE = 'Panasonic BIOS Package Extractor v2.0_a9'
+TITLE = 'Panasonic BIOS Package Extractor v2.0_a10'
 
 import os
 import io
@@ -22,7 +22,8 @@ from common.comp_szip import is_szip_supported, szip_decompress
 from common.path_ops import get_path_files, make_dirs, path_stem, safe_name
 from common.pe_ops import get_pe_file, get_pe_info, is_pe_file, show_pe_info
 from common.patterns import PAT_MICROSOFT_CAB
-from common.system import argparse_init, printer, script_init
+from common.system import printer
+from common.templates import BIOSUtility
 from common.text_ops import file_to_bytes
 
 from AMI_PFAT_Extract import is_ami_pfat, parse_pfat_file
@@ -111,7 +112,7 @@ def panasonic_res_extract(pe_name, pe_file, extract_path, padding=0):
                     res_raw = lznt1.decompress(res_bin[0x8:])
                     
                     printer('Succesfull LZNT1 decompression via lznt1!', padding + 8) 
-                except:
+                except Exception:
                     res_raw = res_bin
                     
                     printer('Succesfull PE Resource extraction!', padding + 8)
@@ -161,10 +162,8 @@ def panasonic_img_extract(pe_name, pe_path, pe_file, extract_path, padding=0):
     return bool(img_bin)
 
 # Parse & Extract Panasonic BIOS Package PE
-def panasonic_pkg_extract(input_path, input_buffer, output_path, padding=0):
-    is_upd_res,is_upd_img = [False] * 2
-    
-    extract_path = os.path.join(f'{output_path}_extracted')
+def panasonic_pkg_extract(input_file, extract_path, padding=0):
+    input_buffer = file_to_bytes(input_file)
     
     make_dirs(extract_path, delete=True)
     
@@ -178,7 +177,7 @@ def panasonic_pkg_extract(input_path, input_buffer, output_path, padding=0):
     if not pkg_pe_info:
         return 3
     
-    pkg_pe_name = path_stem(input_path)
+    pkg_pe_name = path_stem(input_file)
     
     printer(f'Panasonic BIOS Package > PE ({pkg_pe_name})\n', padding)
     
@@ -195,6 +194,8 @@ def panasonic_pkg_extract(input_path, input_buffer, output_path, padding=0):
     
     show_pe_info(upd_pe_info, padding + 16)
     
+    is_upd_res, is_upd_img = False, False
+    
     is_upd_res = panasonic_res_extract(upd_pe_name, upd_pe_file, extract_path, padding + 16)
     
     if not is_upd_res:
@@ -205,32 +206,4 @@ def panasonic_pkg_extract(input_path, input_buffer, output_path, padding=0):
     return 0 if is_upd_res or is_upd_img else 1
 
 if __name__ == '__main__':
-    # Set argparse Arguments    
-    argparser = argparse_init()
-    arguments = argparser.parse_args()
-    
-    # Initialize script (must be after argparse)
-    exit_code,input_files,output_path,padding = script_init(TITLE, arguments, 4)
-    
-    for input_file in input_files:
-        input_name = os.path.basename(input_file)
-        
-        printer(['***', input_name], padding - 4)
-        
-        with open(input_file, 'rb') as in_file:
-            input_buffer = in_file.read()
-        
-        # Check if Panasonic BIOS Package pattern was found on executable
-        if not is_panasonic_pkg(input_buffer):
-            printer('Error: This is not a Panasonic BIOS Package executable!', padding)
-            
-            continue # Next input file
-        
-        extract_path = os.path.join(output_path, input_name)
-        
-        if panasonic_pkg_extract(input_file, input_buffer, extract_path, padding) == 0:
-            exit_code -= 1
-    
-    printer('Done!', pause=True)
-    
-    sys.exit(exit_code)
+    BIOSUtility(TITLE, is_panasonic_pkg, panasonic_pkg_extract).run_utility()

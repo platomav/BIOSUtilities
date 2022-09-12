@@ -7,7 +7,7 @@ Fujitsu SFX BIOS Extractor
 Copyright (C) 2019-2022 Plato Mavropoulos
 """
 
-TITLE = 'Fujitsu SFX BIOS Extractor v3.0_a2'
+TITLE = 'Fujitsu SFX BIOS Extractor v3.0_a3'
 
 import os
 import sys
@@ -18,7 +18,8 @@ sys.dont_write_bytecode = True
 from common.comp_szip import is_szip_supported, szip_decompress
 from common.path_ops import make_dirs
 from common.patterns import PAT_FUJITSU_SFX
-from common.system import argparse_init, printer, script_init
+from common.system import printer
+from common.templates import BIOSUtility
 from common.text_ops import file_to_bytes
 
 # Check if input is Fujitsu SFX image
@@ -71,10 +72,8 @@ def fujitsu_cabinet(in_file, extract_path, padding=0):
     return 0
 
 # Parse & Extract Fujitsu SFX image
-def fujitsu_sfx_extract(in_file, output_path, padding=0):
+def fujitsu_sfx_extract(in_file, extract_path, padding=0):
     buffer = file_to_bytes(in_file)
-    
-    extract_path = os.path.join(f'{output_path}_extracted')
     
     make_dirs(extract_path, delete=True)
     
@@ -87,32 +86,4 @@ def fujitsu_sfx_extract(in_file, output_path, padding=0):
     return 0
 
 if __name__ == '__main__':
-    # Set argparse Arguments    
-    argparser = argparse_init()
-    arguments = argparser.parse_args()
-    
-    # Initialize script (must be after argparse)
-    exit_code,input_files,output_path,padding = script_init(TITLE, arguments, 4)
-    
-    for input_file in input_files:
-        input_name = os.path.basename(input_file)
-        
-        printer(['***', input_name], padding - 4)
-        
-        with open(input_file, 'rb') as in_file:
-            input_buffer = in_file.read()
-        
-        # Check if Fujitsu SFX pattern was found on image
-        if not is_fujitsu_sfx(input_buffer):
-            printer('Error: This is not a Fujitsu SFX image!', padding)
-            
-            continue # Next input file
-        
-        extract_path = os.path.join(output_path, input_name)
-        
-        if fujitsu_sfx_extract(input_buffer, extract_path, padding) == 0:
-            exit_code -= 1
-    
-    printer('Done!', pause=True)
-    
-    sys.exit(exit_code)
+    BIOSUtility(TITLE, is_fujitsu_sfx, fujitsu_sfx_extract).run_utility()

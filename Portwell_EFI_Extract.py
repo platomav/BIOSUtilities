@@ -7,7 +7,7 @@ Portwell EFI Update Extractor
 Copyright (C) 2021-2022 Plato Mavropoulos
 """
 
-TITLE = 'Portwell EFI Update Extractor v2.0_a11'
+TITLE = 'Portwell EFI Update Extractor v2.0_a12'
 
 import os
 import sys
@@ -19,7 +19,8 @@ from common.comp_efi import efi_decompress, is_efi_compressed
 from common.path_ops import make_dirs, safe_name
 from common.pe_ops import get_pe_file
 from common.patterns import PAT_MICROSOFT_MZ, PAT_PORTWELL_EFI
-from common.system import argparse_init, printer, script_init
+from common.system import printer
+from common.templates import BIOSUtility
 from common.text_ops import file_to_bytes
 
 FILE_NAMES = {
@@ -36,7 +37,7 @@ def is_portwell_efi(in_file):
     
     try:
         pe_buffer = get_portwell_pe(in_buffer)[1]
-    except:
+    except Exception:
         pe_buffer = b''
     
     is_mz = PAT_MICROSOFT_MZ.search(in_buffer[:0x2]) # EFI images start with PE Header MZ
@@ -54,10 +55,10 @@ def get_portwell_pe(in_buffer):
     return pe_file, pe_data
 
 # Parse & Extract Portwell UEFI Unpacker
-def portwell_efi_extract(input_buffer, output_path, padding=0):
+def portwell_efi_extract(input_file, extract_path, padding=0):
     efi_files = [] # Initialize EFI Payload file chunks
     
-    extract_path = os.path.join(f'{output_path}_extracted')
+    input_buffer = file_to_bytes(input_file)
     
     make_dirs(extract_path, delete=True)
     
@@ -132,32 +133,4 @@ def parse_efi_files(extract_path, efi_files, padding):
                 os.remove(comp_fname) # Successful decompression, delete compressed file
 
 if __name__ == '__main__':
-    # Set argparse Arguments    
-    argparser = argparse_init()
-    arguments = argparser.parse_args()
-    
-    # Initialize script (must be after argparse)
-    exit_code,input_files,output_path,padding = script_init(TITLE, arguments, 4)
-    
-    for input_file in input_files:
-        input_name = os.path.basename(input_file)
-        
-        printer(['***', input_name], padding - 4)
-        
-        with open(input_file, 'rb') as in_file:
-            input_buffer = in_file.read()
-        
-        if not is_portwell_efi(input_buffer):
-            printer('Error: This is not a Portwell EFI Update Package!', padding)
-            
-            continue # Next input file
-        
-        extract_path = os.path.join(output_path, input_name)
-        
-        portwell_efi_extract(input_buffer, extract_path, padding)
-        
-        exit_code -= 1
-    
-    printer('Done!', pause=True)
-    
-    sys.exit(exit_code)
+    BIOSUtility(TITLE, is_portwell_efi, portwell_efi_extract).run_utility()

@@ -7,7 +7,7 @@ AMI UCP Update Extractor
 Copyright (C) 2021-2022 Plato Mavropoulos
 """
 
-TITLE = 'AMI UCP Update Extractor v2.0_a19'
+TITLE = 'AMI UCP Update Extractor v2.0_a20'
 
 import os
 import re
@@ -21,10 +21,11 @@ sys.dont_write_bytecode = True
 
 from common.checksums import get_chk_16
 from common.comp_efi import efi_decompress, is_efi_compressed
-from common.path_ops import agnostic_path, make_dirs, safe_name, safe_path
+from common.path_ops import agnostic_path, make_dirs, safe_name, safe_path, get_extract_path
 from common.patterns import PAT_AMI_UCP, PAT_INTEL_ENG
 from common.struct_ops import char, get_struct, uint8_t, uint16_t, uint32_t
-from common.system import argparse_init, printer, script_init
+from common.system import printer
+from common.templates import BIOSUtility
 from common.text_ops import file_to_bytes, to_string
 
 from AMI_PFAT_Extract import is_ami_pfat, parse_pfat_file
@@ -211,14 +212,12 @@ def get_uaf_mod(buffer, uaf_off=0x0):
     return uaf_all
 
 # Parse & Extract AMI UCP structures
-def ucp_extract(in_file, out_path, padding=0, checksum=False):
+def ucp_extract(in_file, extract_path, padding=0, checksum=False):
     input_buffer = file_to_bytes(in_file)
     
     nal_dict = {} # Initialize @NAL Dictionary per UCP
     
     printer('Utility Configuration Program', padding)
-    
-    extract_path = os.path.join(f'{out_path}_extracted')
     
     make_dirs(extract_path, delete=True)
     
@@ -419,14 +418,14 @@ def uaf_extract(buffer, extract_path, mod_info, padding=0, checksum=False, nal_d
     if uaf_tag == '@INS' and is_insyde_ifd(uaf_fname):
         ins_dir = os.path.join(extract_path, safe_name(f'{uaf_tag}_nested-IFD')) # Generate extraction directory
         
-        if insyde_ifd_extract(uaf_fname, ins_dir, padding + 4) == 0:
+        if insyde_ifd_extract(uaf_fname, get_extract_path(ins_dir), padding + 4) == 0:
             os.remove(uaf_fname) # Delete raw nested Insyde IFD image after successful extraction
     
     # Detect & Unpack AMI BIOS Guard (PFAT) BIOS image
     if is_ami_pfat(uaf_data_raw):
         pfat_dir = os.path.join(extract_path, safe_name(uaf_name))
         
-        parse_pfat_file(uaf_data_raw, pfat_dir, padding + 4)
+        parse_pfat_file(uaf_data_raw, get_extract_path(pfat_dir), padding + 4)
         
         os.remove(uaf_fname) # Delete raw PFAT BIOS image after successful extraction
     
@@ -439,7 +438,7 @@ def uaf_extract(buffer, extract_path, mod_info, padding=0, checksum=False, nal_d
     if is_ami_ucp(uaf_data_raw):
         uaf_dir = os.path.join(extract_path, safe_name(f'{uaf_tag}_nested-UCP')) # Generate extraction directory
         
-        ucp_extract(uaf_data_raw, uaf_dir, padding + 4, checksum) # Call recursively
+        ucp_extract(uaf_data_raw, get_extract_path(uaf_dir), padding + 4, checksum) # Call recursively
         
         os.remove(uaf_fname) # Delete raw nested AMI UCP image after successful extraction
     
@@ -511,35 +510,6 @@ UAF_TAG_DICT = {
     }
 
 if __name__ == '__main__':
-    # Set argparse Arguments    
-    argparser = argparse_init()
-    argparser.add_argument('-c', '--checksum', help='verify AMI UCP Checksums (slow)', action='store_true')
-    arguments = argparser.parse_args()
-    
-    checksum = arguments.checksum # Set Checksum verification optional argument
-    
-    # Initialize script (must be after argparse)
-    exit_code,input_files,output_path,padding = script_init(TITLE, arguments, 4)
-    
-    for input_file in input_files:
-        input_name = os.path.basename(input_file)
-        
-        printer(['***', input_name], padding - 4)
-        
-        with open(input_file, 'rb') as in_file:
-            input_buffer = in_file.read()
-        
-        if not is_ami_ucp(input_buffer):
-            printer('Error: This is not an AMI UCP Update executable!', padding)
-            
-            continue # Next input file
-        
-        extract_path = os.path.join(output_path, input_name)
-        
-        ucp_extract(input_buffer, extract_path, padding, checksum)
-        
-        exit_code -= 1
-    
-    printer('Done!', pause=True)
-    
-    sys.exit(exit_code)
+    utility = BIOSUtility(TITLE, is_ami_ucp, ucp_extract)
+    utility.parse_argument('-c', '--checksum', help='verify AMI UCP Checksums (slow)', action='store_true')
+    utility.run_utility()

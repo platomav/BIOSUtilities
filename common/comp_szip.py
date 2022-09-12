@@ -34,7 +34,7 @@ def is_szip_supported(in_path, padding=0, args=None, check=False, silent=False):
         
         if check:
             check_bad_exit_code(szip_t.returncode)
-    except:
+    except Exception:
         if not silent:
             printer(f'Error: 7-Zip could not check support for file {in_path}!', padding)
         
@@ -60,7 +60,7 @@ def szip_decompress(in_path, out_path, in_name, padding=0, args=None, check=Fals
         
         if not os.path.isdir(out_path):
             raise Exception('EXTRACT_DIR_MISSING')
-    except:
+    except Exception:
         if not silent:
             printer(f'Error: 7-Zip could not extract {in_name} file {in_path}!', padding)
         

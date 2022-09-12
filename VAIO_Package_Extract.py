@@ -7,7 +7,7 @@ VAIO Packaging Manager Extractor
 Copyright (C) 2019-2022 Plato Mavropoulos
 """
 
-TITLE = 'VAIO Packaging Manager Extractor v3.0_a7'
+TITLE = 'VAIO Packaging Manager Extractor v3.0_a8'
 
 import os
 import sys
@@ -18,7 +18,8 @@ sys.dont_write_bytecode = True
 from common.comp_szip import is_szip_supported, szip_decompress
 from common.path_ops import make_dirs
 from common.patterns import PAT_VAIO_CAB, PAT_VAIO_CFG, PAT_VAIO_CHK, PAT_VAIO_EXT
-from common.system import argparse_init, printer, script_init
+from common.system import printer
+from common.templates import BIOSUtility
 from common.text_ops import file_to_bytes
 
 # Check if input is VAIO Packaging Manager
@@ -125,14 +126,16 @@ def vaio_unlock(name, buffer, extract_path, padding=0):
     return 0
 
 # Parse & Extract or Unlock VAIO Packaging Manager
-def vaio_pkg_extract(name, buffer, output_path, padding=0):
-    extract_path = os.path.join(f'{output_path}_extracted')
+def vaio_pkg_extract(input_file, extract_path, padding=0):
+    input_buffer = file_to_bytes(input_file)
+    
+    input_name = os.path.basename(input_file)
     
     make_dirs(extract_path, delete=True)
     
-    if vaio_cabinet(name, buffer, extract_path, padding) == 0:
+    if vaio_cabinet(input_name, input_buffer, extract_path, padding) == 0:
         printer('Successfully Extracted!', padding)
-    elif vaio_unlock(name, bytearray(buffer), extract_path, padding) == 0:
+    elif vaio_unlock(input_name, bytearray(input_buffer), extract_path, padding) == 0:
         printer('Successfully Unlocked!', padding)
     else:
         printer('Error: Failed to Extract or Unlock executable!', padding)
@@ -141,32 +144,4 @@ def vaio_pkg_extract(name, buffer, output_path, padding=0):
     return 0
 
 if __name__ == '__main__':
-    # Set argparse Arguments    
-    argparser = argparse_init()
-    arguments = argparser.parse_args()
-    
-    # Initialize script (must be after argparse)
-    exit_code,input_files,output_path,padding = script_init(TITLE, arguments, 4)
-    
-    for input_file in input_files:
-        input_name = os.path.basename(input_file)
-        
-        printer(['***', input_name], padding - 4)
-        
-        with open(input_file, 'rb') as in_file:
-            input_buffer = in_file.read()
-        
-        # Check if VAIO Packaging Manager pattern was found on executable
-        if not is_vaio_pkg(input_buffer):
-            printer('Error: This is not a VAIO Packaging Manager executable!', padding)
-            
-            continue # Next input file
-        
-        extract_path = os.path.join(output_path, input_name)
-        
-        if vaio_pkg_extract(input_name, input_buffer, extract_path, padding) == 0:
-            exit_code -= 1
-    
-    printer('Done!', pause=True)
-    
-    sys.exit(exit_code)
+    BIOSUtility(TITLE, is_vaio_pkg, vaio_pkg_extract).run_utility()

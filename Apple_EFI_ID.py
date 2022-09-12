@@ -7,7 +7,7 @@ Apple EFI Image Identifier
 Copyright (C) 2018-2022 Plato Mavropoulos
 """
 
-TITLE = 'Apple EFI Image Identifier v2.0_a4'
+TITLE = 'Apple EFI Image Identifier v2.0_a5'
 
 import os
 import sys
@@ -23,7 +23,8 @@ from common.externals import get_uefifind_path, get_uefiextract_path
 from common.path_ops import del_dirs, path_parent, path_suffixes
 from common.patterns import PAT_APPLE_EFI
 from common.struct_ops import char, get_struct, uint8_t
-from common.system import argparse_init, printer, script_init
+from common.system import printer
+from common.templates import BIOSUtility
 from common.text_ops import file_to_bytes
 
 class IntelBiosId(ctypes.LittleEndianStructure):
@@ -92,11 +93,11 @@ def is_apple_efi(input_file):
         check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
         
         return True
-    except:
+    except Exception:
         return False
 
 # Parse & Identify (or Rename) Apple EFI image
-def apple_efi_identify(input_file, output_path, padding=0, rename=False):
+def apple_efi_identify(input_file, extract_path, padding=0, rename=False):
     if not os.path.isfile(input_file):
         printer('Error: Could not find input file path!', padding)
         
@@ -116,22 +117,20 @@ def apple_efi_identify(input_file, output_path, padding=0, rename=False):
             bios_id_res = subprocess.check_output([get_uefifind_path(), input_file, 'body', 'list', PAT_UEFIFIND],
             text=True)[:36]
             
-            temp_dir = os.path.join(f'{output_path}_uefiextract')
+            del_dirs(extract_path) # UEFIExtract must create its output folder itself, make sure it is not present
             
-            del_dirs(temp_dir) # UEFIExtract must create its output folder itself, make sure it is not present
-            
-            _ = subprocess.run([get_uefiextract_path(), input_file, bios_id_res, '-o', temp_dir, '-m', 'body'],
+            _ = subprocess.run([get_uefiextract_path(), input_file, bios_id_res, '-o', extract_path, '-m', 'body'],
             check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             
-            with open(os.path.join(temp_dir, 'body.bin'), 'rb') as raw_body:
+            with open(os.path.join(extract_path, 'body.bin'), 'rb') as raw_body:
                 body_buffer = raw_body.read()
             
             bios_id_match = PAT_APPLE_EFI.search(body_buffer) # Detect decompressed $IBIOSI$ pattern
             
             bios_id_hdr = get_struct(body_buffer, bios_id_match.start(), IntelBiosId)
             
-            del_dirs(temp_dir) # Successful UEFIExtract extraction, remove its output (temp) folder
-        except:
+            del_dirs(extract_path) # Successful UEFIExtract extraction, remove its output (temp) folder
+        except Exception:
             printer('Error: Failed to parse compressed $IBIOSI$ pattern!', padding)
             
             return 2
@@ -163,31 +162,6 @@ def apple_efi_identify(input_file, output_path, padding=0, rename=False):
 PAT_UEFIFIND = f'244942494F534924{"."*32}2E00{"."*12}2E00{"."*16}2E00{"."*12}2E00{"."*40}0000'
 
 if __name__ == '__main__':
-    # Set argparse Arguments    
-    argparser = argparse_init()
-    argparser.add_argument('-r', '--rename', help='rename EFI image based on its tag', action='store_true')
-    arguments = argparser.parse_args()
-    
-    rename = arguments.rename # Set EFI image tag renaming optional argument
-    
-    # Initialize script (must be after argparse)
-    exit_code,input_files,output_path,padding = script_init(TITLE, arguments, 4)
-    
-    for input_file in input_files:
-        input_name = os.path.basename(input_file)
-        
-        printer(['***', input_name], padding - 4)
-        
-        if not is_apple_efi(input_file):
-            printer('Error: This is not an Apple EFI image!', padding)
-            
-            continue # Next input file
-        
-        extract_path = os.path.join(output_path, input_name)
-        
-        if apple_efi_identify(input_file, extract_path, padding, rename) == 0:
-            exit_code -= 1
-    
-    printer('Done!', pause=True)
-    
-    sys.exit(exit_code)
+    utility = BIOSUtility(TITLE, is_apple_efi, apple_efi_identify)
+    utility.parse_argument('-r', '--rename', help='rename EFI image based on its tag', action='store_true')
+    utility.run_utility()

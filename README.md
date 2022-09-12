@@ -50,32 +50,6 @@ Optionally, to decompile the AMI PFAT \> Intel BIOS Guard Scripts, you must have
 
 * [BIOS Guard Script Tool](https://github.com/platomav/BGScriptTool) (i.e. big_script_tool.py)
 
-#### **Build/Freeze/Compile with PyInstaller**
-
-PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
-
-1. Make sure Python 3.10.0 or newer is installed:
-
-> python --version
-
-2. Use pip to install PyInstaller:
-
-> pip3 install pyinstaller
-
-3. Place prerequisites at the "external" project directory:
-
-> BIOS Guard Script Tool (optional)
-
-4. Build/Freeze/Compile:
-
-> pyinstaller --add-data="external/*;external/" --noupx --onefile \<path-to-project\>\/AMI_PFAT_Extract.py
-
-You should find the final utility executable at "dist" folder
-
-#### **Anti-Virus False Positives**
-
-Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
-
 #### **Pictures**
 
 ![]()
@@ -114,34 +88,6 @@ Optionally, to decompile the AMI UCP \> AMI PFAT \> Intel BIOS Guard Scripts (wh
 
 * [BIOS Guard Script Tool](https://github.com/platomav/BGScriptTool) (i.e. big_script_tool.py)
 
-#### **Build/Freeze/Compile with PyInstaller**
-
-PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
-
-1. Make sure Python 3.10.0 or newer is installed:
-
-> python --version
-
-2. Use pip to install PyInstaller:
-
-> pip3 install pyinstaller
-
-3. Place prerequisites at the "external" project directory:
-
-> TianoCompress\
-> 7-Zip Console\
-> BIOS Guard Script Tool (optional)
-
-4. Build/Freeze/Compile:
-
-> pyinstaller --add-data="external/*;external/" --noupx --onefile \<path-to-project\>\/AMI_UCP_Extract.py
-
-You should find the final utility executable at "dist" folder
-
-#### **Anti-Virus False Positives**
-
-Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
-
 #### **Pictures**
 
 ![]()
@@ -171,28 +117,6 @@ Should work at all Windows, Linux or macOS operating systems which have Python 3
 #### **Prerequisites**
 
 To run the utility, you do not need any prerequisites.
-
-#### **Build/Freeze/Compile with PyInstaller**
-
-PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
-
-1. Make sure Python 3.10.0 or newer is installed:
-
-> python --version
-
-2. Use pip to install PyInstaller:
-
-> pip3 install pyinstaller
-
-3. Build/Freeze/Compile:
-
-> pyinstaller --noupx --onefile \<path-to-project\>\/Apple_EFI_IM4P.py
-
-At dist folder you should find the final utility executable
-
-#### **Anti-Virus False Positives**
-
-Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
 
 #### **Pictures**
 
@@ -228,33 +152,6 @@ To run the utility, you must have the following 3rd party tools at the "external
 * [UEFIFind](https://github.com/LongSoft/UEFITool/) (i.e. [UEFIFind.exe for Windows or UEFIFind for Linux](https://github.com/LongSoft/UEFITool/releases))
 * [UEFIExtract](https://github.com/LongSoft/UEFITool/) (i.e. [UEFIExtract.exe for Windows or UEFIExtract for Linux](https://github.com/LongSoft/UEFITool/releases))
 
-#### **Build/Freeze/Compile with PyInstaller**
-
-PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
-
-1. Make sure Python 3.10.0 or newer is installed:
-
-> python --version
-
-2. Use pip to install PyInstaller:
-
-> pip3 install pyinstaller
-
-3. Place prerequisites at the "external" project directory:
-
-> UEFIFind\
-> UEFIExtract
-
-4. Build/Freeze/Compile:
-
-> pyinstaller --add-data="external/*;external/" --noupx --onefile \<path-to-project\>\/Apple_EFI_ID.py
-
-You should find the final utility executable at "dist" folder
-
-#### **Anti-Virus False Positives**
-
-Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
-
 #### **Pictures**
 
 ![]()
@@ -286,32 +183,6 @@ Should work at all Windows, Linux or macOS operating systems which have Python 3
 To run the utility, you must have the following 3rd party tools at the "external" project directory:
 
 * [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zzs for Linux)
-
-#### **Build/Freeze/Compile with PyInstaller**
-
-PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
-
-1. Make sure Python 3.10.0 or newer is installed:
-
-> python --version
-
-2. Use pip to install PyInstaller:
-
-> pip3 install pyinstaller
-
-3. Place prerequisites at the "external" project directory:
-
-> 7-Zip Console
-
-4. Build/Freeze/Compile:
-
-> pyinstaller --add-data="external/*;external/" --noupx --onefile \<path-to-project\>\/Apple_EFI_PKG.py
-
-You should find the final utility executable at "dist" folder
-
-#### **Anti-Virus False Positives**
-
-Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
 
 #### **Pictures**
 
@@ -345,32 +216,6 @@ To run the utility, you must have the following 3rd party tools at the "external
 
 * [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zzs for Linux)
 
-#### **Build/Freeze/Compile with PyInstaller**
-
-PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
-
-1. Make sure Python 3.10.0 or newer is installed:
-
-> python --version
-
-2. Use pip to install PyInstaller:
-
-> pip3 install pyinstaller
-
-3. Place prerequisites at the "external" project directory:
-
-> 7-Zip Console
-
-4. Build/Freeze/Compile:
-
-> pyinstaller --add-data="external/*;external/" --noupx --onefile \<path-to-project\>\/Apple_EFI_PBZX.py
-
-You should find the final utility executable at "dist" folder
-
-#### **Anti-Virus False Positives**
-
-Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
-
 #### **Pictures**
 
 ![]()
@@ -402,32 +247,6 @@ Should work at all Windows, Linux or macOS operating systems which have Python 3
 To run the utility, you must have the following 3rd party tool at the "external" project directory:
 
 * [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zzs for Linux)
-
-#### **Build/Freeze/Compile with PyInstaller**
-
-PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
-
-1. Make sure Python 3.10.0 or newer is installed:
-
-> python --version
-
-2. Use pip to install PyInstaller:
-
-> pip3 install pyinstaller
-
-3. Place prerequisite at the "external" project directory:
-
-> 7-Zip Console
-
-4. Build/Freeze/Compile:
-
-> pyinstaller --add-data="external/*;external/" --noupx --onefile \<path-to-project\>\/Award_BIOS_Extract.py
-
-At dist folder you should find the final utility executable
-
-#### **Anti-Virus False Positives**
-
-Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
 
 #### **Pictures**
 
@@ -463,32 +282,6 @@ Optionally, to decompile the Intel BIOS Guard (PFAT) Scripts, you must have the 
 
 * [BIOS Guard Script Tool](https://github.com/platomav/BGScriptTool) (i.e. big_script_tool.py)
 
-#### **Build/Freeze/Compile with PyInstaller**
-
-PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
-
-1. Make sure Python 3.10.0 or newer is installed:
-
-> python --version
-
-2. Use pip to install PyInstaller:
-
-> pip3 install pyinstaller
-
-3. Place prerequisites at the "external" project directory:
-
-> BIOS Guard Script Tool (optional)
-
-4. Build/Freeze/Compile:
-
-> pyinstaller --add-data="external/*;external/" --noupx --onefile \<path-to-project\>\/Dell_PFS_Extract.py
-
-You should find the final utility executable at "dist" folder
-
-#### **Anti-Virus False Positives**
-
-Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
-
 #### **Pictures**
 
 ![]()
@@ -520,32 +313,6 @@ Should work at all Windows, Linux or macOS operating systems which have Python 3
 To run the utility, you must have the following 3rd party tool at the "external" project directory:
 
 * [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zzs for Linux)
-
-#### **Build/Freeze/Compile with PyInstaller**
-
-PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
-
-1. Make sure Python 3.10.0 or newer is installed:
-
-> python --version
-
-2. Use pip to install PyInstaller:
-
-> pip3 install pyinstaller
-
-3. Place prerequisite at the "external" project directory:
-
-> 7-Zip Console
-
-4. Build/Freeze/Compile:
-
-> pyinstaller --add-data="external/*;external/" --noupx --onefile \<path-to-project\>\/Fujitsu_SFX_Extract.py
-
-At dist folder you should find the final utility executable
-
-#### **Anti-Virus False Positives**
-
-Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
 
 #### **Pictures**
 
@@ -579,32 +346,6 @@ To run the utility, you must have the following 3rd party tool at the "external"
 
 * [TianoCompress](https://github.com/tianocore/edk2/tree/master/BaseTools/Source/C/TianoCompress/) (i.e. [TianoCompress.exe for Windows](https://github.com/tianocore/edk2-BaseTools-win32/) or TianoCompress for Linux)
 
-#### **Build/Freeze/Compile with PyInstaller**
-
-PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
-
-1. Make sure Python 3.10.0 or newer is installed:
-
-> python --version
-
-2. Use pip to install PyInstaller:
-
-> pip3 install pyinstaller
-
-3. Place prerequisite at the "external" project directory:
-
-> TianoCompress
-
-4. Build/Freeze/Compile:
-
-> pyinstaller --add-data="external/*;external/" --noupx --onefile \<path-to-project\>\/Fujitsu_UPC_Extract.py
-
-You should find the final utility executable at "dist" folder
-
-#### **Anti-Virus False Positives**
-
-Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
-
 #### **Pictures**
 
 ![]()
@@ -634,28 +375,6 @@ Should work at all Windows, Linux or macOS operating systems which have Python 3
 #### **Prerequisites**
 
 To run the utility, you do not need any prerequisites.
-
-#### **Build/Freeze/Compile with PyInstaller**
-
-PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
-
-1. Make sure Python 3.10.0 or newer is installed:
-
-> python --version
-
-2. Use pip to install PyInstaller:
-
-> pip3 install pyinstaller
-
-3. Build/Freeze/Compile:
-
-> pyinstaller --noupx --onefile \<path-to-project\>\/Insyde_IFD_Extract.py
-
-At dist folder you should find the final utility executable
-
-#### **Anti-Virus False Positives**
-
-Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
 
 #### **Pictures**
 
@@ -694,36 +413,6 @@ Moreover, you must have the following 3rd party tool at the "external" project d
 
 * [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zzs for Linux)
 
-#### **Build/Freeze/Compile with PyInstaller**
-
-PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
-
-1. Make sure Python 3.10.0 or newer is installed:
-
-> python --version
-
-2. Use pip to install PyInstaller:
-
-> pip3 install pyinstaller
-
-3. Use pip to install pefile and lznt1:
-
-> pip3 install pefile lznt1
-
-4. Place prerequisite at the "external" project directory:
-
-> 7-Zip Console
-
-5. Build/Freeze/Compile:
-
-> pyinstaller --add-data="external/*;external/" --noupx --onefile \<path-to-project\>\/Panasonic_BIOS_Extract.py
-
-At dist folder you should find the final utility executable
-
-#### **Anti-Virus False Positives**
-
-Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
-
 #### **Pictures**
 
 ![]()
@@ -755,32 +444,6 @@ Should work at all Windows, Linux or macOS operating systems which have Python 3
 To run the utility, you must have the following 3rd party Python module installed:
 
 * [pefile](https://pypi.org/project/pefile/)
-
-#### **Build/Freeze/Compile with PyInstaller**
-
-PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
-
-1. Make sure Python 3.10.0 or newer is installed:
-
-> python --version
-
-2. Use pip to install PyInstaller:
-
-> pip3 install pyinstaller
-
-3. Use pip to install pefile:
-
-> pip3 install pefile
-
-4. Build/Freeze/Compile:
-
-> pyinstaller --noupx --onefile \<path-to-project\>\/Phoenix_TDK_Extract.py
-
-At dist folder you should find the final utility executable
-
-#### **Anti-Virus False Positives**
-
-Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
 
 #### **Pictures**
 
@@ -820,36 +483,6 @@ Moreover, you must have the following 3rd party tool at the "external" project d
 
 * [TianoCompress](https://github.com/tianocore/edk2/tree/master/BaseTools/Source/C/TianoCompress/) (i.e. [TianoCompress.exe for Windows](https://github.com/tianocore/edk2-BaseTools-win32/) or TianoCompress for Linux)
 
-#### **Build/Freeze/Compile with PyInstaller**
-
-PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
-
-1. Make sure Python 3.10.0 or newer is installed:
-
-> python --version
-
-2. Use pip to install PyInstaller:
-
-> pip3 install pyinstaller
-
-3. Use pip to install pefile:
-
-> pip3 install pefile
-
-4. Place prerequisite at the "external" project directory:
-
-> TianoCompress
-
-5. Build/Freeze/Compile:
-
-> pyinstaller --add-data="external/*;external/" --noupx --onefile \<path-to-project\>\/Portwell_EFI_Extract.py
-
-You should find the final utility executable at "dist" folder
-
-#### **Anti-Virus False Positives**
-
-Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
-
 #### **Pictures**
 
 ![]()
@@ -882,32 +515,6 @@ To run the utility, you must have the following 3rd party tool at the "external"
 
 * [ToshibaComExtractor](https://github.com/LongSoft/ToshibaComExtractor) (i.e. [comextract.exe for Windows or comextract for Linux](https://github.com/LongSoft/ToshibaComExtractor/releases))
 
-#### **Build/Freeze/Compile with PyInstaller**
-
-PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
-
-1. Make sure Python 3.10.0 or newer is installed:
-
-> python --version
-
-2. Use pip to install PyInstaller:
-
-> pip3 install pyinstaller
-
-3. Place prerequisite at the "external" project directory:
-
-> ToshibaComExtractor
-
-4. Build/Freeze/Compile:
-
-> pyinstaller --add-data="external/*;external/" --noupx --onefile \<path-to-project\>\/Toshiba_COM_Extract.py
-
-You should find the final utility executable at "dist" folder
-
-#### **Anti-Virus False Positives**
-
-Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
-
 #### **Pictures**
 
 ![]()
@@ -939,32 +546,6 @@ Should work at all Windows, Linux or macOS operating systems which have Python 3
 To run the utility, you must have the following 3rd party tool at the "external" project directory:
 
 * [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zzs for Linux)
-
-#### **Build/Freeze/Compile with PyInstaller**
-
-PyInstaller can build/freeze/compile the utility at all three supported platforms, it is simple to run and gets updated often.
-
-1. Make sure Python 3.10.0 or newer is installed:
-
-> python --version
-
-2. Use pip to install PyInstaller:
-
-> pip3 install pyinstaller
-
-3. Place prerequisite at the "external" project directory:
-
-> 7-Zip Console
-
-4. Build/Freeze/Compile:
-
-> pyinstaller --add-data="external/*;external/" --noupx --onefile \<path-to-project\>\/VAIO_Package_Extract.py
-
-At dist folder you should find the final utility executable
-
-#### **Anti-Virus False Positives**
-
-Some Anti-Virus software may claim that the built/frozen/compiled executable contains viruses. Any such detections are false positives, usually of PyInstaller. You can switch to a better Anti-Virus software, report the false positive to their support, add the executable to the exclusions, build/freeze/compile yourself or use the Python script directly.
 
 #### **Pictures**
 

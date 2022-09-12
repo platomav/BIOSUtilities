@@ -21,7 +21,7 @@ def get_pe_file(in_file, fast=True):
     try:
         # Analyze detected MZ > PE image buffer
         pe_file = pefile.PE(data=in_buffer, fast_load=fast)
-    except:
+    except Exception:
         pe_file = None
     
     return pe_file
@@ -34,7 +34,7 @@ def get_pe_info(pe_file):
         
         # Retrieve MZ > PE > FileInfo > StringTable information
         pe_info = pe_file.FileInfo[0][0].StringTable[0].entries
-    except:
+    except Exception:
         pe_info = {}
     
     return pe_info

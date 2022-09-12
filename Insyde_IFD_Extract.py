@@ -7,7 +7,7 @@ Insyde iFlash/iFdPacker Extractor
 Copyright (C) 2022 Plato Mavropoulos
 """
 
-TITLE = 'Insyde iFlash/iFdPacker Extractor v2.0_a10'
+TITLE = 'Insyde iFlash/iFdPacker Extractor v2.0_a11'
 
 import os
 import sys
@@ -17,10 +17,11 @@ import ctypes
 sys.dont_write_bytecode = True
 
 from common.comp_szip import is_szip_supported, szip_decompress
-from common.path_ops import get_path_files, make_dirs, safe_name
+from common.path_ops import get_path_files, make_dirs, safe_name, get_extract_path
 from common.patterns import PAT_INSYDE_IFL, PAT_INSYDE_SFX
 from common.struct_ops import char, get_struct, uint32_t
-from common.system import argparse_init, printer, script_init
+from common.system import printer
+from common.templates import BIOSUtility
 from common.text_ops import file_to_bytes
 
 class IflashHeader(ctypes.LittleEndianStructure):
@@ -57,10 +58,8 @@ def is_insyde_ifd(input_file):
     return is_ifl or is_sfx
 
 # Parse & Extract Insyde iFlash/iFdPacker Update images
-def insyde_ifd_extract(input_file, output_path, padding=0):
+def insyde_ifd_extract(input_file, extract_path, padding=0):
     input_buffer = file_to_bytes(input_file)
-    
-    extract_path = os.path.join(f'{output_path}_extracted')
     
     iflash_code = insyde_iflash_extract(input_buffer, extract_path, padding)
     
@@ -190,7 +189,7 @@ def insyde_packer_extract(input_buffer, extract_path, padding=0):
         if is_insyde_ifd(sfx_file):
             printer(f'{os.path.basename(sfx_file)}', padding + 12)
             
-            ifd_code = insyde_ifd_extract(sfx_file, sfx_file, padding + 16)
+            ifd_code = insyde_ifd_extract(sfx_file, get_extract_path(sfx_file), padding + 16)
             
             exit_codes.append(ifd_code)
     
@@ -215,32 +214,4 @@ INS_IFL_IMG = {
 INS_IFL_LEN = ctypes.sizeof(IflashHeader)
 
 if __name__ == '__main__':
-    # Set argparse Arguments    
-    argparser = argparse_init()
-    arguments = argparser.parse_args()
-    
-    # Initialize script (must be after argparse)
-    exit_code,input_files,output_path,padding = script_init(TITLE, arguments, 4)
-    
-    for input_file in input_files:
-        input_name = os.path.basename(input_file)
-        
-        printer(['***', input_name], padding - 4)
-        
-        with open(input_file, 'rb') as in_file:
-            input_buffer = in_file.read()
-        
-        if not is_insyde_ifd(input_buffer):
-            printer('Error: This is not an Insyde iFlash/iFdPacker Update image!', padding)
-            
-            continue # Next input file
-        
-        extract_path = os.path.join(output_path, input_name)
-        
-        insyde_ifd_extract(input_buffer, extract_path, padding)
-        
-        exit_code -= 1
-    
-    printer('Done!', pause=True)
-    
-    sys.exit(exit_code)
+    BIOSUtility(TITLE, is_insyde_ifd, insyde_ifd_extract).run_utility()

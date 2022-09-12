@@ -7,7 +7,7 @@ Award BIOS Module Extractor
 Copyright (C) 2018-2022 Plato Mavropoulos
 """
 
-TITLE = 'Award BIOS Module Extractor v2.0_a4'
+TITLE = 'Award BIOS Module Extractor v2.0_a5'
 
 import os
 import sys
@@ -16,9 +16,10 @@ import sys
 sys.dont_write_bytecode = True
 
 from common.comp_szip import szip_decompress
-from common.path_ops import make_dirs, safe_name
+from common.path_ops import make_dirs, safe_name, get_extract_path
 from common.patterns import PAT_AWARD_LZH
-from common.system import argparse_init, printer, script_init
+from common.system import printer
+from common.templates import BIOSUtility
 from common.text_ops import file_to_bytes
 
 # Check if input is Award BIOS image
@@ -28,10 +29,8 @@ def is_award_bios(in_file):
     return bool(PAT_AWARD_LZH.search(in_buffer))
 
 # Parse & Extract Award BIOS image
-def award_bios_extract(input_file, output_path, padding=0):
+def award_bios_extract(input_file, extract_path, padding=0):
     input_buffer = file_to_bytes(input_file)
-    
-    extract_path = os.path.join(f'{output_path}_extracted')
     
     make_dirs(extract_path, delete=True)
     
@@ -69,35 +68,7 @@ def award_bios_extract(input_file, output_path, padding=0):
             # Extract any nested LZH archives
             if is_award_bios(mod_path):
                 # Recursively extract nested Award BIOS modules
-                award_bios_extract(mod_path, mod_path, padding + 8)
+                award_bios_extract(mod_path, get_extract_path(mod_path), padding + 8)
 
 if __name__ == '__main__':
-    # Set argparse Arguments    
-    argparser = argparse_init()
-    arguments = argparser.parse_args()
-    
-    # Initialize script (must be after argparse)
-    exit_code,input_files,output_path,padding = script_init(TITLE, arguments, 4)
-    
-    for input_file in input_files:
-        input_name = os.path.basename(input_file)
-        
-        printer(['***', input_name], padding - 4)
-        
-        with open(input_file, 'rb') as in_file:
-            input_buffer = in_file.read()
-        
-        if not is_award_bios(input_buffer):
-            printer('Error: This is not an Award BIOS image!', padding)
-            
-            continue # Next input file
-        
-        extract_path = os.path.join(output_path, input_name)
-        
-        award_bios_extract(input_buffer, extract_path, padding)
-        
-        exit_code -= 1
-    
-    printer('Done!', pause=True)
-    
-    sys.exit(exit_code)
+    BIOSUtility(TITLE, is_award_bios, award_bios_extract).run_utility()

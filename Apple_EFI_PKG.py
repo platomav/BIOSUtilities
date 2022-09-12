@@ -7,7 +7,7 @@ Apple EFI Package Extractor
 Copyright (C) 2019-2022 Plato Mavropoulos
 """
 
-TITLE = 'Apple EFI Package Extractor v2.0_a4'
+TITLE = 'Apple EFI Package Extractor v2.0_a5'
 
 import os
 import sys
@@ -16,9 +16,10 @@ import sys
 sys.dont_write_bytecode = True
 
 from common.comp_szip import is_szip_supported, szip_decompress
-from common.path_ops import copy_file, del_dirs, get_path_files, make_dirs, path_name, path_parent
+from common.path_ops import copy_file, del_dirs, get_path_files, make_dirs, path_name, path_parent, get_extract_path
 from common.patterns import PAT_APPLE_PKG
-from common.system import argparse_init, printer, script_init
+from common.system import printer
+from common.templates import BIOSUtility
 from common.text_ops import file_to_bytes
 
 from Apple_EFI_ID import apple_efi_identify, is_apple_efi
@@ -35,11 +36,11 @@ def is_apple_pkg(input_file):
 def efi_split_rename(in_file, out_path, padding=0):
     exit_codes = []
     
-    working_dir = f'{in_file}_extracted'
+    working_dir = get_extract_path(in_file)
     
     if is_apple_im4p(in_file):
         printer(f'Splitting IM4P via {is_apple_im4p.__module__}...', padding)
-        im4p_exit = apple_im4p_split(in_file, in_file, padding + 4)
+        im4p_exit = apple_im4p_split(in_file, working_dir, padding + 4)
         exit_codes.append(im4p_exit)
     else:
         make_dirs(working_dir, delete=True)
@@ -59,12 +60,10 @@ def efi_split_rename(in_file, out_path, padding=0):
     return sum(exit_codes)
 
 # Parse & Extract Apple EFI PKG packages
-def apple_pkg_extract(input_file, output_path, padding=0):
+def apple_pkg_extract(input_file, extract_path, padding=0):
     if not os.path.isfile(input_file):
         printer('Error: Could not find input file path!', padding)
         return 1
-    
-    extract_path = os.path.join(f'{output_path}_extracted')
     
     make_dirs(extract_path, delete=True)
     
@@ -82,12 +81,13 @@ def apple_pkg_extract(input_file, output_path, padding=0):
             pbzx_module = is_apple_pbzx.__module__
             if is_apple_pbzx(xar_file):
                 printer(f'Extracting PBZX via {pbzx_module}...', padding + 4)
-                if apple_pbzx_extract(xar_file, xar_file, padding + 8) == 0:
+                pbzx_path = get_extract_path(xar_file)
+                if apple_pbzx_extract(xar_file, pbzx_path, padding + 8) == 0:
                     printer(f'Succesfull PBZX extraction via {pbzx_module}!', padding + 4)
-                    for pbzx_file in get_path_files(f'{xar_file}_extracted'):
+                    for pbzx_file in get_path_files(pbzx_path):
                         if path_name(pbzx_file) == 'UpdateBundle.zip':
                             if is_szip_supported(pbzx_file, padding + 8, args=['-tZIP'], check=True):
-                                zip_path = f'{pbzx_file}_extracted'
+                                zip_path = get_extract_path(pbzx_file)
                                 if szip_decompress(pbzx_file, zip_path, 'ZIP', padding + 8, args=['-tZIP'], check=True) == 0:
                                     for zip_file in get_path_files(zip_path):
                                         if path_name(path_parent(zip_file)) == 'MacEFI':
@@ -114,11 +114,11 @@ def apple_pkg_extract(input_file, output_path, padding=0):
         
         if path_name(xar_file) == 'Scripts':
             if is_szip_supported(xar_file, padding + 4, args=['-tGZIP'], check=True):
-                gzip_path = f'{xar_file}_extracted'
+                gzip_path = get_extract_path(xar_file)
                 if szip_decompress(xar_file, gzip_path, 'GZIP', padding + 4, args=['-tGZIP'], check=True) == 0:
                     for gzip_file in get_path_files(gzip_path):
                         if is_szip_supported(gzip_file, padding + 8, args=['-tCPIO'], check=True):
-                            cpio_path = f'{gzip_file}_extracted'
+                            cpio_path = get_extract_path(gzip_file)
                             if szip_decompress(gzip_file, cpio_path, 'CPIO', padding + 8, args=['-tCPIO'], check=True) == 0:
                                 for cpio_file in get_path_files(cpio_path):
                                     if path_name(path_parent(cpio_file)) == 'EFIPayloads':
@@ -145,28 +145,4 @@ def apple_pkg_extract(input_file, output_path, padding=0):
     return 0
 
 if __name__ == '__main__':
-    # Set argparse Arguments    
-    argparser = argparse_init()
-    arguments = argparser.parse_args()
-    
-    # Initialize script (must be after argparse)
-    exit_code,input_files,output_path,padding = script_init(TITLE, arguments, 4)
-    
-    for input_file in input_files:
-        input_name = os.path.basename(input_file)
-        
-        printer(['***', input_name], padding - 4)
-        
-        if not is_apple_pkg(input_file):
-            printer('Error: This is not an Apple EFI PKG package!', padding)
-            
-            continue # Next input file
-        
-        extract_path = os.path.join(output_path, input_name)
-        
-        if apple_pkg_extract(input_file, extract_path, padding) == 0:
-            exit_code -= 1
-    
-    printer('Done!', pause=True)
-    
-    sys.exit(exit_code)
+    BIOSUtility(TITLE, is_apple_pkg, apple_pkg_extract).run_utility()

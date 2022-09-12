@@ -7,7 +7,7 @@ Apple EFI PBZX Extractor
 Copyright (C) 2021-2022 Plato Mavropoulos
 """
 
-TITLE = 'Apple EFI PBZX Extractor v1.0_a4'
+TITLE = 'Apple EFI PBZX Extractor v1.0_a5'
 
 import os
 import sys
@@ -21,7 +21,8 @@ from common.comp_szip import is_szip_supported, szip_decompress
 from common.path_ops import make_dirs, path_stem
 from common.patterns import PAT_APPLE_PBZX
 from common.struct_ops import get_struct, uint32_t
-from common.system import argparse_init, printer, script_init
+from common.system import printer
+from common.templates import BIOSUtility
 from common.text_ops import file_to_bytes
 
 class PbzxChunk(ctypes.BigEndianStructure):
@@ -47,10 +48,8 @@ def is_apple_pbzx(input_file):
     return bool(PAT_APPLE_PBZX.search(input_buffer[:0x4]))
 
 # Parse & Extract Apple PBZX image
-def apple_pbzx_extract(input_file, output_path, padding=0):
+def apple_pbzx_extract(input_file, extract_path, padding=0):
     input_buffer = file_to_bytes(input_file)
-    
-    extract_path = os.path.join(f'{output_path}_extracted')
     
     make_dirs(extract_path, delete=True)
     
@@ -78,7 +77,7 @@ def apple_pbzx_extract(input_file, output_path, padding=0):
             cpio_bin += lzma.LZMADecompressor().decompress(comp_bin)
             
             printer('Successful LZMA decompression!', padding + 8)
-        except:
+        except Exception:
             # Otherwise, Chunk data is not compressed
             cpio_bin += comp_bin
         
@@ -116,28 +115,4 @@ def apple_pbzx_extract(input_file, output_path, padding=0):
 PBZX_CHUNK_HDR_LEN = ctypes.sizeof(PbzxChunk)
 
 if __name__ == '__main__':
-    # Set argparse Arguments    
-    argparser = argparse_init()
-    arguments = argparser.parse_args()
-    
-    # Initialize script (must be after argparse)
-    exit_code,input_files,output_path,padding = script_init(TITLE, arguments, 4)
-    
-    for input_file in input_files:
-        input_name = os.path.basename(input_file)
-        
-        printer(['***', input_name], padding - 4)
-        
-        if not is_apple_pbzx(input_file):
-            printer('Error: This is not an Apple PBZX image!', padding)
-            
-            continue # Next input file
-        
-        extract_path = os.path.join(output_path, input_name)
-        
-        if apple_pbzx_extract(input_file, extract_path, padding) == 0:
-            exit_code -= 1
-    
-    printer('Done!', pause=True)
-    
-    sys.exit(exit_code)
+    BIOSUtility(TITLE, is_apple_pbzx, apple_pbzx_extract).run_utility()

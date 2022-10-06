@@ -7,7 +7,7 @@ Dell PFS/PKG Update Extractor
 Copyright (C) 2018-2022 Plato Mavropoulos
 """
 
-TITLE = 'Dell PFS/PKG Update Extractor v6.0_a13'
+TITLE = 'Dell PFS/PKG Update Extractor v6.0_a15'
 
 import os
 import io
@@ -192,82 +192,82 @@ class DellPfsPfatMetadata(ctypes.LittleEndianStructure):
 # Each section starts with a 0x30 header, which begins with pattern 72135500.
 # The section length is found at 0x10-0x14 and its (optional) MD5 hash at 0x20-0x30.
 # Section data can be raw or LZMA2 (7zXZ) compressed. The latter contains the PFS update image.
-def is_pfs_pkg(in_file):
-    in_buffer = file_to_bytes(in_file)
+def is_pfs_pkg(input_file):
+    input_buffer = file_to_bytes(input_file)
     
-    return PAT_DELL_PKG.search(in_buffer)
+    return PAT_DELL_PKG.search(input_buffer)
 
 # The Dell PFS update images usually contain multiple sections. 
 # Each section is zlib-compressed with header pattern ********++EEAA761BECBB20F1E651--789C,
 # where ******** is the zlib stream size, ++ is the section type and -- the header Checksum XOR 8.
 # The "Firmware" section has type AA and its files are stored in PFS format.
 # The "Utility" section has type BB and its files are stored in PFS, BIN or 7z formats.
-def is_pfs_hdr(in_file):
-    in_buffer = file_to_bytes(in_file)
+def is_pfs_hdr(input_file):
+    input_buffer = file_to_bytes(input_file)
     
-    return bool(PAT_DELL_HDR.search(in_buffer))
+    return bool(PAT_DELL_HDR.search(input_buffer))
 
 # Each section is followed by the footer pattern ********EEAAEE8F491BE8AE143790--,
 # where ******** is the zlib stream size and ++ the footer Checksum XOR 8.
-def is_pfs_ftr(in_file):
-    in_buffer = file_to_bytes(in_file)
+def is_pfs_ftr(input_file):
+    input_buffer = file_to_bytes(input_file)
     
-    return bool(PAT_DELL_FTR.search(in_buffer))
+    return bool(PAT_DELL_FTR.search(input_buffer))
 
 # Check if input is Dell PFS/PKG image
-def is_dell_pfs(in_file):
-    in_buffer = file_to_bytes(in_file)
+def is_dell_pfs(input_file):
+    input_buffer = file_to_bytes(input_file)
     
-    is_pkg = is_pfs_pkg(in_buffer)
+    is_pkg = is_pfs_pkg(input_buffer)
     
-    is_hdr = is_pfs_hdr(in_buffer)
+    is_hdr = is_pfs_hdr(input_buffer)
     
-    is_ftr = is_pfs_ftr(in_buffer)
+    is_ftr = is_pfs_ftr(input_buffer)
     
     return bool(is_pkg or is_hdr and is_ftr)
 
 # Parse & Extract Dell PFS/PKG Update image
-def pfs_pkg_parse(in_file, output_path, padding=0, structure=True, advanced=True):
-    in_buffer = file_to_bytes(in_file)
+def pfs_pkg_parse(input_file, extract_path, padding=0, structure=True, advanced=True):
+    input_buffer = file_to_bytes(input_file)
     
-    make_dirs(output_path, delete=True)
+    make_dirs(extract_path, delete=True)
     
-    is_dell_pkg = is_pfs_pkg(in_buffer)
+    is_dell_pkg = is_pfs_pkg(input_buffer)
     
     if is_dell_pkg:
-        pfs_results = thinos_pkg_extract(in_buffer, output_path)
+        pfs_results = thinos_pkg_extract(input_buffer, extract_path)
     else:
-        pfs_results = {path_stem(in_file) if os.path.isfile(in_file) else 'Image': in_buffer}
+        pfs_results = {path_stem(input_file) if os.path.isfile(input_file) else 'Image': input_buffer}
     
     # Parse each Dell PFS image contained in the input file
     for pfs_index,(pfs_name,pfs_buffer) in enumerate(pfs_results.items(), start=1):
         # At ThinOS PKG packages, multiple PFS images may be included in separate model-named folders
-        pfs_path = os.path.join(output_path, f'{pfs_index} {pfs_name}') if is_dell_pkg else output_path
+        pfs_path = os.path.join(extract_path, f'{pfs_index} {pfs_name}') if is_dell_pkg else extract_path
         # Parse each PFS ZLIB section
         for zlib_offset in get_section_offsets(pfs_buffer):
             # Call the PFS ZLIB section parser function
             pfs_section_parse(pfs_buffer, zlib_offset, pfs_path, pfs_name, pfs_index, 1, False, padding, structure, advanced)
 
 # Extract Dell ThinOS PKG 7zXZ
-def thinos_pkg_extract(in_file, output_path):
-    in_buffer = file_to_bytes(in_file)
+def thinos_pkg_extract(input_file, extract_path):
+    input_buffer = file_to_bytes(input_file)
     
     # Initialize PFS results (Name: Buffer)
     pfs_results = {}
     
     # Search input image for ThinOS PKG 7zXZ header
-    thinos_pkg_match = PAT_DELL_PKG.search(in_buffer)
+    thinos_pkg_match = PAT_DELL_PKG.search(input_buffer)
     
     lzma_len_off = thinos_pkg_match.start() + 0x10
-    lzma_len_int = int.from_bytes(in_buffer[lzma_len_off:lzma_len_off + 0x4], 'little')
+    lzma_len_int = int.from_bytes(input_buffer[lzma_len_off:lzma_len_off + 0x4], 'little')
     lzma_bin_off = thinos_pkg_match.end() - 0x5
-    lzma_bin_dat = in_buffer[lzma_bin_off:lzma_bin_off + lzma_len_int]
+    lzma_bin_dat = input_buffer[lzma_bin_off:lzma_bin_off + lzma_len_int]
     
     # Check if the compressed 7zXZ stream is complete
     if len(lzma_bin_dat) != lzma_len_int:
         return pfs_results
     
-    working_path = os.path.join(output_path, 'THINOS_PKG_TEMP')
+    working_path = os.path.join(extract_path, 'THINOS_PKG_TEMP')
     
     make_dirs(working_path, delete=True)
     
@@ -319,7 +319,7 @@ def get_section_offsets(buffer):
     return pfs_zlib_list
 
 # Dell PFS ZLIB Section Parser
-def pfs_section_parse(zlib_data, zlib_start, output_path, pfs_name, pfs_index, pfs_count, is_rec, padding=0, structure=True, advanced=True):
+def pfs_section_parse(zlib_data, zlib_start, extract_path, pfs_name, pfs_index, pfs_count, is_rec, padding=0, structure=True, advanced=True):
     is_zlib_error = False # Initialize PFS ZLIB-related error state
     
     section_type = zlib_data[zlib_start - 0x1] # Byte before PFS ZLIB Section pattern is Section Type (e.g. AA, BB)
@@ -329,7 +329,7 @@ def pfs_section_parse(zlib_data, zlib_start, output_path, pfs_name, pfs_index, p
     printer(f'Extracting Dell PFS {pfs_index} > {pfs_name} > {section_name}', padding)
     
     # Set PFS ZLIB Section extraction sub-directory path
-    section_path = os.path.join(output_path, safe_name(section_name))
+    section_path = os.path.join(extract_path, safe_name(section_name))
     
     # Create extraction sub-directory and delete old (if present, not in recursions)
     make_dirs(section_path, delete=(not is_rec), parents=True, exist_ok=True)
@@ -395,7 +395,7 @@ def pfs_section_parse(zlib_data, zlib_start, output_path, pfs_name, pfs_index, p
     pfs_extract(section_data, pfs_index, pfs_name, pfs_count, section_path, padding, structure, advanced)
 
 # Parse & Extract Dell PFS Volume
-def pfs_extract(buffer, pfs_index, pfs_name, pfs_count, output_path, padding=0, structure=True, advanced=True):    
+def pfs_extract(buffer, pfs_index, pfs_name, pfs_count, extract_path, padding=0, structure=True, advanced=True):    
     # Show PFS Volume indicator
     if structure:
         printer('PFS Volume:', padding)
@@ -619,7 +619,7 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count, output_path, padding=0, 
                 sub_pfs_name = f'{info_all[pfs_count - 2][1]} v{info_all[pfs_count - 2][2]}' if info_all else ' UNKNOWN'
                 
                 # Set the sub-PFS output path (create sub-folders for each sub-PFS and its ZLIB sections)
-                sub_pfs_path = os.path.join(output_path, f'{pfs_count} {safe_name(sub_pfs_name)}')
+                sub_pfs_path = os.path.join(extract_path, f'{pfs_count} {safe_name(sub_pfs_name)}')
                 
                 # Recursively call the PFS ZLIB Section Parser function for the sub-PFS Volume (pfs_index = pfs_count)
                 pfs_section_parse(entry_data, offset, sub_pfs_path, sub_pfs_name, pfs_count, pfs_count, True, padding + 4, structure, advanced)
@@ -691,7 +691,7 @@ def pfs_extract(buffer, pfs_index, pfs_name, pfs_count, output_path, padding=0, 
         # Write/Extract PFS Entry files
         for file in write_files:
             full_name = f'{pfs_index} {pfs_name} -- {file_index} {file_name} v{file_version}' # Full PFS Entry Name
-            pfs_file_write(file[0], file[1], file_type, full_name, output_path, padding, structure, advanced)
+            pfs_file_write(file[0], file[1], file_type, full_name, extract_path, padding, structure, advanced)
     
     # Get PFS Footer Data after PFS Header Payload
     pfs_footer = buffer[PFS_HEAD_LEN + pfs_hdr.PayloadSize:PFS_HEAD_LEN + pfs_hdr.PayloadSize + PFS_FOOT_LEN]
@@ -766,7 +766,7 @@ def parse_pfat_pfs(entry_hdr, entry_data, padding=0, structure=True):
     pfat_footer = entry_data[PFS_HEAD_LEN + entry_hdr.PayloadSize:PFS_HEAD_LEN + entry_hdr.PayloadSize + PFS_FOOT_LEN]
     
     # Parse all sub-PFS Payload PFAT Entries
-    pfat_data_all = [] # Storage for all sub-PFS PFAT Entries Order/Offset & Payload/Raw Data
+    pfat_entries_all = [] # Storage for all sub-PFS PFAT Entries Order/Offset & Payload/Raw Data
     pfat_entry_start = 0 # Increasing sub-PFS PFAT Entry start offset
     pfat_entry_index = 0 # Increasing sub-PFS PFAT Entry count index
     _, pfs_entry_size = get_pfs_entry(pfat_payload, 0) # Get initial PFS PFAT Entry Size for loop
@@ -855,26 +855,36 @@ def parse_pfat_pfs(entry_hdr, entry_data, padding=0, structure=True):
             pfat_entry_data_raw = pfat_payload_data # Prefer Data from PFAT Block, in case PFAT Entry differs
         
         # Store each sub-PFS PFAT Entry Order/Offset and Payload/Raw Data (w/o PFAT)
-        pfat_data_all.append((pfat_entry_off, pfat_entry_data_raw))
+        pfat_entries_all.append((pfat_entry_off, pfat_entry_data_raw))
         
         pfat_entry_start = pfat_next_entry # Next sub-PFS PFAT Entry starts after sub-PFS Entry Metadata Signature
         
         pfat_entry_index += 1
     
-    pfat_data_all.sort() # Sort all sub-PFS PFAT Entries payloads/data based on their Order/Offset
+    pfat_entries_all.sort() # Sort all sub-PFS PFAT Entries payloads/data based on their Order/Offset
     
-    entry_data = b'' # Initialize new sub-PFS Entry Data
-    for pfat_data in pfat_data_all:
-        entry_data += pfat_data[1] # Merge all sub-PFS PFAT Entry Payload/Raw into the final sub-PFS Entry Data
+    sorted_start_expected = pfat_entries_all[0][0] # Initialize sub-PFS PFAT Entry expected Offset
+    final_entry_data = b'' # Initialize final sub-PFS Entry Data from ordered PFAT Entries
     
-    # Verify that the Order/Offset of the last PFAT Entry w/ its Size matches the final sub-PFS Entry Data Size
-    if len(entry_data) != pfat_data_all[-1][0] + len(pfat_data_all[-1][1]):
+    # Parse all sorted sub-PFS PFAT Entries and merge their payload/data
+    for sorted_start,sorted_data in pfat_entries_all:
+        # Fill any data gaps between sorted sub-PFS PFAT Entries with padding
+        if sorted_start != sorted_start_expected:
+            # The sub-PFS PFAT Entry expected Start is the previous Offset + Size
+            final_entry_data += b'\xFF' * (sorted_start - sorted_start_expected)
+        
+        final_entry_data += sorted_data # Append sorted sub-PFS PFAT Entry payload/data
+        
+        sorted_start_expected = sorted_start + len(sorted_data) # Set next sub-PFS PFAT Entry expected Start
+    
+    # Verify that the end offset of the last PFAT Entry matches the final sub-PFS Entry Data Size
+    if len(final_entry_data) != pfat_entries_all[-1][0] + len(pfat_entries_all[-1][1]):
         printer('Error: Detected sub-PFS PFAT Entry Buffer & Last Offset Size mismatch!', padding + 8)
     
     # Analyze sub-PFS Footer Structure
     chk_pfs_ftr(pfat_footer, pfat_payload, entry_hdr.PayloadSize, 'Sub-PFS', padding + 4, structure)
     
-    return entry_data
+    return final_entry_data
 
 # Get Dell PFS Entry Structure & Size via its Version
 def get_pfs_entry(buffer, offset):

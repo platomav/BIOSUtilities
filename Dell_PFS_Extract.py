@@ -904,7 +904,7 @@ def parse_pfat_pfs(entry_hdr, entry_data, padding=0, structure=True):
         block_data_gap = block_start - block_start_exp
         if block_data_gap > 0:
             printer(f'Warning: Filled sub-PFS PFAT {block_index} data gap 0x{block_data_gap:X} [0x{block_start_exp:X}-0x{block_start:X}]!', padding + 8)
-            total_pfat_data += b'\xFF' * block_data_gap # The sub-PFS PFAT Entry expected Start is the previous Offset + Size
+            total_pfat_data += b'\xFF' * block_data_gap # Use 0xFF padding to fill in data gaps in PFAT UEFI firmware images
         
         total_pfat_data += block_data # Append sorted sub-PFS PFAT Entry payload/data
         

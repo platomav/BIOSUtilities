@@ -30,8 +30,8 @@ def is_auto_exit():
 def check_sys_py():
     sys_py = get_py_ver()
     
-    if sys_py < (3,8):
-        sys.stdout.write(f'\nError: Python >= 3.8 required, not {sys_py[0]}.{sys_py[1]}!')
+    if sys_py < (3,10):
+        sys.stdout.write(f'\nError: Python >= 3.10 required, not {sys_py[0]}.{sys_py[1]}!')
         
         if not is_auto_exit():
             # noinspection PyUnresolvedReferences

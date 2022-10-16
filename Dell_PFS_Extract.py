@@ -3,11 +3,11 @@
 
 """
 Dell PFS Extract
-Dell PFS/PKG Update Extractor
+Dell PFS Update Extractor
 Copyright (C) 2018-2022 Plato Mavropoulos
 """
 
-TITLE = 'Dell PFS/PKG Update Extractor v6.0_a15'
+TITLE = 'Dell PFS Update Extractor v6.0_a16'
 
 import os
 import io
@@ -22,6 +22,7 @@ sys.dont_write_bytecode = True
 
 from common.checksums import get_chk_8_xor
 from common.comp_szip import is_szip_supported, szip_decompress
+from common.num_ops import get_ordinal
 from common.path_ops import del_dirs, get_path_files, make_dirs, path_name, path_parent, path_stem, safe_name
 from common.patterns import PAT_DELL_FTR, PAT_DELL_HDR, PAT_DELL_PKG
 from common.struct_ops import char, get_struct, uint8_t, uint16_t, uint32_t, uint64_t
@@ -169,10 +170,10 @@ class DellPfsMetadata(ctypes.LittleEndianStructure):
 class DellPfsPfatMetadata(ctypes.LittleEndianStructure):
     _pack_ = 1
     _fields_ = [
-        ('OffsetTop',           uint32_t),      # 0x00
+        ('Address',             uint32_t),      # 0x00
         ('Unknown0',            uint32_t),      # 0x04
-        ('OffsetBase',          uint32_t),      # 0x08
-        ('BlockSize',           uint32_t),      # 0x0C
+        ('Offset',              uint32_t),      # 0x08 Matches BG Script > I0
+        ('DataSize',            uint32_t),      # 0x0C Matches BG Script > I2 & Header > Data Size
         ('Unknown1',            uint32_t),      # 0x10
         ('Unknown2',            uint32_t),      # 0x14
         ('Unknown3',            uint8_t),       # 0x18
@@ -180,13 +181,13 @@ class DellPfsPfatMetadata(ctypes.LittleEndianStructure):
     ]
     
     def struct_print(self, p):
-        printer(['Offset Top :', f'0x{self.OffsetTop:X}'], p, False)
-        printer(['Unknown 0  :', f'0x{self.Unknown0:X}'], p, False)
-        printer(['Offset Base:', f'0x{self.OffsetBase:X}'], p, False)
-        printer(['Block Size :', f'0x{self.BlockSize:X}'], p, False)
-        printer(['Unknown 1  :', f'0x{self.Unknown1:X}'], p, False)
-        printer(['Unknown 2  :', f'0x{self.Unknown2:X}'], p, False)
-        printer(['Unknown 3  :', f'0x{self.Unknown3:X}'], p, False)
+        printer(['Address  :', f'0x{self.Address:X}'], p, False)
+        printer(['Unknown 0:', f'0x{self.Unknown0:X}'], p, False)
+        printer(['Offset   :', f'0x{self.Offset:X}'], p, False)
+        printer(['Length   :', f'0x{self.DataSize:X}'], p, False)
+        printer(['Unknown 1:', f'0x{self.Unknown1:X}'], p, False)
+        printer(['Unknown 2:', f'0x{self.Unknown2:X}'], p, False)
+        printer(['Unknown 3:', f'0x{self.Unknown3:X}'], p, False)
 
 # The Dell ThinOS PKG update images usually contain multiple sections.
 # Each section starts with a 0x30 header, which begins with pattern 72135500.
@@ -226,7 +227,7 @@ def is_dell_pfs(input_file):
     
     return bool(is_pkg or is_hdr and is_ftr)
 
-# Parse & Extract Dell PFS/PKG Update image
+# Parse & Extract Dell PFS Update image
 def pfs_pkg_parse(input_file, extract_path, padding=0, structure=True, advanced=True):
     input_buffer = file_to_bytes(input_file)
     
@@ -768,7 +769,7 @@ def parse_pfat_pfs(entry_hdr, entry_data, padding=0, structure=True):
     # Parse all sub-PFS Payload PFAT Entries
     pfat_entries_all = [] # Storage for all sub-PFS PFAT Entries Order/Offset & Payload/Raw Data
     pfat_entry_start = 0 # Increasing sub-PFS PFAT Entry start offset
-    pfat_entry_index = 0 # Increasing sub-PFS PFAT Entry count index
+    pfat_entry_index = 1 # Increasing sub-PFS PFAT Entry count index
     _, pfs_entry_size = get_pfs_entry(pfat_payload, 0) # Get initial PFS PFAT Entry Size for loop
     while len(pfat_payload[pfat_entry_start:pfat_entry_start + pfs_entry_size]) == pfs_entry_size:
         # Get sub-PFS PFAT Entry Structure & Size info
@@ -785,9 +786,12 @@ def parse_pfat_pfs(entry_hdr, entry_data, padding=0, structure=True):
         # Get sub-PFS PFAT Header Structure values
         pfat_hdr = get_struct(pfat_payload, pfat_hdr_off, IntelBiosGuardHeader)
         
+        # Get ordinal value of the sub-PFS PFAT Entry Index
+        pfat_entry_idx_ord = get_ordinal(pfat_entry_index)
+        
         # Show sub-PFS PFAT Header Structure info
         if structure:
-            printer(f'PFAT Block {pfat_entry_index} Header:\n', padding + 12)
+            printer(f'PFAT Block {pfat_entry_idx_ord} - Header:\n', padding + 12)
             pfat_hdr.struct_print(padding + 16)
         
         pfat_script_start = pfat_hdr_off + PFAT_HDR_LEN # PFAT Block Script Start
@@ -800,7 +804,7 @@ def parse_pfat_pfs(entry_hdr, entry_data, padding=0, structure=True):
         
         # The PFAT Script End should match the total Entry Data Size w/o PFAT block 
         if pfat_hdr_bgs_size != pfat_entry.DataSize - pfat_hdr.DataSize:
-            printer('Error: Detected sub-PFS PFAT Entry Header & PFAT Size mismatch!', padding + 16)
+            printer(f'Error: Detected sub-PFS PFAT Block {pfat_entry_idx_ord} Header & PFAT Size mismatch!', padding + 16)
         
         # Get PFAT Header Flags (SFAM, ProtectEC, GFXMitDis, FTU, Reserved)
         is_sfam,_,_,_,_ = pfat_hdr.get_flags()
@@ -812,12 +816,12 @@ def parse_pfat_pfs(entry_hdr, entry_data, padding=0, structure=True):
             
             # Show sub-PFS PFAT Signature Structure info
             if structure:
-                printer(f'PFAT Block {pfat_entry_index} Signature:\n', padding + 12)
+                printer(f'PFAT Block {pfat_entry_idx_ord} - Signature:\n', padding + 12)
                 pfat_sig.struct_print(padding + 16)
         
         # Show PFAT Script via BIOS Guard Script Tool
         if structure:
-            printer(f'PFAT Block {pfat_entry_index} Script:\n', padding + 12)
+            printer(f'PFAT Block {pfat_entry_idx_ord} - Script:\n', padding + 12)
             
             _ = parse_bg_script(pfat_script_data, padding + 16)
         
@@ -826,65 +830,94 @@ def parse_pfat_pfs(entry_hdr, entry_data, padding=0, structure=True):
         # PFAT Script OpCode #2 > Operand #3 stores the payload Offset in final image
         pfat_entry_off = int.from_bytes(pfat_script_data[0xC:0x10], 'little')
         
+        # We can get each payload's length from PFAT Script > OpCode #4 (set I2 imm)
+        # PFAT Script OpCode #4 > Operand #3 stores the payload Length in final image
+        pfat_entry_len = int.from_bytes(pfat_script_data[0x1C:0x20], 'little')
+        
+        # Check that the PFAT Entry Length from Header & Script match
+        if pfat_hdr.DataSize != pfat_entry_len:
+            printer(f'Error: Detected sub-PFS PFAT Block {pfat_entry_idx_ord} Header & Script Length mismatch!', padding + 12)
+        
+        # Initialize sub-PFS PFAT Entry Metadata Address
+        pfat_entry_adr = pfat_entry_off
+        
         # Parse sub-PFS PFAT Entry/Block Metadata
         if len(pfat_entry_met) >= PFS_PFAT_LEN:
             # Get sub-PFS PFAT Metadata Structure values
             pfat_met = get_struct(pfat_entry_met, 0, DellPfsPfatMetadata)
             
+            # Store sub-PFS PFAT Entry Metadata Address
+            pfat_entry_adr = pfat_met.Address
+            
             # Show sub-PFS PFAT Metadata Structure info
             if structure:
-                printer(f'PFAT Block {pfat_entry_index} Metadata:\n', padding + 12)
+                printer(f'PFAT Block {pfat_entry_idx_ord} - Metadata:\n', padding + 12)
                 pfat_met.struct_print(padding + 16)
             
-            # Another way to get each PFAT Entry payload's Order is from its Metadata at 0x8-0xC, if applicable
-            # Check that the PFAT Entry payload Order/Offset from PFAT Script matches the one from PFAT Metadata
-            if pfat_entry_off != pfat_met.OffsetBase:
-                printer('Error: Detected sub-PFS PFAT Entry Metadata & PFAT Base Offset mismatch!', padding + 16)
-                pfat_entry_off = pfat_met.OffsetBase # Prefer Offset from Metadata, in case PFAT Script differs
+            # Another way to get each PFAT Entry Offset is from its Metadata, if applicable
+            # Check that the PFAT Entry Offsets from PFAT Script and PFAT Metadata match
+            if pfat_entry_off != pfat_met.Offset:
+                printer(f'Error: Detected sub-PFS PFAT Block {pfat_entry_idx_ord} Metadata & PFAT Offset mismatch!', padding + 16)
+                pfat_entry_off = pfat_met.Offset # Prefer Offset from Metadata, in case PFAT Script differs
+            
+            # Another way to get each PFAT Entry Length is from its Metadata, if applicable
+            # Check that the PFAT Entry Length from PFAT Script and PFAT Metadata match
+            if not (pfat_hdr.DataSize == pfat_entry_len == pfat_met.DataSize):
+                printer(f'Error: Detected sub-PFS PFAT Block {pfat_entry_idx_ord} Metadata & PFAT Length mismatch!', padding + 16)
             
             # Check that the PFAT Entry payload Size from PFAT Header matches the one from PFAT Metadata
-            if pfat_hdr.DataSize != pfat_met.BlockSize:
-                printer('Error: Detected sub-PFS PFAT Entry Metadata & PFAT Block Size mismatch!', padding + 16)        
+            if pfat_hdr.DataSize != pfat_met.DataSize:
+                printer(f'Error: Detected sub-PFS PFAT Block {pfat_entry_idx_ord} Metadata & PFAT Block Size mismatch!', padding + 16)        
         
         # Get sub-PFS Entry Raw Data by subtracting PFAT Header & Script from PFAT Entry Data
         pfat_entry_data_raw = pfat_entry_data[pfat_hdr_bgs_size:]
         
         # The sub-PFS Entry Raw Data (w/o PFAT Header & Script) should match with the PFAT Block payload
         if pfat_entry_data_raw != pfat_payload_data:
-            printer('Error: Detected sub-PFS PFAT Entry w/o PFAT & PFAT Block Data mismatch!', padding + 16)
+            printer(f'Error: Detected sub-PFS PFAT Block {pfat_entry_idx_ord} w/o PFAT & PFAT Block Data mismatch!', padding + 16)
             pfat_entry_data_raw = pfat_payload_data # Prefer Data from PFAT Block, in case PFAT Entry differs
         
-        # Store each sub-PFS PFAT Entry Order/Offset and Payload/Raw Data (w/o PFAT)
-        pfat_entries_all.append((pfat_entry_off, pfat_entry_data_raw))
+        # Store each sub-PFS PFAT Entry/Block Offset, Address, Ordinal Index and Payload/Raw Data
+        # Goal is to sort these based on Offset first and Address second, in cases of same Offset
+        # For example, Precision 3430 has two PFAT Entries with the same Offset of 0x40000 at both
+        # BG Script and PFAT Metadata but their PFAT Metadata Address is 0xFF040000 and 0xFFA40000
+        pfat_entries_all.append((pfat_entry_off, pfat_entry_adr, pfat_entry_idx_ord, pfat_entry_data_raw))
+        
+        # Check if next sub-PFS PFAT Entry offset is valid 
+        if pfat_next_entry <= 0:
+            printer(f'Error: Detected sub-PFS PFAT Block {pfat_entry_idx_ord} with invalid next PFAT Block offset!', padding + 16)
+            pfat_next_entry += pfs_entry_size # Avoid a potential infinite loop if next sub-PFS PFAT Entry offset is bad
         
         pfat_entry_start = pfat_next_entry # Next sub-PFS PFAT Entry starts after sub-PFS Entry Metadata Signature
         
         pfat_entry_index += 1
     
-    pfat_entries_all.sort() # Sort all sub-PFS PFAT Entries payloads/data based on their Order/Offset
+    pfat_entries_all.sort() # Sort all sub-PFS PFAT Entries based on their Offset/Address
     
-    sorted_start_expected = pfat_entries_all[0][0] # Initialize sub-PFS PFAT Entry expected Offset
-    final_entry_data = b'' # Initialize final sub-PFS Entry Data from ordered PFAT Entries
+    block_start_exp = 0 # Initialize sub-PFS PFAT Entry expected Offset
+    total_pfat_data = b'' # Initialize final/ordered sub-PFS Entry Data
     
     # Parse all sorted sub-PFS PFAT Entries and merge their payload/data
-    for sorted_start,sorted_data in pfat_entries_all:
+    for block_start,_,block_index,block_data in pfat_entries_all:
         # Fill any data gaps between sorted sub-PFS PFAT Entries with padding
-        if sorted_start != sorted_start_expected:
-            # The sub-PFS PFAT Entry expected Start is the previous Offset + Size
-            final_entry_data += b'\xFF' * (sorted_start - sorted_start_expected)
+        # For example, Precision 7960 v0.16.68 has gap at 0x1190000-0x11A0000
+        block_data_gap = block_start - block_start_exp
+        if block_data_gap > 0:
+            printer(f'Warning: Filled sub-PFS PFAT {block_index} data gap 0x{block_data_gap:X} [0x{block_start_exp:X}-0x{block_start:X}]!', padding + 8)
+            total_pfat_data += b'\xFF' * block_data_gap # The sub-PFS PFAT Entry expected Start is the previous Offset + Size
         
-        final_entry_data += sorted_data # Append sorted sub-PFS PFAT Entry payload/data
+        total_pfat_data += block_data # Append sorted sub-PFS PFAT Entry payload/data
         
-        sorted_start_expected = sorted_start + len(sorted_data) # Set next sub-PFS PFAT Entry expected Start
+        block_start_exp = len(total_pfat_data) # Set next sub-PFS PFAT Entry expected Start
     
     # Verify that the end offset of the last PFAT Entry matches the final sub-PFS Entry Data Size
-    if len(final_entry_data) != pfat_entries_all[-1][0] + len(pfat_entries_all[-1][1]):
-        printer('Error: Detected sub-PFS PFAT Entry Buffer & Last Offset Size mismatch!', padding + 8)
+    if len(total_pfat_data) != pfat_entries_all[-1][0] + len(pfat_entries_all[-1][3]):
+        printer('Error: Detected sub-PFS PFAT total buffer size and last block end mismatch!', padding + 8)
     
     # Analyze sub-PFS Footer Structure
     chk_pfs_ftr(pfat_footer, pfat_payload, entry_hdr.PayloadSize, 'Sub-PFS', padding + 4, structure)
     
-    return final_entry_data
+    return total_pfat_data
 
 # Get Dell PFS Entry Structure & Size via its Version
 def get_pfs_entry(buffer, offset):

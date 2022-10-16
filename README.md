@@ -10,7 +10,7 @@
 * [**Apple EFI Package Extractor**](#apple-efi-package-extractor)
 * [**Apple EFI PBZX Extractor**](#apple-efi-pbzx-extractor)
 * [**Award BIOS Module Extractor**](#award-bios-module-extractor)
-* [**Dell PFS/PKG Update Extractor**](#dell-pfspkg-update-extractor)
+* [**Dell PFS Update Extractor**](#dell-pfs-update-extractor)
 * [**Fujitsu SFX BIOS Extractor**](#fujitsu-sfx-bios-extractor)
 * [**Fujitsu UPC BIOS Extractor**](#fujitsu-upc-bios-extractor)
 * [**Insyde iFlash/iFdPacker Extractor**](#insyde-iflashifdpacker-extractor)
@@ -252,17 +252,17 @@ To run the utility, you must have the following 3rd party tool at the "external"
 
 ![]()
 
-## **Dell PFS/PKG Update Extractor**
+## **Dell PFS Update Extractor**
 
 ![]()
 
 #### **Description**
 
-Parses Dell PFS/PKG Update images and extracts their Firmware (e.g. SPI, BIOS/UEFI, EC, ME etc) and Utilities (e.g. Flasher etc) component sections. It supports all Dell PFS/PKG revisions and formats, including those which are originally LZMA compressed in ThinOS packages, ZLIB compressed or Intel BIOS Guard (PFAT) protected. The output comprises only final firmware components which are directly usable by end users.
+Parses Dell PFS Update images and extracts their Firmware (e.g. SPI, BIOS/UEFI, EC, ME etc) and Utilities (e.g. Flasher etc) component sections. It supports all Dell PFS revisions and formats, including those which are originally LZMA compressed in ThinOS packages (PKG), ZLIB compressed or Intel BIOS Guard (PFAT) protected. The output comprises only final firmware components which are directly usable by end users.
 
 #### **Usage**
 
-You can either Drag & Drop or manually enter Dell PFS/PKG Update images(s). Optional arguments:
+You can either Drag & Drop or manually enter Dell PFS Update images(s). Optional arguments:
   
 * -h or --help : show help message and exit
 * -v or --version : show utility name and version

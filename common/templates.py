@@ -11,10 +11,13 @@ import ctypes
 import argparse
 import traceback
 
-from common.path_ops import runtime_root, is_path_absolute, safe_path, get_dequoted_path, get_path_files, path_parent, get_extract_path
-from common.system import check_sys_py, check_sys_os, get_os_ver, printer, is_auto_exit
+from common.num_ops import get_ordinal
+from common.path_ops import get_dequoted_path, get_extract_path, get_path_files, is_path_absolute, path_parent, runtime_root, safe_path
+from common.system import check_sys_os, check_sys_py, get_os_ver, is_auto_exit, printer
 
 class BIOSUtility:
+    
+    MAX_FAT32_ITEMS = 65535
     
     def __init__(self, title, check, main, padding=0):
         self._title = title
@@ -27,7 +30,7 @@ class BIOSUtility:
         self._argparser = argparse.ArgumentParser()
         
         self._argparser.add_argument('files', type=argparse.FileType('r', encoding='utf-8'), nargs='*')
-        self._argparser.add_argument('-e', '--auto-exit', help='skip press enter to exit prompts', action='store_true')
+        self._argparser.add_argument('-e', '--auto-exit', help='skip all user action prompts', action='store_true')
         self._argparser.add_argument('-v', '--version', help='show utility name and version', action='store_true')
         self._argparser.add_argument('-o', '--output-dir', help='extract in given output directory')
         self._argparser.add_argument('-i', '--input-dir', help='extract from given input directory')
@@ -58,7 +61,7 @@ class BIOSUtility:
         self._process_input_files()
         
         # Count input files for exit code
-        self.exit_code = len(self._input_files)
+        self._exit_code = len(self._input_files)
     
     def parse_argument(self, *args, **kwargs):
         _dest = self._argparser.add_argument(*args, **kwargs).dest
@@ -78,14 +81,21 @@ class BIOSUtility:
             
             _extract_path = os.path.join(self._output_path, get_extract_path(_input_name))
             
+            if os.path.isdir(_extract_path):
+                for _suffix in range(2, self.MAX_FAT32_ITEMS):
+                    _renamed_path = f'{os.path.normpath(_extract_path)}_{get_ordinal(_suffix)}'
+                    
+                    if not os.path.isdir(_renamed_path):
+                        _extract_path = _renamed_path
+                        
+                        break # Extract path is now unique
+            
             if self._main(_input_file, _extract_path, self._padding + 4, **self._arguments_kw) in [0, None]:
-                self.exit_code -= 1
-        
-        #print(self.exit_code)
+                self._exit_code -= 1
         
         printer('Done!', pause=True)
         
-        sys.exit(self.exit_code)
+        sys.exit(self._exit_code)
 
     # Process input files
     def _process_input_files(self):

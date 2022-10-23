@@ -38,7 +38,7 @@ You can either Drag & Drop or manually enter AMI BIOS Guard (PFAT) image file(s)
 * -v or --version : show utility name and version
 * -i or --input-dir : extract from given input directory
 * -o or --output-dir : extract in given output directory
-* -e or --auto-exit : skip press enter to exit prompts
+* -e or --auto-exit : skip all user action prompts
 
 #### **Compatibility**
 
@@ -70,7 +70,7 @@ You can either Drag & Drop or manually enter AMI UCP Update executable file(s). 
 * -v or --version : show utility name and version
 * -i or --input-dir : extract from given input directory
 * -o or --output-dir : extract in given output directory
-* -e or --auto-exit : skip press enter to exit prompts
+* -e or --auto-exit : skip all user action prompts
 * -c or --checksum : verify AMI UCP Checksums (slow)
 
 #### **Compatibility**
@@ -108,7 +108,7 @@ You can either Drag & Drop or manually enter Apple EFI IM4P file(s). Optional ar
 * -v or --version : show utility name and version
 * -i or --input-dir : extract from given input directory
 * -o or --output-dir : extract in given output directory
-* -e or --auto-exit : skip press enter to exit prompts
+* -e or --auto-exit : skip all user action prompts
 
 #### **Compatibility**
 
@@ -138,7 +138,7 @@ You can either Drag & Drop or manually enter Apple EFI image file(s). Optional a
 * -v or --version : show utility name and version
 * -i or --input-dir : extract from given input directory
 * -o or --output-dir : extract in given output directory
-* -e or --auto-exit : skip press enter to exit prompts
+* -e or --auto-exit : skip all user action prompts
 * -r or --rename : rename EFI image based on its tag
 
 #### **Compatibility**
@@ -172,7 +172,7 @@ You can either Drag & Drop or manually enter Apple EFI PKG package file(s). Opti
 * -v or --version : show utility name and version
 * -i or --input-dir : extract from given input directory
 * -o or --output-dir : extract in given output directory
-* -e or --auto-exit : skip press enter to exit prompts
+* -e or --auto-exit : skip all user action prompts
 
 #### **Compatibility**
 
@@ -204,7 +204,7 @@ You can either Drag & Drop or manually enter Apple EFI PBZX image file(s). Optio
 * -v or --version : show utility name and version
 * -i or --input-dir : extract from given input directory
 * -o or --output-dir : extract in given output directory
-* -e or --auto-exit : skip press enter to exit prompts
+* -e or --auto-exit : skip all user action prompts
 
 #### **Compatibility**
 
@@ -236,7 +236,7 @@ You can either Drag & Drop or manually enter Award BIOS image file(s). Optional 
 * -v or --version : show utility name and version
 * -i or --input-dir : extract from given input directory
 * -o or --output-dir : extract in given output directory
-* -e or --auto-exit : skip press enter to exit prompts
+* -e or --auto-exit : skip all user action prompts
 
 #### **Compatibility**
 
@@ -268,7 +268,7 @@ You can either Drag & Drop or manually enter Dell PFS Update images(s). Optional
 * -v or --version : show utility name and version
 * -i or --input-dir : extract from given input directory
 * -o or --output-dir : extract in given output directory
-* -e or --auto-exit : skip press enter to exit prompts
+* -e or --auto-exit : skip all user action prompts
 * -a or --advanced : extract signatures and metadata
 * -s or --structure : show PFS structure information
 
@@ -302,7 +302,7 @@ You can either Drag & Drop or manually enter Fujitsu SFX BIOS image file(s). Opt
 * -v or --version : show utility name and version
 * -i or --input-dir : extract from given input directory
 * -o or --output-dir : extract in given output directory
-* -e or --auto-exit : skip press enter to exit prompts
+* -e or --auto-exit : skip all user action prompts
 
 #### **Compatibility**
 
@@ -334,7 +334,7 @@ You can either Drag & Drop or manually enter Fujitsu UPC BIOS image file(s). Opt
 * -v or --version : show utility name and version
 * -i or --input-dir : extract from given input directory
 * -o or --output-dir : extract in given output directory
-* -e or --auto-exit : skip press enter to exit prompts
+* -e or --auto-exit : skip all user action prompts
 
 #### **Compatibility**
 
@@ -366,7 +366,7 @@ You can either Drag & Drop or manually enter Insyde iFlash/iFdPacker Update imag
 * -v or --version : show utility name and version
 * -i or --input-dir : extract from given input directory
 * -o or --output-dir : extract in given output directory
-* -e or --auto-exit : skip press enter to exit prompts
+* -e or --auto-exit : skip all user action prompts
 
 #### **Compatibility**
 
@@ -396,7 +396,7 @@ You can either Drag & Drop or manually enter Panasonic BIOS Package executable f
 * -v or --version : show utility name and version
 * -i or --input-dir : extract from given input directory
 * -o or --output-dir : extract in given output directory
-* -e or --auto-exit : skip press enter to exit prompts
+* -e or --auto-exit : skip all user action prompts
 
 #### **Compatibility**
 
@@ -433,7 +433,7 @@ You can either Drag & Drop or manually enter Phoenix Tools Development Kit (TDK)
 * -v or --version : show utility name and version
 * -i or --input-dir : extract from given input directory
 * -o or --output-dir : extract in given output directory
-* -e or --auto-exit : skip press enter to exit prompts
+* -e or --auto-exit : skip all user action prompts
 
 #### **Compatibility**
 
@@ -465,7 +465,7 @@ You can either Drag & Drop or manually enter Portwell UEFI Unpacker EFI executab
 * -v or --version : show utility name and version
 * -i or --input-dir : extract from given input directory
 * -o or --output-dir : extract in given output directory
-* -e or --auto-exit : skip press enter to exit prompts
+* -e or --auto-exit : skip all user action prompts
 
 #### **Compatibility**
 
@@ -503,7 +503,7 @@ You can either Drag & Drop or manually enter Toshiba BIOS COM image file(s). Opt
 * -v or --version : show utility name and version
 * -i or --input-dir : extract from given input directory
 * -o or --output-dir : extract in given output directory
-* -e or --auto-exit : skip press enter to exit prompts
+* -e or --auto-exit : skip all user action prompts
 
 #### **Compatibility**
 
@@ -535,7 +535,7 @@ You can either Drag & Drop or manually enter VAIO Packaging Manager executable f
 * -v or --version : show utility name and version
 * -i or --input-dir : extract from given input directory
 * -o or --output-dir : extract in given output directory
-* -e or --auto-exit : skip press enter to exit prompts
+* -e or --auto-exit : skip all user action prompts
 
 #### **Compatibility**
 

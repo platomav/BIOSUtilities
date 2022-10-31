@@ -81,7 +81,7 @@ def path_stem(in_path):
 
 # Get list of path file extensions
 def path_suffixes(in_path):
-    return PurePath(in_path).suffixes
+    return PurePath(in_path).suffixes or ['']
 
 # Check if path is absolute
 def is_path_absolute(in_path):

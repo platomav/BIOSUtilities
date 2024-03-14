@@ -122,7 +122,7 @@ class BIOSUtility:
             _output_path = self._arguments.output_dir or self._arguments.input_dir or _output_fallback
         else:
             # Script w/o parameters
-            _input_path_user = get_dequoted_path(input('\nEnter input directory path: '))
+            _input_path_user = get_dequoted_path(input('\nEnter input directory path or file path: '))
             _input_path_full = self._get_input_path(_input_path_user) if _input_path_user else ''
             self._input_files = get_path_files(_input_path_full)
             

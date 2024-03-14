@@ -111,10 +111,17 @@ def clear_readonly(in_func, in_path, _):
     os.chmod(in_path, stat.S_IWRITE)
     in_func(in_path)
 
-# Walk path to get all files
+# Get specific file OR Walk path to get all files
 def get_path_files(in_path):
     path_files = []
-    
+
+    # Check if it is a file path
+    if os.path.exists(in_path):
+        path_files.append(in_path)
+
+        return path_files
+
+    # Is only path, loop all folder files
     for root, _, files in os.walk(in_path):
         for name in files:
             path_files.append(os.path.join(root, name))

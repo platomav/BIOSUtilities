@@ -266,7 +266,7 @@ You can either Drag & Drop or manually enter Dell PFS Update images(s). Optional
   
 * -h or --help : show help message and exit
 * -v or --version : show utility name and version
-* -i or --input-dir : extract from given input directory
+* -i or --input-dir : extract from given input directory/file path
 * -o or --output-dir : extract in given output directory
 * -e or --auto-exit : skip all user action prompts
 * -a or --advanced : extract signatures and metadata

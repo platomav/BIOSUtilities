@@ -1,8 +1,8 @@
-#!/usr/bin/env python3
-#coding=utf-8
+#!/usr/bin/env python3 -B
+# coding=utf-8
 
 """
-Copyright (C) 2022 Plato Mavropoulos
+Copyright (C) 2022-2024 Plato Mavropoulos
 """
 
 import re

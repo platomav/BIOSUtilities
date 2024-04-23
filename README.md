@@ -42,7 +42,7 @@ You can either Drag & Drop or manually enter AMI BIOS Guard (PFAT) image file(s)
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.10 support.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
 
 #### **Prerequisites**
 
@@ -75,7 +75,7 @@ You can either Drag & Drop or manually enter AMI UCP Update executable file(s). 
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.10 support.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
 
 #### **Prerequisites**
 
@@ -112,7 +112,7 @@ You can either Drag & Drop or manually enter Apple EFI IM4P file(s). Optional ar
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.10 support.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
 
 #### **Prerequisites**
 
@@ -143,7 +143,7 @@ You can either Drag & Drop or manually enter Apple EFI image file(s). Optional a
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.10 support.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
 
 #### **Prerequisites**
 
@@ -176,7 +176,7 @@ You can either Drag & Drop or manually enter Apple EFI PKG package file(s). Opti
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.10 support.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
 
 #### **Prerequisites**
 
@@ -208,7 +208,7 @@ You can either Drag & Drop or manually enter Apple EFI PBZX image file(s). Optio
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.10 support.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
 
 #### **Prerequisites**
 
@@ -240,7 +240,7 @@ You can either Drag & Drop or manually enter Award BIOS image file(s). Optional 
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.10 support.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
 
 #### **Prerequisites**
 
@@ -274,7 +274,7 @@ You can either Drag & Drop or manually enter Dell PFS Update images(s). Optional
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.10 support.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
 
 #### **Prerequisites**
 
@@ -306,7 +306,7 @@ You can either Drag & Drop or manually enter Fujitsu SFX BIOS image file(s). Opt
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.10 support.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
 
 #### **Prerequisites**
 
@@ -338,7 +338,7 @@ You can either Drag & Drop or manually enter Fujitsu UPC BIOS image file(s). Opt
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.10 support.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
 
 #### **Prerequisites**
 
@@ -370,7 +370,7 @@ You can either Drag & Drop or manually enter Insyde iFlash/iFdPacker Update imag
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.10 support.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
 
 #### **Prerequisites**
 
@@ -400,14 +400,14 @@ You can either Drag & Drop or manually enter Panasonic BIOS Package executable f
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.10 support.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
 
 #### **Prerequisites**
 
 To run the utility, you must have the following 3rd party Python modules installed:
 
 * [pefile](https://pypi.org/project/pefile/)
-* [lznt1](https://pypi.org/project/lznt1/)
+* [dissect.util](https://pypi.org/project/dissect.util/)
 
 Moreover, you must have the following 3rd party tool at the "external" project directory:
 
@@ -437,7 +437,7 @@ You can either Drag & Drop or manually enter Phoenix Tools Development Kit (TDK)
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.10 support.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
 
 #### **Prerequisites**
 
@@ -469,7 +469,7 @@ You can either Drag & Drop or manually enter Portwell UEFI Unpacker EFI executab
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.10 support.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
 
 #### **Prerequisites**
 
@@ -507,7 +507,7 @@ You can either Drag & Drop or manually enter Toshiba BIOS COM image file(s). Opt
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.10 support.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
 
 #### **Prerequisites**
 
@@ -539,7 +539,7 @@ You can either Drag & Drop or manually enter VAIO Packaging Manager executable f
 
 #### **Compatibility**
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.10 support.
+Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
 
 #### **Prerequisites**
 

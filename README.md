@@ -397,8 +397,6 @@ To run the utility, you must have the following 3rd party Python module installe
 
 * [pefile](https://pypi.org/project/pefile/)
 
-> pip3 install pefile
-
 Moreover, you must have the following 3rd party tool at the "external" project directory:
 
 * [TianoCompress](https://github.com/tianocore/edk2/tree/master/BaseTools/Source/C/TianoCompress/) (i.e. [TianoCompress.exe for Windows](https://github.com/tianocore/edk2-BaseTools-win32/) or TianoCompress for Linux)

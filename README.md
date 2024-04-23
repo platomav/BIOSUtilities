@@ -1,4 +1,4 @@
-# BIOSUtilities [Refactor - WIP]
+# BIOSUtilities
 **Various BIOS Utilities for Modding/Research**
 
 [BIOS Utilities News Feed](https://twitter.com/platomaniac)
@@ -21,8 +21,6 @@
 * [**VAIO Packaging Manager Extractor**](#vaio-packaging-manager-extractor)
 
 ## **AMI BIOS Guard Extractor**
-
-![]()
 
 #### **Description**
 
@@ -50,13 +48,7 @@ Optionally, to decompile the AMI PFAT \> Intel BIOS Guard Scripts, you must have
 
 * [BIOS Guard Script Tool](https://github.com/platomav/BGScriptTool) (i.e. big_script_tool.py)
 
-#### **Pictures**
-
-![]()
-
 ## **AMI UCP Update Extractor**
-
-![]()
 
 #### **Description**
 
@@ -88,13 +80,7 @@ Optionally, to decompile the AMI UCP \> AMI PFAT \> Intel BIOS Guard Scripts (wh
 
 * [BIOS Guard Script Tool](https://github.com/platomav/BGScriptTool) (i.e. big_script_tool.py)
 
-#### **Pictures**
-
-![]()
-
 ## **Apple EFI IM4P Splitter**
-
-![]()
 
 #### **Description**
 
@@ -118,13 +104,7 @@ Should work at all Windows, Linux or macOS operating systems which have Python 3
 
 To run the utility, you do not need any prerequisites.
 
-#### **Pictures**
-
-![]()
-
 ## **Apple EFI Image Identifier**
-
-![]()
 
 #### **Description**
 
@@ -152,13 +132,7 @@ To run the utility, you must have the following 3rd party tools at the "external
 * [UEFIFind](https://github.com/LongSoft/UEFITool/) (i.e. [UEFIFind.exe for Windows or UEFIFind for Linux](https://github.com/LongSoft/UEFITool/releases))
 * [UEFIExtract](https://github.com/LongSoft/UEFITool/) (i.e. [UEFIExtract.exe for Windows or UEFIExtract for Linux](https://github.com/LongSoft/UEFITool/releases))
 
-#### **Pictures**
-
-![]()
-
 ## **Apple EFI Package Extractor**
-
-![]()
 
 #### **Description**
 
@@ -184,13 +158,7 @@ To run the utility, you must have the following 3rd party tools at the "external
 
 * [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zzs for Linux)
 
-#### **Pictures**
-
-![]()
-
 ## **Apple EFI PBZX Extractor**
-
-![]()
 
 #### **Description**
 
@@ -216,13 +184,7 @@ To run the utility, you must have the following 3rd party tools at the "external
 
 * [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zzs for Linux)
 
-#### **Pictures**
-
-![]()
-
 ## **Award BIOS Module Extractor**
-
-![]()
 
 #### **Description**
 
@@ -248,13 +210,7 @@ To run the utility, you must have the following 3rd party tool at the "external"
 
 * [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zzs for Linux)
 
-#### **Pictures**
-
-![]()
-
 ## **Dell PFS Update Extractor**
-
-![]()
 
 #### **Description**
 
@@ -282,13 +238,7 @@ Optionally, to decompile the Intel BIOS Guard (PFAT) Scripts, you must have the 
 
 * [BIOS Guard Script Tool](https://github.com/platomav/BGScriptTool) (i.e. big_script_tool.py)
 
-#### **Pictures**
-
-![]()
-
 ## **Fujitsu SFX BIOS Extractor**
-
-![]()
 
 #### **Description**
 
@@ -314,13 +264,7 @@ To run the utility, you must have the following 3rd party tool at the "external"
 
 * [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zzs for Linux)
 
-#### **Pictures**
-
-![]()
-
 ## **Fujitsu UPC BIOS Extractor**
-
-![]()
 
 #### **Description**
 
@@ -346,13 +290,7 @@ To run the utility, you must have the following 3rd party tool at the "external"
 
 * [TianoCompress](https://github.com/tianocore/edk2/tree/master/BaseTools/Source/C/TianoCompress/) (i.e. [TianoCompress.exe for Windows](https://github.com/tianocore/edk2-BaseTools-win32/) or TianoCompress for Linux)
 
-#### **Pictures**
-
-![]()
-
 ## **Insyde iFlash/iFdPacker Extractor**
-
-![]()
 
 #### **Description**
 
@@ -376,13 +314,7 @@ Should work at all Windows, Linux or macOS operating systems which have Python 3
 
 To run the utility, you do not need any prerequisites.
 
-#### **Pictures**
-
-![]()
-
 ## **Panasonic BIOS Package Extractor**
-
-![]()
 
 #### **Description**
 
@@ -413,13 +345,7 @@ Moreover, you must have the following 3rd party tool at the "external" project d
 
 * [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zzs for Linux)
 
-#### **Pictures**
-
-![]()
-
 ## **Phoenix TDK Packer Extractor**
-
-![]()
 
 #### **Description**
 
@@ -445,13 +371,7 @@ To run the utility, you must have the following 3rd party Python module installe
 
 * [pefile](https://pypi.org/project/pefile/)
 
-#### **Pictures**
-
-![]()
-
 ## **Portwell EFI Update Extractor**
-
-![]()
 
 #### **Description**
 
@@ -483,13 +403,7 @@ Moreover, you must have the following 3rd party tool at the "external" project d
 
 * [TianoCompress](https://github.com/tianocore/edk2/tree/master/BaseTools/Source/C/TianoCompress/) (i.e. [TianoCompress.exe for Windows](https://github.com/tianocore/edk2-BaseTools-win32/) or TianoCompress for Linux)
 
-#### **Pictures**
-
-![]()
-
 ## **Toshiba BIOS COM Extractor**
-
-![]()
 
 #### **Description**
 
@@ -515,13 +429,7 @@ To run the utility, you must have the following 3rd party tool at the "external"
 
 * [ToshibaComExtractor](https://github.com/LongSoft/ToshibaComExtractor) (i.e. [comextract.exe for Windows or comextract for Linux](https://github.com/LongSoft/ToshibaComExtractor/releases))
 
-#### **Pictures**
-
-![]()
-
 ## **VAIO Packaging Manager Extractor**
-
-![]()
 
 #### **Description**
 
@@ -546,7 +454,3 @@ Should work at all Windows, Linux or macOS operating systems which have Python 3
 To run the utility, you must have the following 3rd party tool at the "external" project directory:
 
 * [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zzs for Linux)
-
-#### **Pictures**
-
-![]()

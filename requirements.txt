@@ -1,2 +1,2 @@
-dissect.util == 3.15
-pefile == 2023.2.7
+dissect.util==3.16
+pefile==2023.2.7

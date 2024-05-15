@@ -10,6 +10,7 @@ Copyright (C) 2018-2024 Plato Mavropoulos
 import ctypes
 import os
 import re
+import struct
 
 from common.externals import get_bgs_tool
 from common.num_ops import get_ordinal
@@ -20,7 +21,7 @@ from common.system import printer
 from common.templates import BIOSUtility
 from common.text_ops import bytes_to_hex, file_to_bytes
 
-TITLE = 'AMI BIOS Guard Extractor v5.0'
+TITLE = 'AMI BIOS Guard Extractor v6.0'
 
 
 class AmiBiosGuardHeader(ctypes.LittleEndianStructure):
@@ -78,6 +79,11 @@ class IntelBiosGuardHeader(ctypes.LittleEndianStructure):
         id_guid: str = f'{{{id_hexs[:8]}-{id_hexs[8:12]}-{id_hexs[12:16]}-{id_hexs[16:20]}-{id_hexs[20:]}}}'
 
         return f'{id_text} {id_guid}'
+
+    def get_hdr_marker(self) -> bytes:
+        """ Get Intel BIOS Guard Header Marker """
+
+        return struct.pack('<HH16B', self.BGVerMajor, self.BGVerMinor, *self.PlatformID)
 
     def get_flags(self) -> tuple:
         """ Get Intel BIOS Guard Header Attributes """
@@ -261,19 +267,30 @@ def parse_bg_script(script_data: bytes, padding: int = 0) -> int:
     return 0
 
 
-def parse_bg_sign(input_data: bytes, sign_offset: int, print_info: bool = False, padding: int = 0) -> int:
+def parse_bg_sign(input_data: bytes, sign_offset: int, sign_length: int = 0,
+                  print_info: bool = False, padding: int = 0) -> int:
     """ Process Intel BIOS Guard Signature """
 
     bg_sig_hdr = get_struct(input_data, sign_offset, IntelBiosGuardSignatureHeader)
 
     if bg_sig_hdr.Unknown0 == 1:
-        # Unknown0 = 1, Unknown1 = 1
+        bg_sig_rsa_struct = IntelBiosGuardSignatureRsa2k  # Unknown0 = 1, Unknown1 = 1
+    elif bg_sig_hdr.Unknown0 == 2:
+        bg_sig_rsa_struct = IntelBiosGuardSignatureRsa3k  # Unknown0 = 2, Unknown1 = 3
+    elif sign_length == PFAT_INT_SIG_HDR_LEN + PFAT_INT_SIG_R2K_LEN:
         bg_sig_rsa_struct = IntelBiosGuardSignatureRsa2k
-    else:
-        # Unknown0 = 2, Unknown1 = 3
+
+        printer('Warning: Detected Intel BIOS Guard Signature 2K length via pattern!\n', padding, False)
+    elif sign_length == PFAT_INT_SIG_HDR_LEN + PFAT_INT_SIG_R3K_LEN:
         bg_sig_rsa_struct = IntelBiosGuardSignatureRsa3k
 
-    bg_sig_rsa = get_struct(input_data, sign_offset + PFAT_BLK_SIG_LEN, bg_sig_rsa_struct)
+        printer('Warning: Detected Intel BIOS Guard Signature 3K length via pattern!\n', padding, False)
+    else:
+        bg_sig_rsa_struct = IntelBiosGuardSignatureRsa3k
+
+        printer('Error: Could not detect Intel BIOS Guard Signature length, assuming 3K!\n', padding, False, pause=True)
+
+    bg_sig_rsa = get_struct(input_data, sign_offset + PFAT_INT_SIG_HDR_LEN, bg_sig_rsa_struct)
 
     if print_info:
         bg_sig_hdr.struct_print(padding)
@@ -281,7 +298,7 @@ def parse_bg_sign(input_data: bytes, sign_offset: int, print_info: bool = False,
         bg_sig_rsa.struct_print(padding)
 
     # Total size of Signature Header and RSA Structure
-    return PFAT_BLK_SIG_LEN + ctypes.sizeof(bg_sig_rsa_struct)
+    return PFAT_INT_SIG_HDR_LEN + ctypes.sizeof(bg_sig_rsa_struct)
 
 
 def parse_pfat_hdr(buffer: bytes | bytearray, padding: int = 0) -> tuple:
@@ -347,6 +364,8 @@ def parse_pfat_file(input_object: str | bytes | bytearray, extract_path: str, pa
 
     all_blocks_dict: dict = {}
 
+    bg_sign_len: int = 0
+
     extract_name: str = path_name(extract_path).removesuffix(extract_suffix())
 
     make_dirs(extract_path, delete=True)
@@ -371,7 +390,7 @@ def parse_pfat_file(input_object: str | bytes | bytearray, extract_path: str, pa
 
         bg_hdr.struct_print(padding + 12)
 
-        bg_script_bgn: int = block_off + PFAT_BLK_HDR_LEN
+        bg_script_bgn: int = block_off + PFAT_INT_HDR_LEN
         bg_script_end: int = bg_script_bgn + bg_hdr.ScriptSize
 
         bg_data_bgn: int = bg_script_end
@@ -379,15 +398,19 @@ def parse_pfat_file(input_object: str | bytes | bytearray, extract_path: str, pa
 
         bg_data_bin: bytes = pfat_buffer[bg_data_bgn:bg_data_end]
 
-        block_off: int = bg_data_end  # Assume next block starts at data end
+        block_off = bg_data_end  # Assume next block starts at data end
 
         is_sfam, _, _, _, _ = bg_hdr.get_flags()  # SFAM, ProtectEC, GFXMitDis, FTU, Reserved
 
         if is_sfam:
             printer(f'Intel BIOS Guard {block_status} Signature:\n', padding + 8)
 
+            if bg_sign_len == 0:
+                bg_sign_len = pfat_buffer.find(bg_hdr.get_hdr_marker(), bg_data_end,
+                                               bg_data_end + PFAT_INT_SIG_MAX_LEN) - bg_data_end
+
             # Adjust next block to start after current block Data + Signature
-            block_off += parse_bg_sign(pfat_buffer, bg_data_end, True, padding + 12)
+            block_off += parse_bg_sign(pfat_buffer, bg_data_end, bg_sign_len, True, padding + 12)
 
         printer(f'Intel BIOS Guard {block_status} Script:\n', padding + 8)
 
@@ -427,8 +450,11 @@ def parse_pfat_file(input_object: str | bytes | bytearray, extract_path: str, pa
 
 
 PFAT_AMI_HDR_LEN: int = ctypes.sizeof(AmiBiosGuardHeader)
-PFAT_BLK_HDR_LEN: int = ctypes.sizeof(IntelBiosGuardHeader)
-PFAT_BLK_SIG_LEN: int = ctypes.sizeof(IntelBiosGuardSignatureHeader)
+PFAT_INT_HDR_LEN: int = ctypes.sizeof(IntelBiosGuardHeader)
+PFAT_INT_SIG_HDR_LEN: int = ctypes.sizeof(IntelBiosGuardSignatureHeader)
+PFAT_INT_SIG_R2K_LEN: int = ctypes.sizeof(IntelBiosGuardSignatureRsa2k)
+PFAT_INT_SIG_R3K_LEN: int = ctypes.sizeof(IntelBiosGuardSignatureRsa3k)
+PFAT_INT_SIG_MAX_LEN: int = PFAT_INT_SIG_HDR_LEN + PFAT_INT_SIG_R3K_LEN
 
 if __name__ == '__main__':
     BIOSUtility(title=TITLE, check=is_ami_pfat, main=parse_pfat_file).run_utility()

@@ -24,9 +24,9 @@ from common.system import printer
 from common.templates import BIOSUtility
 from common.text_ops import file_to_bytes
 
-from AMI_PFAT_Extract import IntelBiosGuardHeader, parse_bg_script, parse_bg_sign
+from AMI_PFAT_Extract import IntelBiosGuardHeader, parse_bg_script, parse_bg_sign, PFAT_INT_SIG_MAX_LEN
 
-TITLE = 'Dell PFS Update Extractor v7.0'
+TITLE = 'Dell PFS Update Extractor v7.1'
 
 
 class DellPfsHeader(ctypes.LittleEndianStructure):
@@ -934,10 +934,14 @@ def parse_pfat_pfs(entry_hdr, entry_data, padding=0, structure=True):
             if structure:
                 printer(f'PFAT Block {pfat_entry_idx_ord} - Signature:\n', padding + 12)
 
-            # Get sub-PFS PFAT Signature Structure values
-            bg_sign_len = parse_bg_sign(pfat_payload, pfat_payload_end, structure, padding + 16)
+            # Get sub-PFS PFAT Signature length from Header pattern (not needed for Dell PFS)
+            _pfat_sign_len = pfat_payload.find(pfat_hdr.get_hdr_marker(), pfat_payload_end,
+                                               pfat_payload_end + PFAT_INT_SIG_MAX_LEN) - pfat_payload_end
 
-            if len(pfat_payload[pfat_payload_end:pfat_payload_end + bg_sign_len]) != bg_sign_len:
+            # Get sub-PFS PFAT Signature Structure values
+            pfat_sign_len = parse_bg_sign(pfat_payload, pfat_payload_end, _pfat_sign_len, structure, padding + 16)
+
+            if len(pfat_payload[pfat_payload_end:pfat_payload_end + pfat_sign_len]) != pfat_sign_len:
                 printer(f'Error: Detected sub-PFS PFAT Block {pfat_entry_idx_ord} Signature Size mismatch!',
                         padding + 12)
 

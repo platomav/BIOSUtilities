@@ -6,14 +6,12 @@ init-hook="import sys; sys.path.append('./')"
 
 disable=
     duplicate-code,
-    invalid-name,
     line-too-long,
     too-few-public-methods,
     too-many-arguments,
     too-many-branches,
-    too-many-instance-attributes,
     too-many-lines,
     too-many-locals,
     too-many-nested-blocks,
-    too-many-return-statements,
+    too-many-positional-arguments,
     too-many-statements

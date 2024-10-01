@@ -1,0 +1,478 @@
+24.10.01
+
+Complete repository overhaul into python project
+Re-designed BIOSUtility base template class flow
+Re-structured utilities as BIOSUtility inherited
+Re-structured project for 3rd-party compatibility
+Unified project requirements and package version
+Code overhaul with type hints and linting support
+Switched external executable dependencies via PATH
+BIOSUtility enforces simple check and parse methods
+Utilities now work with both path and buffer inputs
+Adjusted class, method, function names and parameters
+Improved Dell PFS Update Extractor sub-PFAT processing
+Improved Award BIOS Module Extractor corruption handling
+Improved Apple EFI Image Identifier to expose the EFI ID
+Improved Insyde iFlash/iFdPacker Extractor with ISH & PDT
+Re-written Apple EFI Package Extractor to support all PKG
+
+24.06.17
+
+Toshiba BIOS COM Extractor v4.0
+Improved Toshiba COM detection (pattern only, no file extension)
+Improved input object handling to support both paths and bytes
+Populated code type hints and applied few small improvements
+
+24.05.26
+
+Panasonic BIOS Package Extractor v4.0
+Added ability to parse nested Panasonic BIOS update executable directly
+Restructured logic to allow more flexibility on input executable parsing
+Populated code type hints and applied multiple small improvements
+
+24.05.16
+
+Improved Intel BIOS Guard Signature parsing
+
+24.04.24
+
+Added AMI PFAT RSA 3K signed blocks support
+Added AMI PFAT nested detection at each file
+Added Award BIOS payload naming at each file
+Switched Panasonic BIOS LZNT1 external library
+Improved Panasonic LZNT1 detection and length
+Improved Dell PFS code structure and fixed bugs
+Improved code exception handling (raise, catch)
+Improved code definitions (PEP8, docs, types)
+Fixed some arguments missing from help screens
+Additions, Improvements and Fixes from Q4 2022 to Q1 2024
+Fixed .gitignore file exclusion
+Various README cleanups
+
+22.10.31
+
+Fixed potential crash at files without extension(s)
+
+22.10.23
+
+Auto-resolve extract directory name conflicts
+
+22.10.16
+
+Updated Dell PFS Update Extractor v6.0_a16
+Improved handling of sub-PFS PFAT Entries with offset conflicts and/or data gaps
+Replace contents of no longer relevant comment
+
+22.10.07
+
+Updated Dell PFS/PKG Update Extractor v6.0_a15
+Padding is now added between sub-PFS PFAT Entry gaps
+Thanks for the help @NikolajSchlej
+
+22.09.12
+
+Created common template for executing all utilities
+Unified extracted output directory naming logic
+Multiple code fixes, refactors and improvements
+
+22.09.02
+
+Updated AMI UCP Update Extractor v2.0_a19
+
+22.08.31
+
+Updated Dell PFS/PKG Update Extractor v6.0_a12
+Added support for Dell ThinOS PKG with multiple PFS
+
+22.08.28
+
+Added Apple EFI Package Extractor v2.0_a4
+Added Apple EFI PBZX Extractor v1.0_a4
+Updated Apple EFI Image Identifier v2.0_a4
+Updated Apple EFI IM4P Splitter v3.0_a4
+Updated Insyde iFlash/iFdPacker Extractor v2.0_a10
+Improved 7-Zip parameter control
+
+22.08.17
+
+Added Apple EFI IM4P Splitter v3.0_a2
+
+22.08.15
+
+Added Apple EFI Image Identifier v2.0_a3
+Fixed argparse lock of input files
+
+22.07.14
+
+Added Fujitsu SFX BIOS Extractor v3.0_a2
+Fixed deletion of folders with read-only files
+Fixed missing README > Requirement for VAIO Packaging Manager Extractor
+
+22.07.07
+
+Insyde iFlash/iFdPacker Extractor v2.0_a9
+Support for hardcoded Insyde 7-Zip SFX password
+Fixed 7-Zip hang on password protected files
+
+22.07.06
+
+Insyde iFlash/iFdPacker Extractor v2.0_a8
+Improved PFAT, UCP, PFS, TDK format check methods
+Cleanup/improvements to all utilities
+Fixed README > Insyde iFlash/iFdPacker Extractor
+Increased Python version to 3.10 and PEFile version to 2022.5.30 (performance)
+
+22.06.30
+
+Added Insyde iFlash Update Extractor v2.0_a2
+Added Toshiba BIOS COM Extractor v2.0_a2
+
+22.06.29
+
+Added Fujitsu UPC BIOS Extractor v2.0_a2
+
+22.06.26
+
+Added Award BIOS Module Extractor v2.0_a3
+Improved 7-Zip exit code handling
+
+22.06.21
+
+Added Panasonic BIOS Package Extractor v2.0_a7
+New processes to better handle PE files
+Various common package fixes and improvements
+
+22.06.16
+
+Fix main pattern detections, when found at offset 0x0
+AMI UCP Update Extractor v2.0_a15
+Phoenix TDK Packer Extractor v2.0_a7
+Portwell EFI Update Extractor v2.0_a9
+Fixes issue #13, thanks @PCRider for the report!
+
+22.06.02
+
+Added VAIO Packaging Manager Extractor v3.0_a4
+Sort README utilities based on name
+
+22.06.01
+
+Improved 7-Zip decompressor
+Removed --static argument
+Small fixes at variable names and f-strings
+
+22.05.24
+
+Phoenix TDK Packer Extractor v2.0_a6
+Dramatically increase TDK Packer base offset detection speed
+Applied regex pattern improvements
+
+22.05.23
+
+Phoenix TDK Packer Extractor v2.0_a5
+Added detection of TDK Packer executable base offset
+Improve TDK unpacking at weird images
+
+22.05.22
+
+Added Phoenix TDK Packer Extractor v2.0_a4
+Added f-strings all the things!
+
+22.05.15
+
+Portwell EFI BIOS Extractor v2.0_a4
+Replaced any assertions
+Added pip requirements file
+
+22.05.09
+
+Improved README
+
+22.05.07
+
+Added --static parameter to README
+
+22.05.06
+
+Added relevant exit codes at utilities
+Fixed missing output path value crash
+Increased minimum Python version to 3.8
+Added --static optional parameter
+Allow usage of static-built external dependencies
+
+22.05.01
+
+Fix handling of quote-encased user input paths
+
+22.04.21
+
+Format detectors now accept input bytes or path
+
+22.04.17
+
+Revamped path-related operations
+Fixed dependencies detecton
+Fixed frozen state support
+
+22.04.16
+
+Fixed path symlink resolutions
+
+22.04.15
+
+Improved AMI UCP > NAL unpacking
+Fix potential illegal path traversals
+
+22.04.14
+
+Fixes at title/version display
+Add quick format check functions for PFAT, UCP, PFS
+
+22.04.13
+
+Dell PFS Update Extractor v6.0_a2
+Added --version parameter
+Structure fixes and improvements
+
+22.04.09
+
+AMI UCP BIOS Extractor v2.0_a3
+Added support for HP-modded AMI UCP (HP Flash Utility v4)
+Small AMI UCP pattern improvement
+
+22.04.07
+
+Added Dell PFS Update Extractor v6.0_a1
+Adjusted dependencies
+
+22.04.01
+
+Added AMI UCP BIOS Extractor v2.0_a1
+Added AMI BIOS Guard Extractor v4.0_a1
+Added empty external directory
+Initial refactor work
+Cleanup old files
+
+22.03.28
+
+Apple EFI Package Grabber v2.0
+
+22.03.14
+
+Insyde iFlash Image Extractor v1.0
+
+22.01.05
+
+Dell PFS Update Extractor v5.1
+Fixed BIOS Guard (PFAT) PFS Entry Signature parsing bug
+Minor improvement in BIOS Guard (PFAT) PFS Entry detection
+
+21.12.27
+
+Dell PFS Update Extractor v5.0
+Support for PFS Utilities section extraction, aside from the Firmware one
+Support and proper extraction of Intel BIOS Guard protected Firmware
+Support for parsing some newer PFS Information and Signature entries
+Ability to show verbose output of extraction progress and PFS structures
+Ability to better integrate the script to other projects via new parameters
+Extensive code re-structuring in more modular form for future expansion
+
+21.09.15
+
+Fujitsu UPC BIOS Extractor v1.0
+Fujitsu SFX BIOS Extractor v2.1
+Small rebranding
+
+21.08.21
+
+AMI UCP BIOS Extractor v1.2
+Fixed crash when parsing compressed text only UAF Modules
+
+21.08.02
+
+AMI UCP BIOS Extractor v1.1
+Improved UAF Tag-File Dictionary
+
+21.06.19
+
+Portwell EFI BIOS Extractor v1.0
+
+21.06.15
+
+Phoenix SCT BIOS Extractor v1.0
+
+21.06.04
+
+AMI UCP BIOS Extractor v1.0
+
+21.05.08
+
+Dell PFS BIOS Extractor v4.9
+Improved detection of PFS Text Modules
+
+21.04.27
+
+Dell PFS BIOS Extractor v4.8
+Added support for PFS images within Dell ThinOS PKG packages
+Applied various small performance & static analysis code fixes
+
+21.02.27
+
+Update README.md
+Updated Donation button
+
+21.01.19
+
+AMI BIOS Guard Extractor v3.2
+Each input file name is now shown at the top
+Each output file now includes the input file name
+Applied a few small static analysis code fixes
+
+21.01.02
+
+AMI BIOS Guard Extractor v3.1
+File AMI_PFAT_X_DATA_ALL now includes AMI_PFAT_X_DATA_END
+Applied various static analysis code fixes
+
+20.12.06
+
+AMI BIOS Guard Extractor v3.0
+Added AMI PFAT Component new extraction method
+Added AMI PFAT Nested PFAT Component extraction
+Added Intel BIOS Guard Block Header detailed info
+Added Intel BIOS Guard Block Script decompilation
+Applied various code fixes & improvements
+
+20.10.07
+
+Dell PFS BIOS Extractor v4.6
+Fixed crash when PFS filenames include Windows reserved characters
+Fixed PFS Entry Version Type display typo, thanks to @vuquangtrong
+
+20.07.04
+
+Apple EFI IM4P Splitter v2.1
+Improved Intel Flash Descriptor detection & parsing
+
+20.06.26
+
+VAIO Packaging Manager Extractor v2.0
+Major de-obfuscation speed increase, up to x13 times
+Improved VAIO executable unlocking procedure
+Fujitsu SFX Packager Extractor v2.0
+Major de-obfuscation speed increase, up to x13 times
+
+20.06.18
+
+Dell PFS BIOS Extractor v4.5
+Added PFS section zlib data size & checksum checks
+Added PFS section zlib footer detection & checks
+Fixed null character ignoring at info text files
+Applied various code fixes & improvements
+
+20.05.23
+
+Apple EFI IM4P Splitter v2.0
+Added better Apple EFI extraction based on Intel Flash Descriptor Flash Component Size. Same output, robust method.
+
+20.04.22
+
+Dell PFS BIOS Extractor v4.2
+Added PFS Revision 2 support
+Added proper sub PFS Chunked Entries parsing
+
+19.09.24
+
+Dell PFS BIOS Extractor v3.6
+Added another PFS Information Entry GUID
+
+19.09.12
+
+Dell PFS BIOS Extractor v3.5
+Added support for Nested PFS without PFS Information Entry
+Fixed error handling when PFS Entry names cannot be found
+
+19.09.07
+
+Update README.md
+Added Anti-Virus False Positives note
+
+19.08.09
+
+Dell PFS BIOS Extractor v3.2
+Fixed crash when checking for sub PFS of Zlib or Chunk types
+
+19.08.07
+
+Dell PFS BIOS Extractor v3.1
+Fixed Dell PFS sub PFS Payload Chunk Order Number detection
+New scripts, updated current scripts, new repo license
+Added Dell PFS BIOS Extractor v3.0 (removed Dell HDR Module Extractor v2.0)
+Added Apple EFI Package Extractor v1.1
+Apple EFI File Renamer v1.3 supports calling from Apple EFI Package Extractor utility
+Apple EFI IM4P Splitter v1.3 supports calling from Apple EFI Package Extractor utility
+Apple EFI Sucatalog Link Grabber v1.2 stores output text file with unique name for easier comparisons
+Repository is now licensed under BSD+Patent
+All scripts now require Python 3.7 or newer
+
+19.02.28
+
+Fujitsu SFX Packager Extractor v1.0
+
+19.02.03
+
+VAIO Packaging Manager Extractor v1.0
+
+19.01.15
+
+AMI BIOS Guard Extractor v2.0
+Any data after the end of PFAT, as dictated by the Main Header, are now appended to the final unpacked image.
+
+19.01.10
+
+Award BIOS Module Extractor v1.2
+Added 7zip parameter to automatically rename extracted files with the same name
+
+18.11.01
+
+Apple EFI IM4P Splitter v1.2
+Fixed IM4P payload start offset
+
+18.10.13
+
+Added AMI BIOS Guard Extractor
+
+18.09.22
+
+Dell HDR Module Extractor v2.0
+Fixed issue which caused some HDR executables to extract less modules than expected
+
+18.09.12
+
+Added Panasonic BIOS Update Extractor
+
+18.09.06
+
+Updated README
+
+18.09.05
+
+Apple EFI File Renamer v1.2
+Added official Intel $IBIOSI$ parsing
+Added $IBIOSI$ output information
+
+18.09.04
+
+Updated all scripts to v1.1
+Added "Working..." indicators while running at all scripts
+Added dependency filename expectations when required
+Apple EFI File Renamer now saves the checksum in hex
+
+18.08.31
+
+Added Utilities, Readme and Licence
+Dell HDR Module Extractor v1.0
+Apple EFI Sucatalog Link Grabber v1.0
+Apple EFI File Renamer v1.0
+Apple EFI IM4P Splitter v1.0
+Award BIOS Module Extractor v1.0

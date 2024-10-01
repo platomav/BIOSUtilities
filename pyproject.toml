@@ -1,0 +1,51 @@
+[build-system]
+requires = ["setuptools >= 61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "biosutilities"
+license = {text = "BSD-2-Clause-Patent"}
+authors = [
+    {name = "Plato Mavropoulos"}
+]
+maintainers = [
+    {name = "Plato Mavropoulos"}
+]
+description = "Various BIOS Utilities for Modding/Research"
+keywords = [
+    "bios", "uefi", "firmware", "extract", "unpack", "package", "ami", "insyde", "phoenix", "award",
+    "apple", "dell", "fujitsu", "panasonic", "toshiba", "dynabook", "vaio", "portwell", "bios guard",
+    "pfat", "ucp", "im4p", "pbzx", "efi", "pfs", "sfx", "upc", "iflash", "ifdpacker", "ifd", "com"
+]
+readme = "README.md"
+dynamic = ["version"]
+requires-python = ">= 3.10"
+classifiers = [
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: BSD License",
+    "Operating System :: Microsoft :: Windows",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: POSIX :: BSD",
+    "Operating System :: MacOS",
+    "Topic :: Security",
+    "Topic :: Scientific/Engineering :: Information Analysis"
+]
+
+[project.optional-dependencies]
+lznt1 = ["dissect.util == 3.18"]
+pefile = ["pefile == 2024.8.26"]
+
+[project.urls]
+Homepage = "https://github.com/platomav/BIOSUtilities"
+Repository = "https://github.com/platomav/BIOSUtilities"
+Issues = "https://github.com/platomav/BIOSUtilities/issues"
+Readme = "https://github.com/platomav/BIOSUtilities/blob/main/README.md"
+Changelog = "https://github.com/platomav/BIOSUtilities/blob/main/CHANGELOG"
+
+[tool.setuptools.packages.find]
+include = ["biosutilities*"]
+
+[tool.setuptools.dynamic]
+version = {attr = "biosutilities.__version__"}

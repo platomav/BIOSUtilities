@@ -16,13 +16,35 @@ from importlib.util import module_from_spec, spec_from_file_location
 from types import ModuleType
 from typing import Type
 
+from biosutilities.common.paths import project_root
+from biosutilities.common.texts import to_string
+
+
+def get_external_path(cmd: str | list | tuple, raise_on_error: bool = True) -> str | None:
+    """ Get external dependency path (PATH environment variable or "external" directory) """
+
+    external_root: str = os.path.join(project_root(), 'external')
+
+    external_path: str | None = external_root if os.path.isdir(external_root) else None
+
+    for command in cmd if isinstance(cmd, (list, tuple)) else [to_string(in_object=cmd)]:
+        command_path: str | None = shutil.which(cmd=command, path=external_path)
+
+        if command_path and os.path.isfile(path=command_path):
+            return command_path
+
+    if raise_on_error:
+        raise OSError(f'{to_string(in_object=cmd, sep_char=", ")} could not be found!')
+
+    return None
+
 
 def big_script_tool() -> Type | None:
     """ Get Intel BIOS Guard Script Tool class """
 
-    bgst: str | None = shutil.which(cmd='big_script_tool')
+    bgst: str | None = get_external_path(cmd='big_script_tool', raise_on_error=False)
 
-    if bgst and os.path.isfile(path=bgst):
+    if bgst is not None:
         bgst_spec: ModuleSpec | None = spec_from_file_location(
             name='big_script_tool', location=re.sub(r'\.PY$', '.py', bgst))
 
@@ -39,56 +61,31 @@ def big_script_tool() -> Type | None:
     return None
 
 
-def comextract_path() -> str:
+def comextract_path() -> str | None:
     """ Get ToshibaComExtractor path """
 
-    comextract: str | None = shutil.which(cmd='comextract')
-
-    if not (comextract and os.path.isfile(path=comextract)):
-        raise OSError('comextract executable not found!')
-
-    return comextract
+    return get_external_path(cmd='comextract')
 
 
-def szip_path() -> str:
+def szip_path() -> str | None:
     """ Get 7-Zip path """
 
-    szip: str | None = shutil.which(cmd='7zzs') or shutil.which(cmd='7z')
-
-    if not (szip and os.path.isfile(path=szip)):
-        raise OSError('7zzs or 7z executable not found!')
-
-    return szip
+    return get_external_path(cmd=['7zzs', '7zz', '7z'])
 
 
-def tiano_path() -> str:
+def tiano_path() -> str | None:
     """ Get TianoCompress path """
 
-    tiano: str | None = shutil.which(cmd='TianoCompress')
-
-    if not (tiano and os.path.isfile(path=tiano)):
-        raise OSError('TianoCompress executable not found!')
-
-    return tiano
+    return get_external_path(cmd='TianoCompress')
 
 
-def uefifind_path() -> str:
+def uefifind_path() -> str | None:
     """ Get UEFIFind path """
 
-    uefifind: str | None = shutil.which(cmd='UEFIFind')
-
-    if not (uefifind and os.path.isfile(path=uefifind)):
-        raise OSError('UEFIFind executable not found!')
-
-    return uefifind
+    return get_external_path(cmd='UEFIFind')
 
 
-def uefiextract_path() -> str:
+def uefiextract_path() -> str | None:
     """ Get UEFIExtract path """
 
-    uefiextract: str | None = shutil.which(cmd='UEFIExtract')
-
-    if not (uefiextract and os.path.isfile(path=uefiextract)):
-        raise OSError('UEFIExtract executable not found!')
-
-    return uefiextract
+    return get_external_path(cmd='UEFIExtract')

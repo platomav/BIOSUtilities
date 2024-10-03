@@ -70,7 +70,7 @@ from biosutilities.ami_pfat_extract import AmiPfatExtract
 ami_pfat_extractor = AmiPfatExtract()
 
 ami_pfat_extractor.check_format(input_object='/path/to/input/file.bin')
-ami_pfat_extractor.parse_format(input_object='/path/to/input/file.bin')
+ami_pfat_extractor.parse_format(input_object='/path/to/input/file.bin', extract_path='/path/to/output/folder/')
 ```
 
 ``` python
@@ -82,7 +82,23 @@ with open(file='/path/to/input/file.bin', mode='rb') as pfs_file:
     pfs_buffer = pfs_file.read()
 
 dell_pfs_extractor.check_format(input_object=pfs_buffer)
-dell_pfs_extractor.parse_format(input_object=pfs_buffer)
+dell_pfs_extractor.parse_format(input_object=pfs_buffer, extract_path='/path/to/output/directory/', padding=8)
+```
+
+``` python
+from biosutilities.phoenix_tdk_extract import PhoenixTdkExtract
+
+phoenix_tdk_extractor = PhoenixTdkExtract(arguments=['-e', '/path/to/input/file.bin', '-o', '/path/to/output/folder/'])
+
+phoenix_tdk_extractor.run_utility(padding=4)
+```
+
+``` python
+from biosutilities.apple_efi_pbzx import AppleEfiPbzxExtract
+
+apple_efi_pbzx_extractor = AppleEfiPbzxExtract()
+
+apple_efi_pbzx_extractor.show_version(is_boxed=False, padding=12)
 ```
 
 It also allows to use directly the four public methods which are inherited by every utility from the base BIOSUtility class.
@@ -135,9 +151,11 @@ python -m pip install --upgrade -r requirements.txt
 python -m pip install --upgrade pefile
 ```
 
-### External Executables / Python Scripts
+### External Executables / Scripts
 
-External executables (e.g. 7-Zip, TianoCompress, UEFIFind) and Python scripts (e.g. BIOS Guard Script Tool) need to be found via PATH.
+External executables and/or scripts (e.g. TianoCompress.exe, big_script_tool.py, 7z.exe) need to be found via the "PATH" environment variable, which is configured differently depending on the operating system.
+
+Alternatively, if neither modifying PATH environment variable nor copying the executables in standard OS PATH directories is an option, you can create a folder "external" at the root of the "biosutilities" project.
 
 #### Linux
 
@@ -146,12 +164,14 @@ External executables (e.g. 7-Zip, TianoCompress, UEFIFind) and Python scripts (e
 or
 
 ``` bash
-sudo install "/path/to/downloaded/external/executable/to/install"
+sudo install "/path/to/downloaded/external/executable/to/install" /usr/local/bin
 ```
 
 #### Windows
 
 [Windows Path](https://www.computerhope.com/issues/ch000549.htm)
+
+**Note:** In the "Environment Variables" window, you can modify the "Path" variable under "User variables" instead of "System variables", as many guides suggest.
 
 #### MacOS
 
@@ -194,7 +214,7 @@ Should work at all Windows, Linux or macOS operating systems which have Python 3
 
 #### **Prerequisites**
 
-Optionally, to decompile the AMI PFAT \> Intel BIOS Guard Scripts, you must have the following 3rd party python script at PATH:
+Optionally, to decompile the AMI PFAT \> Intel BIOS Guard Scripts, you must have the following 3rd party python script at PATH or "external":
 
 * [BIOS Guard Script Tool](https://github.com/platomav/BGScriptTool) (i.e. big_script_tool.py)
 
@@ -216,12 +236,12 @@ Should work at all Windows, Linux or macOS operating systems which have Python 3
 
 #### **Prerequisites**
 
-To run the utility, you must have the following 3rd party tools at PATH:
+To run the utility, you must have the following 3rd party tools at PATH or "external":
 
-* [TianoCompress](https://github.com/tianocore/edk2/tree/master/BaseTools/Source/C/TianoCompress/) (i.e. [TianoCompress.exe for Windows](https://github.com/tianocore/edk2-BaseTools-win32/) or TianoCompress for Linux)
-* [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zzs for Linux)
+* [TianoCompress](https://github.com/tianocore/edk2/tree/master/BaseTools/Source/C/TianoCompress/) (i.e. [TianoCompress.exe for Windows](https://github.com/tianocore/edk2-BaseTools-win32/) or TianoCompress for Linux/macOS)
+* [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zz for macOS or 7zz, 7zzs for Linux)
 
-Optionally, to decompile the AMI UCP \> AMI PFAT \> Intel BIOS Guard Scripts (when applicable), you must have the following 3rd party python script at PATH:
+Optionally, to decompile the AMI UCP \> AMI PFAT \> Intel BIOS Guard Scripts (when applicable), you must have the following 3rd party python script at PATH or "external":
 
 * [BIOS Guard Script Tool](https://github.com/platomav/BGScriptTool) (i.e. big_script_tool.py)
 
@@ -238,6 +258,8 @@ No additional optional arguments are provided for this utility.
 #### **Compatibility**
 
 Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
+
+Note: On Linux and macOS, you'll need to compile TianoCompress from sources as no pre-built binary exists.
 
 #### **Prerequisites**
 
@@ -259,10 +281,10 @@ Should work at all Windows, Linux or macOS operating systems which have Python 3
 
 #### **Prerequisites**
 
-To run the utility, you must have the following 3rd party tools at PATH:
+To run the utility, you must have the following 3rd party tools at PATH or "external":
 
-* [UEFIFind](https://github.com/LongSoft/UEFITool/) (i.e. [UEFIFind.exe for Windows or UEFIFind for Linux](https://github.com/LongSoft/UEFITool/releases))
-* [UEFIExtract](https://github.com/LongSoft/UEFITool/) (i.e. [UEFIExtract.exe for Windows or UEFIExtract for Linux](https://github.com/LongSoft/UEFITool/releases))
+* [UEFIFind](https://github.com/LongSoft/UEFITool/) (i.e. [UEFIFind.exe for Windows or UEFIFind for Linux/macOS](https://github.com/LongSoft/UEFITool/releases))
+* [UEFIExtract](https://github.com/LongSoft/UEFITool/) (i.e. [UEFIExtract.exe for Windows or UEFIExtract for Linux/macOS](https://github.com/LongSoft/UEFITool/releases))
 
 ### **Apple EFI Package Extractor**
 
@@ -280,9 +302,9 @@ Should work at all Windows, Linux or macOS operating systems which have Python 3
 
 #### **Prerequisites**
 
-To run the utility, you must have the following 3rd party tools at PATH:
+To run the utility, you must have the following 3rd party tools at PATH or "external":
 
-* [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zzs for Linux)
+* [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zz for macOS or 7zz, 7zzs for Linux)
 
 ### **Apple EFI PBZX Extractor**
 
@@ -300,9 +322,9 @@ Should work at all Windows, Linux or macOS operating systems which have Python 3
 
 #### **Prerequisites**
 
-To run the utility, you must have the following 3rd party tools at PATH:
+To run the utility, you must have the following 3rd party tools at PATH or "external":
 
-* [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zzs for Linux)
+* [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zz for macOS or 7zz, 7zzs for Linux)
 
 ### **Award BIOS Module Extractor**
 
@@ -320,9 +342,9 @@ Should work at all Windows, Linux or macOS operating systems which have Python 3
 
 #### **Prerequisites**
 
-To run the utility, you must have the following 3rd party tool at PATH:
+To run the utility, you must have the following 3rd party tool at PATH or "external":
 
-* [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zzs for Linux)
+* [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zz for macOS or 7zz, 7zzs for Linux)
 
 ### **Dell PFS Update Extractor**
 
@@ -343,7 +365,7 @@ Should work at all Windows, Linux or macOS operating systems which have Python 3
 
 #### **Prerequisites**
 
-Optionally, to decompile the Intel BIOS Guard (PFAT) Scripts, you must have the following 3rd party utility at PATH:
+Optionally, to decompile the Intel BIOS Guard (PFAT) Scripts, you must have the following 3rd party utility at PATH or "external":
 
 * [BIOS Guard Script Tool](https://github.com/platomav/BGScriptTool) (i.e. big_script_tool.py)
 
@@ -363,9 +385,9 @@ Should work at all Windows, Linux or macOS operating systems which have Python 3
 
 #### **Prerequisites**
 
-To run the utility, you must have the following 3rd party tool at PATH:
+To run the utility, you must have the following 3rd party tool at PATH or "external":
 
-* [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zzs for Linux)
+* [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zz for macOS or 7zz, 7zzs for Linux)
 
 ### **Fujitsu UPC BIOS Extractor**
 
@@ -383,9 +405,9 @@ Should work at all Windows, Linux or macOS operating systems which have Python 3
 
 #### **Prerequisites**
 
-To run the utility, you must have the following 3rd party tool at PATH:
+To run the utility, you must have the following 3rd party tool at PATH or "external":
 
-* [TianoCompress](https://github.com/tianocore/edk2/tree/master/BaseTools/Source/C/TianoCompress/) (i.e. [TianoCompress.exe for Windows](https://github.com/tianocore/edk2-BaseTools-win32/) or TianoCompress for Linux)
+* [TianoCompress](https://github.com/tianocore/edk2/tree/master/BaseTools/Source/C/TianoCompress/) (i.e. [TianoCompress.exe for Windows](https://github.com/tianocore/edk2-BaseTools-win32/) or TianoCompress for Linux/macOS)
 
 ### **Insyde iFlash/iFdPacker Extractor**
 
@@ -400,6 +422,8 @@ No additional optional arguments are provided for this utility.
 #### **Compatibility**
 
 Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
+
+Note: On Linux and macOS, you'll need to compile TianoCompress from sources as no pre-built binary exists.
 
 #### **Prerequisites**
 
@@ -426,9 +450,9 @@ To run the utility, you must have the following 3rd party Python modules install
 * [pefile](https://pypi.org/project/pefile/)
 * [dissect.util](https://pypi.org/project/dissect.util/)
 
-Moreover, you must have the following 3rd party tool at PATH:
+Moreover, you must have the following 3rd party tool at PATH or "external":
 
-* [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zzs for Linux)
+* [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zz for macOS or 7zz, 7zzs for Linux)
 
 ### **Phoenix TDK Packer Extractor**
 
@@ -470,9 +494,9 @@ To run the utility, you must have the following 3rd party Python module installe
 
 * [pefile](https://pypi.org/project/pefile/)
 
-Moreover, you must have the following 3rd party tool at PATH:
+Moreover, you must have the following 3rd party tool at PATH or "external":
 
-* [TianoCompress](https://github.com/tianocore/edk2/tree/master/BaseTools/Source/C/TianoCompress/) (i.e. [TianoCompress.exe for Windows](https://github.com/tianocore/edk2-BaseTools-win32/) or TianoCompress for Linux)
+* [TianoCompress](https://github.com/tianocore/edk2/tree/master/BaseTools/Source/C/TianoCompress/) (i.e. [TianoCompress.exe for Windows](https://github.com/tianocore/edk2-BaseTools-win32/) or TianoCompress for Linux/macOS)
 
 ### **Toshiba BIOS COM Extractor**
 
@@ -488,11 +512,13 @@ No additional optional arguments are provided for this utility.
 
 Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
 
+Note: On Linux and macOS, you'll need to compile TianoCompress from sources as no pre-built binary exists.
+
 #### **Prerequisites**
 
-To run the utility, you must have the following 3rd party tool at PATH:
+To run the utility, you must have the following 3rd party tool at PATH or "external":
 
-* [ToshibaComExtractor](https://github.com/LongSoft/ToshibaComExtractor) (i.e. [comextract.exe for Windows or comextract for Linux](https://github.com/LongSoft/ToshibaComExtractor/releases))
+* [ToshibaComExtractor](https://github.com/LongSoft/ToshibaComExtractor) (i.e. [comextract.exe for Windows or comextract for Linux/macOS](https://github.com/LongSoft/ToshibaComExtractor/releases))
 
 ### **VAIO Packaging Manager Extractor**
 
@@ -508,8 +534,10 @@ No additional optional arguments are provided for this utility.
 
 Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
 
+Note: On Linux, you'll need to compile comextract from sources as no pre-built binary exists.
+
 #### **Prerequisites**
 
-To run the utility, you must have the following 3rd party tool at PATH:
+To run the utility, you must have the following 3rd party tool at PATH or "external":
 
-* [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zzs for Linux)
+* [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zz for macOS or 7zz, 7zzs for Linux)

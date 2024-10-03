@@ -1,3 +1,8 @@
+24.10.03
+
+Added external executable dependencies non-PATH flow (#51)
+Improved the README with Usage, Dependencies, Examples etc
+
 24.10.01
 
 Complete repository overhaul into python project

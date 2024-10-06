@@ -12,7 +12,7 @@ import os
 import re
 import struct
 
-from typing import Any, Type
+from typing import Any, Final, Type
 
 from biosutilities.common.externals import big_script_tool
 from biosutilities.common.paths import extract_suffix, extract_folder, make_dirs, path_name, safe_name
@@ -71,6 +71,7 @@ class IntelBiosGuardHeader(ctypes.LittleEndianStructure):
         id_text: str = re.sub(r'[\n\t\r\x00 ]', '', id_byte.decode(encoding='utf-8', errors='ignore'))
 
         id_hexs: str = f'{int.from_bytes(bytes=id_byte, byteorder="big"):0{0x10 * 2}X}'
+
         id_guid: str = f'{{{id_hexs[:8]}-{id_hexs[8:12]}-{id_hexs[12:16]}-{id_hexs[16:20]}-{id_hexs[20:]}}}'
 
         return f'{id_text} {id_guid}'
@@ -205,12 +206,12 @@ class AmiPfatExtract(BIOSUtility):
 
     TITLE: str = 'AMI BIOS Guard Extractor'
 
-    PFAT_AMI_HDR_LEN: int = ctypes.sizeof(AmiBiosGuardHeader)
-    PFAT_INT_HDR_LEN: int = ctypes.sizeof(IntelBiosGuardHeader)
-    PFAT_INT_SIG_HDR_LEN: int = ctypes.sizeof(IntelBiosGuardSignatureHeader)
-    PFAT_INT_SIG_R2K_LEN: int = ctypes.sizeof(IntelBiosGuardSignatureRsa2k)
-    PFAT_INT_SIG_R3K_LEN: int = ctypes.sizeof(IntelBiosGuardSignatureRsa3k)
-    PFAT_INT_SIG_MAX_LEN: int = PFAT_INT_SIG_HDR_LEN + PFAT_INT_SIG_R3K_LEN
+    PFAT_AMI_HDR_LEN: Final[int] = ctypes.sizeof(AmiBiosGuardHeader)
+    PFAT_INT_HDR_LEN: Final[int] = ctypes.sizeof(IntelBiosGuardHeader)
+    PFAT_INT_SIG_HDR_LEN: Final[int] = ctypes.sizeof(IntelBiosGuardSignatureHeader)
+    PFAT_INT_SIG_R2K_LEN: Final[int] = ctypes.sizeof(IntelBiosGuardSignatureRsa2k)
+    PFAT_INT_SIG_R3K_LEN: Final[int] = ctypes.sizeof(IntelBiosGuardSignatureRsa3k)
+    PFAT_INT_SIG_MAX_LEN: Final[int] = PFAT_INT_SIG_HDR_LEN + PFAT_INT_SIG_R3K_LEN
 
     def check_format(self, input_object: str | bytes | bytearray) -> bool:
         """ Check if input is AMI BIOS Guard """
@@ -219,7 +220,7 @@ class AmiPfatExtract(BIOSUtility):
 
         return bool(self._get_ami_pfat(input_object=input_buffer))
 
-    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> int:
+    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool:
         """ Process and store AMI BIOS Guard output file """
 
         input_buffer: bytes = file_to_bytes(in_object=input_object)
@@ -317,7 +318,7 @@ class AmiPfatExtract(BIOSUtility):
         with open(file=in_all_path, mode='wb') as out_all:
             out_all.write(in_all_data + pfat_oob_data)
 
-        return 0
+        return True
 
     def parse_bg_sign(self, input_data: bytes, sign_offset: int, sign_length: int = 0,
                       print_info: bool = False, padding: int = 0) -> int:

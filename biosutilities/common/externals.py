@@ -20,7 +20,7 @@ from biosutilities.common.paths import project_root
 from biosutilities.common.texts import to_string
 
 
-def get_external_path(cmd: str | list | tuple, raise_on_error: bool = True) -> str | None:
+def get_external_path(cmd: str | list | tuple) -> str:
     """ Get external dependency path (PATH environment variable or "external" directory) """
 
     external_root: str = os.path.join(project_root(), 'external')
@@ -33,18 +33,15 @@ def get_external_path(cmd: str | list | tuple, raise_on_error: bool = True) -> s
         if command_path and os.path.isfile(path=command_path):
             return command_path
 
-    if raise_on_error:
-        raise OSError(f'{to_string(in_object=cmd, sep_char=", ")} could not be found!')
-
-    return None
+    raise OSError(f'{to_string(in_object=cmd, sep_char=", ")} could not be found!')
 
 
 def big_script_tool() -> Type | None:
     """ Get Intel BIOS Guard Script Tool class """
 
-    bgst: str | None = get_external_path(cmd='big_script_tool', raise_on_error=False)
+    try:
+        bgst: str = get_external_path(cmd='big_script_tool')
 
-    if bgst is not None:
         bgst_spec: ModuleSpec | None = spec_from_file_location(
             name='big_script_tool', location=re.sub(r'\.PY$', '.py', bgst))
 
@@ -57,35 +54,37 @@ def big_script_tool() -> Type | None:
                 bgst_spec.loader.exec_module(module=bgst_module)
 
                 return getattr(bgst_module, 'BigScript')
+    except OSError:
+        pass
 
     return None
 
 
-def comextract_path() -> str | None:
+def comextract_path() -> str:
     """ Get ToshibaComExtractor path """
 
     return get_external_path(cmd='comextract')
 
 
-def szip_path() -> str | None:
+def szip_path() -> str:
     """ Get 7-Zip path """
 
     return get_external_path(cmd=['7zzs', '7zz', '7z'])
 
 
-def tiano_path() -> str | None:
+def tiano_path() -> str:
     """ Get TianoCompress path """
 
     return get_external_path(cmd='TianoCompress')
 
 
-def uefifind_path() -> str | None:
+def uefifind_path() -> str:
     """ Get UEFIFind path """
 
     return get_external_path(cmd='UEFIFind')
 
 
-def uefiextract_path() -> str | None:
+def uefiextract_path() -> str:
     """ Get UEFIExtract path """
 
     return get_external_path(cmd='UEFIExtract')

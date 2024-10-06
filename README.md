@@ -11,19 +11,19 @@ Various BIOS/UEFI-related utilities which aid in modding and/or research
 The "main" script provides a simple way to check and parse each of the user provided files against all utilities, in succession. It is ideal for quick drag & drop operations but lacks the finer control of the BIOSUtility method. If needed, a few options can be set, by using the command line:
 
 ``` bash
-usage: main.py [-h] [--output-folder OUTPUT_FOLDER] [--pause-exit] input_files [input_files ...]
+usage: [-h] [-e] [-o OUTPUT_DIR] paths [paths ...]
 
 positional arguments:
-  input_files
+  paths
 
 options:
-  -h, --help                     show help message and exit
-  --output-folder OUTPUT_FOLDER  extraction folder
-  --pause-exit                   pause on exit
+  -h, --help                              show help and exit
+  -e, --auto-exit                         do not pause on exit
+  -o OUTPUT_DIR, --output-dir OUTPUT_DIR  extraction directory
 ```
 
 ``` bash
-python ./main.py "/path/to/input/file.bin" --output-folder "/path/to/file extractions"
+python ./main.py "/path/to/input/file.bin" --output-dir "/path/to/file extractions"
 ```
 
 ### BIOSUtility
@@ -37,7 +37,7 @@ positional arguments:
   paths
 
 options:
-  -h, --help                              show help message and exit
+  -h, --help                              show help and exit
   -e, --auto-exit                         skip user action prompts
   -o OUTPUT_DIR, --output-dir OUTPUT_DIR  output extraction directory
 ```
@@ -108,7 +108,7 @@ It also allows to use directly the four public methods which are inherited by ev
 Run utility after checking for supported format
 
 ``` python
-run_utility(padding: int = 0) -> int
+run_utility(padding: int = 0) -> bool
 ```
 
 #### check_format
@@ -124,7 +124,7 @@ check_format(input_object: str | bytes | bytearray) -> bool
 Process input object as a specific supported format
 
 ``` python
-parse_format(input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> int | None
+parse_format(input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool
 ```
 
 #### show_version
@@ -148,7 +148,7 @@ python -m pip install --upgrade -r requirements.txt
 ```
 
 ``` bash
-python -m pip install --upgrade pefile
+python -m pip install --upgrade pefile dissect.util
 ```
 
 ### External Executables / Scripts
@@ -269,7 +269,7 @@ To run the utility, you do not need any prerequisites.
 
 #### **Description**
 
-Parses Apple EFI images and identifies them based on Intel's official $IBIOSI$ tag, which contains info such as Model, Version, Build, Date and Time. Optionally, the utility can rename the input Apple EFI image based on the retrieved $IBIOSI$ tag info, while also making sure to differentiate any EFI images with the same $IBIOSI$ tag (e.g. Production, Pre-Production) by appending a checksum of their data.
+Parses Apple EFI images and identifies them based on Intel's official "IBIOSI" tag, which contains info such as Model, Version, Build, Date and Time. Additionally, the utility can provide both "IBIOSI" and "Apple ROM Version" structure info, when available, as well as a suggested EFI image filename, while also making sure to differentiate any EFI images with the same "IBIOSI" tag (e.g. Production, Pre-Production) by appending a checksum of their data.
 
 #### **Usage**
 
@@ -290,7 +290,7 @@ To run the utility, you must have the following 3rd party tools at PATH or "exte
 
 #### **Description**
 
-Parses Apple EFI PKG firmware packages (i.e. FirmwareUpdate.pkg, BridgeOSUpdateCustomer.pkg), extracts their EFI images, splits those in IM4P format and identifies/renames the final Intel SPI/BIOS images accordingly. The output comprises only final firmware components which are directly usable by end users.
+Parses Apple EFI PKG firmware packages (e.g. FirmwareUpdate.pkg, BridgeOSUpdateCustomer.pkg, InstallAssistant.pkg, iMacEFIUpdate.pkg, iMacFirmwareUpdate.tar), extracts their EFI images, splits those in IM4P format and identifies/renames the final Intel SPI/BIOS images accordingly. The output comprises only final firmware components which are directly usable by end users.
 
 #### **Usage**
 

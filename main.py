@@ -29,18 +29,18 @@ from biosutilities.vaio_package_extract import VaioPackageExtract
 if __name__ == '__main__':
     main_argparser: ArgumentParser = ArgumentParser(allow_abbrev=False)
 
-    main_argparser.add_argument('input_files', nargs='+')
-    main_argparser.add_argument('--output-folder', help='extraction folder')
-    main_argparser.add_argument('--pause-exit', help='pause on exit', action='store_false')
+    main_argparser.add_argument('paths', nargs='+')
+    main_argparser.add_argument('-e', '--auto-exit', help='do not pause on exit', action='store_true')
+    main_argparser.add_argument('-o', '--output-dir', help='extraction directory')
 
     main_arguments: Namespace = main_argparser.parse_args()
 
-    if main_arguments.output_folder:
-        output_folder: Path = Path(main_arguments.output_folder)
+    if main_arguments.output_dir:
+        output_folder: Path = Path(main_arguments.output_dir)
     else:
-        output_folder = Path(main_arguments.input_files[0]).parent
+        output_folder = Path(main_arguments.paths[0]).parent
 
-    util_arguments: list[str] = [*main_arguments.input_files, '-e', '-o', str(output_folder.absolute())]
+    util_arguments: list[str] = [*main_arguments.paths, '-e', '-o', str(output_folder.absolute())]
 
     AmiUcpExtract(arguments=util_arguments).run_utility()
     AmiPfatExtract(arguments=util_arguments).run_utility()
@@ -59,5 +59,5 @@ if __name__ == '__main__':
     AppleEfiIm4pSplit(arguments=util_arguments).run_utility()
     AppleEfiIdentify(arguments=util_arguments).run_utility()
 
-    if main_arguments.pause_exit:
+    if not main_arguments.auto_exit:
         input('Press any key to exit...')

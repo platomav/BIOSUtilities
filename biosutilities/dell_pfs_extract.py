@@ -15,7 +15,7 @@ import os
 import zlib
 
 from re import Match
-from typing import Any
+from typing import Any, Final
 
 from biosutilities.common.checksums import checksum_8_xor
 from biosutilities.common.compression import is_szip_supported, szip_decompress
@@ -231,13 +231,13 @@ class DellPfsExtract(BIOSUtility):
         (['-s', '--structure'], {'help': 'show PFS structure information', 'action': 'store_true'})
     ]
 
-    PFS_HEAD_LEN: int = ctypes.sizeof(DellPfsHeader)
-    PFS_FOOT_LEN: int = ctypes.sizeof(DellPfsFooter)
-    PFS_INFO_LEN: int = ctypes.sizeof(DellPfsInfo)
-    PFS_NAME_LEN: int = ctypes.sizeof(DellPfsName)
-    PFS_META_LEN: int = ctypes.sizeof(DellPfsMetadata)
-    PFS_PFAT_LEN: int = ctypes.sizeof(DellPfsPfatMetadata)
-    PFAT_HDR_LEN: int = ctypes.sizeof(IntelBiosGuardHeader)
+    PFS_HEAD_LEN: Final[int] = ctypes.sizeof(DellPfsHeader)
+    PFS_FOOT_LEN: Final[int] = ctypes.sizeof(DellPfsFooter)
+    PFS_INFO_LEN: Final[int] = ctypes.sizeof(DellPfsInfo)
+    PFS_NAME_LEN: Final[int] = ctypes.sizeof(DellPfsName)
+    PFS_META_LEN: Final[int] = ctypes.sizeof(DellPfsMetadata)
+    PFS_PFAT_LEN: Final[int] = ctypes.sizeof(DellPfsPfatMetadata)
+    PFAT_HDR_LEN: Final[int] = ctypes.sizeof(IntelBiosGuardHeader)
 
     def check_format(self, input_object: str | bytes | bytearray) -> bool:
         """ Check if input is Dell PFS/PKG image """
@@ -252,7 +252,7 @@ class DellPfsExtract(BIOSUtility):
 
         return False
 
-    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> None:
+    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool:
         """ Parse & Extract Dell PFS Update image """
 
         input_buffer: bytes = file_to_bytes(in_object=input_object)
@@ -279,6 +279,8 @@ class DellPfsExtract(BIOSUtility):
                 self._pfs_section_parse(zlib_data=pfs_buffer, zlib_start=zlib_offset, extract_path=pfs_path,
                                         pfs_name=pfs_name, pfs_index=pfs_index, pfs_count=1, is_rec=False,
                                         padding=padding)
+
+        return True
 
     @staticmethod
     def _is_pfs_pkg(input_object: str | bytes | bytearray) -> bool:
@@ -353,7 +355,7 @@ class DellPfsExtract(BIOSUtility):
 
         if is_szip_supported(in_path=pkg_tar_path, padding=0, args=['-tTAR']):
             if szip_decompress(in_path=pkg_tar_path, out_path=working_path, in_name='TAR', padding=0,
-                               args=['-tTAR'], check=True, silent=True) == 0:
+                               args=['-tTAR'], check=True, silent=True):
                 os.remove(path=pkg_tar_path)
             else:
                 return pfs_results
@@ -1005,6 +1007,8 @@ class DellPfsExtract(BIOSUtility):
             # Get PFAT Header Flags (SFAM, ProtectEC, GFXMitDis, FTU, Reserved)
             is_sfam, _, _, _, _ = pfat_hdr.get_flags()
 
+            ami_pfat_extract: AmiPfatExtract = AmiPfatExtract()
+
             # Parse sub-PFS PFAT Signature, if applicable (only when PFAT Header > SFAM flag is set)
             if is_sfam:
                 if self.arguments.structure:
@@ -1014,13 +1018,13 @@ class DellPfsExtract(BIOSUtility):
                 if _pfat_sign_len == 0:
                     _pfat_sign_sig: bytes = pfat_hdr.get_hdr_marker()
                     _pfat_sign_pfs: int = pfs_entry_size + self.PFS_PFAT_LEN
-                    _pfat_sign_max: int = _pfat_sign_pfs + AmiPfatExtract.PFAT_INT_SIG_MAX_LEN + len(_pfat_sign_sig)
+                    _pfat_sign_max: int = _pfat_sign_pfs + ami_pfat_extract.PFAT_INT_SIG_MAX_LEN + len(_pfat_sign_sig)
                     _pfat_sign_lim: int = pfat_payload_end + _pfat_sign_max
                     _pfat_sign_off: int = pfat_payload.find(_pfat_sign_sig, pfat_payload_end, _pfat_sign_lim)
                     _pfat_sign_len = _pfat_sign_off - pfat_payload_end - _pfat_sign_pfs
 
                 # Get sub-PFS PFAT Signature Structure values
-                pfat_sign_len: int = AmiPfatExtract().parse_bg_sign(
+                pfat_sign_len: int = ami_pfat_extract.parse_bg_sign(
                     input_data=pfat_payload, sign_offset=pfat_payload_end, sign_length=_pfat_sign_len,
                     print_info=self.arguments.structure, padding=padding + 16)
 
@@ -1033,7 +1037,7 @@ class DellPfsExtract(BIOSUtility):
             if self.arguments.structure:
                 printer(message=f'PFAT Block {pfat_entry_idx_ord} - Script:\n', padding=padding + 12)
 
-                _ = AmiPfatExtract().parse_bg_script(script_data=pfat_script_data, padding=padding + 16)
+                _ = ami_pfat_extract.parse_bg_script(script_data=pfat_script_data, padding=padding + 16)
 
             # The payload of sub-PFS PFAT Entries is not in proper order by default
             # We can get each payload's order from PFAT Script > OpCode #2 (set I0 imm)

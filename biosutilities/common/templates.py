@@ -30,10 +30,6 @@ class BIOSUtility:
     MIN_PYTHON_VER: Final[tuple[int, int]] = (3, 10)
 
     def __init__(self, arguments: list[str] | None = None) -> None:
-        self._check_sys_py()
-
-        self._check_sys_os()
-
         self.title: str = f'{self.TITLE.strip()} v{__version__}'
 
         argparser: ArgumentParser = ArgumentParser(allow_abbrev=False)
@@ -53,8 +49,12 @@ class BIOSUtility:
 
         self._output_path: str = ''
 
-    def run_utility(self, padding: int = 0) -> int:
+    def run_utility(self, padding: int = 0) -> bool:
         """ Run utility after checking for supported format """
+
+        self._check_sys_py()
+
+        self._check_sys_os()
 
         self.show_version(padding=padding)
 
@@ -85,8 +85,7 @@ class BIOSUtility:
 
                         break
 
-            if self.parse_format(input_object=input_file, extract_path=extract_path,
-                                 padding=padding + 8) in [0, None]:
+            if self.parse_format(input_object=input_file, extract_path=extract_path, padding=padding + 8):
                 exit_code -= 1
 
             if is_empty_dir(in_path=extract_path):
@@ -94,14 +93,14 @@ class BIOSUtility:
 
         printer(message='Done!\n' if not self.arguments.auto_exit else None, pause=not self.arguments.auto_exit)
 
-        return exit_code
+        return exit_code == 0
 
     def show_version(self, is_boxed: bool = True, padding: int = 0) -> None:
         """ Show title and version of utility """
 
         printer(message=to_boxed(in_text=self.title) if is_boxed else self.title, new_line=False, padding=padding)
 
-    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> int | None:
+    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool:
         """ Process input object as a specific supported format """
 
         raise NotImplementedError(f'Method "parse_format" not implemented at {__name__}')
@@ -112,6 +111,8 @@ class BIOSUtility:
         raise NotImplementedError(f'Method "check_format" not implemented at {__name__}')
 
     def _setup_input_files(self, padding: int = 0) -> None:
+        self._input_files = []
+
         input_paths: list[str] = self.arguments.paths
 
         if not input_paths:
@@ -126,6 +127,8 @@ class BIOSUtility:
                 self._input_files.append(input_path_real)
 
     def _setup_output_dir(self, padding: int = 0) -> None:
+        self._output_path = ''
+
         output_path: str = self.arguments.output_dir
 
         if not output_path:

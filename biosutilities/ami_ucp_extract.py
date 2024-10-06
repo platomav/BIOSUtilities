@@ -13,12 +13,12 @@ import os
 import re
 import struct
 
-from typing import Any
+from typing import Any, Final
 
 from biosutilities.common.checksums import checksum_16
 from biosutilities.common.compression import efi_decompress, is_efi_compressed
 from biosutilities.common.paths import agnostic_path, extract_folder, make_dirs, safe_name, safe_path
-from biosutilities.common.patterns import PAT_AMI_UCP, PAT_INTEL_ENG
+from biosutilities.common.patterns import PAT_AMI_UCP, PAT_INTEL_ENGINE
 from biosutilities.common.structs import CHAR, ctypes_struct, UINT8, UINT16, UINT32
 from biosutilities.common.system import printer
 from biosutilities.common.templates import BIOSUtility
@@ -101,11 +101,12 @@ class UiiHeader(ctypes.LittleEndianStructure):
         # 0x10
     ]
 
-    SBI: dict[int, str] = {1: 'ALL', 2: 'AMIBIOS8', 3: 'UEFI', 4: 'AMIBIOS8/UEFI'}
-    SOS: dict[int, str] = {1: 'DOS', 2: 'EFI', 3: 'Windows', 4: 'Linux', 5: 'FreeBSD', 6: 'MacOS', 128: 'Multi-OS'}
-    DBW: dict[int, str] = {1: '16b', 2: '16/32b', 3: '32b', 4: '64b'}
-    PTP: dict[int, str] = {1: 'Executable', 2: 'Library', 3: 'Driver'}
-    PMD: dict[int, str] = {1: 'API', 2: 'Console', 3: 'GUI', 4: 'Console/GUI'}
+    SBI: Final[dict[int, str]] = {1: 'ALL', 2: 'AMIBIOS8', 3: 'UEFI', 4: 'AMIBIOS8/UEFI'}
+    SOS: Final[dict[int, str]] = {1: 'DOS', 2: 'EFI', 3: 'Windows', 4: 'Linux', 5: 'FreeBSD',
+                                  6: 'MacOS', 128: 'Multi-Platform'}
+    DBW: Final[dict[int, str]] = {1: '16b', 2: '16/32b', 3: '32b', 4: '64b'}
+    PTP: Final[dict[int, str]] = {1: 'Executable', 2: 'Library', 3: 'Driver'}
+    PMD: Final[dict[int, str]] = {1: 'API', 2: 'Console', 3: 'GUI', 4: 'Console/GUI'}
 
     def struct_print(self, description: str, padding: int = 0) -> None:
         """ Display structure information """
@@ -160,8 +161,8 @@ class DisModule(ctypes.LittleEndianStructure):
         # 0x122
     ]
 
-    ENDIS: dict[int, str] = {0: 'Disabled', 1: 'Enabled'}
-    SHOWN: dict[int, str] = {0: 'Hidden', 1: 'Shown', 2: 'Shown Only'}
+    ENDIS: Final[dict[int, str]] = {0: 'Disabled', 1: 'Enabled'}
+    SHOWN: Final[dict[int, str]] = {0: 'Hidden', 1: 'Shown', 2: 'Shown Only'}
 
     def struct_print(self, padding: int = 0) -> None:
         """ Display structure information """
@@ -187,14 +188,14 @@ class AmiUcpExtract(BIOSUtility):
     ]
 
     # Get common ctypes Structure Sizes
-    UAF_HDR_LEN: int = ctypes.sizeof(UafHeader)
-    UAF_MOD_LEN: int = ctypes.sizeof(UafModule)
-    DIS_HDR_LEN: int = ctypes.sizeof(DisHeader)
-    DIS_MOD_LEN: int = ctypes.sizeof(DisModule)
-    UII_HDR_LEN: int = ctypes.sizeof(UiiHeader)
+    UAF_HDR_LEN: Final[int] = ctypes.sizeof(UafHeader)
+    UAF_MOD_LEN: Final[int] = ctypes.sizeof(UafModule)
+    DIS_HDR_LEN: Final[int] = ctypes.sizeof(DisHeader)
+    DIS_MOD_LEN: Final[int] = ctypes.sizeof(DisModule)
+    UII_HDR_LEN: Final[int] = ctypes.sizeof(UiiHeader)
 
     # AMI UCP Tag Dictionary
-    UAF_TAG_DICT: dict[str, list[str]] = {
+    UAF_TAG_DICT: Final[dict[str, list[str]]] = {
         '@3FI': ['HpBiosUpdate32.efi', 'HpBiosUpdate32.efi', ''],
         '@3S2': ['HpBiosUpdate32.s12', 'HpBiosUpdate32.s12', ''],
         '@3S4': ['HpBiosUpdate32.s14', 'HpBiosUpdate32.s14', ''],
@@ -259,7 +260,7 @@ class AmiUcpExtract(BIOSUtility):
 
         return bool(self._get_ami_ucp(input_object=buffer)[0])
 
-    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> None:
+    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool:
         """ Parse & Extract AMI UCP structures """
 
         input_buffer: bytes = file_to_bytes(in_object=input_object)
@@ -300,6 +301,8 @@ class AmiUcpExtract(BIOSUtility):
         for mod_info in uaf_all:
             nal_dict = self._uaf_extract(buffer=ucp_buffer, extract_path=extract_path, mod_info=mod_info,
                                          nal_dict=nal_dict, padding=padding + 8)
+
+        return True
 
     @staticmethod
     def _chk16_validate(data: bytes | bytearray, tag: str, padding: int = 0) -> None:
@@ -482,7 +485,7 @@ class AmiUcpExtract(BIOSUtility):
             # Decompressed @UAF|@HPU Module file path
             dec_fname: str = uaf_fname.replace('.temp', uaf_fext)
 
-            if efi_decompress(in_path=uaf_fname, out_path=dec_fname, padding=padding + 4) == 0:
+            if efi_decompress(in_path=uaf_fname, out_path=dec_fname, padding=padding + 4):
                 with open(file=dec_fname, mode='rb') as dec:
                     uaf_data_raw = dec.read()  # Read back the @UAF|@HPU Module decompressed Raw data
 
@@ -558,26 +561,30 @@ class AmiUcpExtract(BIOSUtility):
                 # Assign a file path & name to each Tag
                 nal_dict[info_tag] = (info_path, info_name)
 
+        insyde_ifd_extract: InsydeIfdExtract = InsydeIfdExtract()
+
         # Parse Insyde BIOS @UAF|@HPU Module (@INS)
-        if uaf_tag == '@INS' and InsydeIfdExtract().check_format(input_object=uaf_fname):
+        if uaf_tag == '@INS' and insyde_ifd_extract.check_format(input_object=uaf_fname):
             # Generate extraction directory
             ins_dir: str = os.path.join(extract_path, safe_name(in_name=f'{uaf_tag}_nested-IFD'))
 
-            if InsydeIfdExtract().parse_format(input_object=uaf_fname, extract_path=extract_folder(ins_dir),
-                                               padding=padding + 4) == 0:
+            if insyde_ifd_extract.parse_format(input_object=uaf_fname, extract_path=extract_folder(ins_dir),
+                                               padding=padding + 4):
                 os.remove(path=uaf_fname)  # Delete raw nested Insyde IFD image after successful extraction
 
+        ami_pfat_extract: AmiPfatExtract = AmiPfatExtract()
+
         # Detect & Unpack AMI BIOS Guard (PFAT) BIOS image
-        if AmiPfatExtract().check_format(input_object=uaf_data_raw):
+        if ami_pfat_extract.check_format(input_object=uaf_data_raw):
             pfat_dir: str = os.path.join(extract_path, safe_name(in_name=uaf_name))
 
-            AmiPfatExtract().parse_format(input_object=uaf_data_raw, extract_path=extract_folder(pfat_dir),
+            ami_pfat_extract.parse_format(input_object=uaf_data_raw, extract_path=extract_folder(pfat_dir),
                                           padding=padding + 4)
 
             os.remove(path=uaf_fname)  # Delete raw PFAT BIOS image after successful extraction
 
         # Detect Intel Engine firmware image and show ME Analyzer advice
-        if uaf_tag.startswith('@ME') and PAT_INTEL_ENG.search(string=uaf_data_raw):
+        if uaf_tag.startswith('@ME') and PAT_INTEL_ENGINE.search(string=uaf_data_raw):
             printer(message='Intel Management Engine (ME) Firmware:\n', padding=padding + 4)
             printer(message='Use "ME Analyzer" from https://github.com/platomav/MEAnalyzer',
                     padding=padding + 8, new_line=False)

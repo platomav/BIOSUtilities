@@ -30,7 +30,7 @@ class FujitsuSfxExtract(BIOSUtility):
 
         return bool(PAT_FUJITSU_SFX.search(string=input_buffer))
 
-    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> int:
+    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool:
         """ Parse & Extract Fujitsu SFX image """
 
         input_buffer: bytes = file_to_bytes(in_object=input_object)
@@ -39,7 +39,7 @@ class FujitsuSfxExtract(BIOSUtility):
         match_cab: re.Match[bytes] | None = PAT_FUJITSU_SFX.search(string=input_buffer)
 
         if not match_cab:
-            return 1
+            return False
 
         printer(message='Detected obfuscated CAB archive!', padding=padding)
 
@@ -78,14 +78,14 @@ class FujitsuSfxExtract(BIOSUtility):
 
         if is_szip_supported(in_path=cab_path, padding=padding + 8, silent=False):
             if szip_decompress(in_path=cab_path, out_path=extract_path, in_name='FjSfxBinay CAB',
-                               padding=padding + 8, check=True) == 0:
+                               padding=padding + 8, check=True):
                 os.remove(path=cab_path)
             else:
-                return 3
+                return False
         else:
-            return 2
+            return False
 
-        return 0
+        return True
 
 
 if __name__ == '__main__':

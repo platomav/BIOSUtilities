@@ -14,12 +14,13 @@ import struct
 import subprocess
 import zlib
 
+from collections import defaultdict
 from re import Match
 from typing import Any, Final
 
 from biosutilities.common.externals import uefiextract_path, uefifind_path
 from biosutilities.common.paths import delete_dirs, delete_file, path_suffixes, runtime_root
-from biosutilities.common.patterns import PAT_APPLE_EFI
+from biosutilities.common.patterns import PAT_INTEL_IBIOSI, PAT_APPLE_ROM_VER
 from biosutilities.common.structs import CHAR, ctypes_struct, UINT8
 from biosutilities.common.system import printer
 from biosutilities.common.templates import BIOSUtility
@@ -58,8 +59,10 @@ class IntelBiosId(ctypes.LittleEndianStructure):
     def _decode(field: bytes) -> str:
         return struct.pack('B' * len(field), *field).decode(encoding='utf-16', errors='ignore').strip('\x00 ')
 
-    def get_bios_id(self) -> tuple:
-        """ Create Apple EFI BIOS ID """
+    def get_bios_id(self) -> dict[str, str]:
+        """ Get Apple/Intel EFI BIOS ID """
+
+        intel_sig: str = self.Signature.decode(encoding='utf-8')
 
         board_id: str = self._decode(field=self.BoardID)
         board_ext: str = self._decode(field=self.BoardExt)
@@ -72,26 +75,40 @@ class IntelBiosId(ctypes.LittleEndianStructure):
         build_hour: str = self._decode(field=self.Hour)
         build_minute: str = self._decode(field=self.Minute)
 
-        build_date: str = f'20{build_year}-{build_month}-{build_day}'
-        build_time: str = f'{build_hour}-{build_minute}'
+        efi_name_id: str = (f'{board_id}_{board_ext}_{version_major}_{build_type}{version_minor}'
+                            f'_20{build_year}-{build_month}-{build_day}_{build_hour}-{build_minute}')
 
-        return board_id, board_ext, version_major, build_type, version_minor, build_date, build_time
+        return {
+            'intel_sig': intel_sig,
+            'board_id': board_id,
+            'board_ext': board_ext,
+            'version_major': version_major,
+            'version_minor': version_minor,
+            'build_type': build_type,
+            'build_year': build_year,
+            'build_month': build_month,
+            'build_day': build_day,
+            'build_hour': build_hour,
+            'build_minute': build_minute,
+            'efi_name_id': efi_name_id
+        }
 
     def struct_print(self, padding: int = 0) -> None:
         """ Display structure information """
 
-        board_id, board_ext, version_major, build_type, version_minor, build_date, build_time = self.get_bios_id()
+        ibiosi: dict[str, str] = self.get_bios_id()
 
-        intel_id: str = self.Signature.decode(encoding='utf-8')
+        ibiosi_date: str = f'20{ibiosi["build_year"]}-{ibiosi["build_month"]}-{ibiosi["build_day"]}'
+        ibiosi_time: str = f'{ibiosi["build_hour"]}:{ibiosi["build_minute"]}'
 
-        printer(message=['Intel Signature:', intel_id], padding=padding, new_line=False)
-        printer(message=['Board Identity: ', board_id], padding=padding, new_line=False)
-        printer(message=['Apple Identity: ', board_ext], padding=padding, new_line=False)
-        printer(message=['Major Version:  ', version_major], padding=padding, new_line=False)
-        printer(message=['Minor Version:  ', version_minor], padding=padding, new_line=False)
-        printer(message=['Build Type:     ', build_type], padding=padding, new_line=False)
-        printer(message=['Build Date:     ', build_date], padding=padding, new_line=False)
-        printer(message=['Build Time:     ', build_time.replace('-', ':')], padding=padding, new_line=False)
+        printer(message=['Intel Signature:', ibiosi['intel_sig']], padding=padding, new_line=False)
+        printer(message=['Board Identity: ', ibiosi['board_id']], padding=padding, new_line=False)
+        printer(message=['Apple Identity: ', ibiosi['board_ext']], padding=padding, new_line=False)
+        printer(message=['Major Version:  ', ibiosi['version_major']], padding=padding, new_line=False)
+        printer(message=['Minor Version:  ', ibiosi['version_minor']], padding=padding, new_line=False)
+        printer(message=['Build Type:     ', ibiosi['build_type']], padding=padding, new_line=False)
+        printer(message=['Build Date:     ', ibiosi_date], padding=padding, new_line=False)
+        printer(message=['Build Time:     ', ibiosi_time], padding=padding, new_line=False)
 
 
 class AppleEfiIdentify(BIOSUtility):
@@ -104,14 +121,16 @@ class AppleEfiIdentify(BIOSUtility):
     def __init__(self, arguments: list[str] | None = None) -> None:
         super().__init__(arguments=arguments)
 
-        self.efi_name_id: str = ''
+        self.efi_file_name: str = ''
+        self.intel_bios_info: dict[str, str] = {}
+        self.apple_rom_version: defaultdict[str, set] = defaultdict(set)
 
     def check_format(self, input_object: str | bytes | bytearray) -> bool:
         """ Check if input is Apple EFI image """
 
         input_buffer: bytes = file_to_bytes(in_object=input_object)
 
-        if PAT_APPLE_EFI.search(string=input_buffer):
+        if PAT_INTEL_IBIOSI.search(string=input_buffer):
             return True
 
         if isinstance(input_object, str) and os.path.isfile(path=input_object):
@@ -135,7 +154,7 @@ class AppleEfiIdentify(BIOSUtility):
             if input_path != input_object:
                 delete_file(in_path=input_path)
 
-    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> int:
+    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool:
         """ Parse & Identify (or Rename) Apple EFI image """
 
         input_buffer: bytes = file_to_bytes(in_object=input_object)
@@ -148,7 +167,7 @@ class AppleEfiIdentify(BIOSUtility):
             with open(file=input_path, mode='wb') as parse_out:
                 parse_out.write(input_buffer)
 
-        bios_id_match: Match[bytes] | None = PAT_APPLE_EFI.search(string=input_buffer)
+        bios_id_match: Match[bytes] | None = PAT_INTEL_IBIOSI.search(string=input_buffer)
 
         if bios_id_match:
             bios_id_res: str = f'0x{bios_id_match.start():X}'
@@ -171,7 +190,7 @@ class AppleEfiIdentify(BIOSUtility):
                     body_buffer: bytes = raw_body.read()
 
                 # Detect decompressed $IBIOSI$ pattern
-                bios_id_match = PAT_APPLE_EFI.search(string=body_buffer)
+                bios_id_match = PAT_INTEL_IBIOSI.search(string=body_buffer)
 
                 if not bios_id_match:
                     raise RuntimeError('Failed to detect decompressed $IBIOSI$ pattern!')
@@ -183,25 +202,56 @@ class AppleEfiIdentify(BIOSUtility):
             except Exception as error:  # pylint: disable=broad-except
                 printer(message=f'Error: Failed to parse compressed $IBIOSI$ pattern: {error}!', padding=padding)
 
-                return 1
+                return False
 
-        printer(message=f'Detected $IBIOSI$ at {bios_id_res}\n', padding=padding)
+        printer(message=f'Detected Intel BIOS Info at {bios_id_res}\n', padding=padding)
 
         bios_id_hdr.struct_print(padding=padding + 4)
 
-        input_suffix: str = path_suffixes(input_path)[-1]
+        self.intel_bios_info = bios_id_hdr.get_bios_id()
 
-        input_adler32: int = zlib.adler32(input_buffer)
+        self.efi_file_name = (f'{self.intel_bios_info["efi_name_id"]}_{zlib.adler32(input_buffer):08X}'
+                              f'{path_suffixes(in_path=input_path)[-1]}')
 
-        fw_id, fw_ext, fw_major, fw_type, fw_minor, fw_date, fw_time = bios_id_hdr.get_bios_id()
-
-        self.efi_name_id = (f'{fw_id}_{fw_ext}_{fw_major}_{fw_type}{fw_minor}_{fw_date}_{fw_time}_'
-                            f'{input_adler32:08X}{input_suffix}')
+        _ = self._apple_rom_version(input_buffer=input_buffer, padding=padding)
 
         if input_path != input_object:
             delete_file(in_path=input_path)
 
-        return 0
+        return True
+
+    def _apple_rom_version(self, input_buffer: bytes | bytearray, padding: int = 0) -> bool:
+        rom_version_match: Match[bytes] | None = PAT_APPLE_ROM_VER.search(string=input_buffer)
+
+        if rom_version_match:
+            rom_version_match_off: int = rom_version_match.start()
+
+            rom_version_header_len: int = input_buffer[rom_version_match_off:].find(b'\n')
+
+            if rom_version_header_len != -1:
+                rom_version_data_bgn: int = rom_version_match_off + rom_version_header_len
+
+                rom_version_data_len: int = input_buffer[rom_version_data_bgn:].find(b'\x00')
+
+                if rom_version_data_len != -1:
+                    rom_version_data_end: int = rom_version_data_bgn + rom_version_data_len
+
+                    rom_version_data: bytes = input_buffer[rom_version_data_bgn:rom_version_data_end]
+
+                    rom_version_text: str = rom_version_data.decode('utf-8').strip('\n')
+
+                    for rom_version_line in [line.strip() for line in rom_version_text.split('\n')]:
+                        rom_version_parts: list[str] = rom_version_line.split(sep=':', maxsplit=1)
+
+                        self.apple_rom_version[rom_version_parts[0].strip()].add(rom_version_parts[1].strip())
+
+                    printer(message=f'Detected Apple ROM Version at 0x{rom_version_match_off:X}', padding=padding)
+
+                    printer(message=rom_version_text, strip=True, padding=padding + 4)
+
+                    return True
+
+        return False
 
 
 if __name__ == '__main__':

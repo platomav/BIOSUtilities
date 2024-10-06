@@ -110,7 +110,7 @@ class PhoenixTdkExtract(BIOSUtility):
 
         return bool(self._get_phoenix_tdk(in_buffer=input_buffer)[1] is not None)
 
-    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> int:
+    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool:
         """ Parse & Extract Phoenix Tools Development Kit (TDK) Packer """
 
         exit_code: int = 0
@@ -199,7 +199,7 @@ class PhoenixTdkExtract(BIOSUtility):
             with open(file=mod_file, mode='wb') as out_file:
                 out_file.write(mod_data)
 
-        return exit_code
+        return exit_code == 0
 
     @staticmethod
     def _get_tdk_base(in_buffer: bytes | bytearray, pack_off: int) -> int | None:

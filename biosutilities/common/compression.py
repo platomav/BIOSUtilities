@@ -41,7 +41,7 @@ def is_szip_supported(in_path: str, padding: int = 0, args: list | None = None, 
 
 
 def szip_decompress(in_path: str, out_path: str, in_name: str | None, padding: int = 0, args: list | None = None,
-                    check: bool = False, silent: bool = False) -> int:
+                    check: bool = False, silent: bool = False) -> bool:
     """ Archive decompression via 7-Zip """
 
     if not in_name:
@@ -64,12 +64,12 @@ def szip_decompress(in_path: str, out_path: str, in_name: str | None, padding: i
         if not silent:
             printer(message=f'Error: 7-Zip could not extract {in_name} file {in_path}: {error}!', padding=padding)
 
-        return 1
+        return False
 
     if not silent:
         printer(message=f'Successful {in_name} decompression via 7-Zip!', padding=padding)
 
-    return 0
+    return True
 
 
 def efi_compress_sizes(data: bytes | bytearray) -> tuple[int, int]:
@@ -98,7 +98,7 @@ def is_efi_compressed(data: bytes | bytearray, strict: bool = True) -> bool:
 
 
 def efi_decompress(in_path: str, out_path: str, padding: int = 0, silent: bool = False,
-                   comp_type: str = '--uefi') -> int:
+                   comp_type: str = '--uefi') -> bool:
     """ EFI/Tiano Decompression via TianoCompress """
 
     try:
@@ -114,9 +114,9 @@ def efi_decompress(in_path: str, out_path: str, padding: int = 0, silent: bool =
         if not silent:
             printer(message=f'Error: TianoCompress could not extract file {in_path}: {error}!', padding=padding)
 
-        return 1
+        return False
 
     if not silent:
         printer(message='Successful EFI decompression via TianoCompress!', padding=padding)
 
-    return 0
+    return True

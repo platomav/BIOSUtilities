@@ -132,7 +132,7 @@ def delete_dirs(in_path: str) -> None:
     """ Delete folder(s), if present """
 
     if Path(in_path).is_dir():
-        shutil.rmtree(path=in_path, onexc=clear_readonly_callback)
+        shutil.rmtree(path=in_path, onerror=clear_readonly_callback)  # pylint: disable=deprecated-argument
 
 
 def delete_file(in_path: str) -> None:
@@ -164,7 +164,7 @@ def clear_readonly_callback(in_func: Callable, in_path: str, _) -> None:
 
     clear_readonly(in_path=in_path)
 
-    in_func(in_path=in_path)
+    in_func(path=in_path)
 
 
 def path_files(in_path: str, follow_links: bool = False) -> list[str]:

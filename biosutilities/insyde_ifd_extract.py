@@ -11,7 +11,7 @@ import ctypes
 import os
 import re
 
-from typing import Any
+from typing import Any, Final
 
 from biosutilities.common.compression import is_szip_supported, szip_decompress
 from biosutilities.common.paths import extract_folder, path_files, make_dirs, path_name, safe_name
@@ -58,10 +58,10 @@ class InsydeIfdExtract(BIOSUtility):
     TITLE: str = 'Insyde iFlash/iFdPacker Extractor'
 
     # Insyde iFdPacker known 7-Zip SFX Password
-    INS_SFX_PWD: str = 'Y`t~i!L@i#t$U%h^s7A*l(f)E-d=y+S_n?i'
+    INS_SFX_PWD: Final[str] = 'Y`t~i!L@i#t$U%h^s7A*l(f)E-d=y+S_n?i'
 
     # Insyde iFlash known Image Names
-    INS_IFL_IMG: dict = {
+    INS_IFL_IMG: Final[dict[str, list[str]]] = {
         'BIOSCER': ['Certificate', 'bin'],
         'BIOSCR2': ['Certificate 2nd', 'bin'],
         'BIOSIMG': ['BIOS-UEFI', 'bin'],
@@ -77,7 +77,7 @@ class InsydeIfdExtract(BIOSUtility):
     }
 
     # Get common ctypes Structure Sizes
-    INS_IFL_LEN: int = ctypes.sizeof(IflashHeader)
+    INS_IFL_LEN: Final[int] = ctypes.sizeof(IflashHeader)
 
     def check_format(self, input_object: str | bytes | bytearray) -> bool:
         """ Check if input is Insyde iFlash/iFdPacker Update image """
@@ -92,7 +92,7 @@ class InsydeIfdExtract(BIOSUtility):
 
         return False
 
-    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> int:
+    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool:
         """ Parse & Extract Insyde iFlash/iFdPacker Update images """
 
         input_buffer: bytes = file_to_bytes(in_object=input_object)
@@ -105,7 +105,7 @@ class InsydeIfdExtract(BIOSUtility):
         ifdpack_code: int = self._insyde_packer_extract(input_buffer=input_buffer, extract_path=ifdpack_path,
                                                         padding=padding)
 
-        return iflash_code and ifdpack_code
+        return (iflash_code and ifdpack_code) == 0
 
     def _insyde_iflash_detect(self, input_buffer: bytes) -> list:
         """ Detect Insyde iFlash Update image """
@@ -219,7 +219,7 @@ class InsydeIfdExtract(BIOSUtility):
 
         if is_szip_supported(in_path=sfx_path, padding=padding + 8, args=[f'-p{self.INS_SFX_PWD}'], silent=False):
             if szip_decompress(in_path=sfx_path, out_path=extract_path, in_name='Insyde iFdPacker > 7-Zip SFX',
-                               padding=padding + 8, args=[f'-p{self.INS_SFX_PWD}'], check=True) == 0:
+                               padding=padding + 8, args=[f'-p{self.INS_SFX_PWD}'], check=True):
                 os.remove(path=sfx_path)
             else:
                 return 125
@@ -232,10 +232,10 @@ class InsydeIfdExtract(BIOSUtility):
             if self.check_format(input_object=sfx_file):
                 printer(message=path_name(in_path=sfx_file), padding=padding + 12)
 
-                ifd_code: int = self.parse_format(input_object=sfx_file, extract_path=extract_folder(sfx_file),
-                                                  padding=padding + 16)
+                ifd_status: int = self.parse_format(input_object=sfx_file, extract_path=extract_folder(sfx_file),
+                                                    padding=padding + 16)
 
-                exit_codes.append(ifd_code)
+                exit_codes.append(0 if ifd_status else 1)
 
         return sum(exit_codes)
 

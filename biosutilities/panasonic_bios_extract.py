@@ -12,6 +12,8 @@ import logging
 import os
 import re
 
+from typing import Final
+
 import pefile
 
 # noinspection PyPackageRequirements
@@ -33,9 +35,9 @@ class PanasonicBiosExtract(BIOSUtility):
 
     TITLE: str = 'Panasonic BIOS Package Extractor'
 
-    PAN_PE_DESC_UNP: str = 'UNPACK UTILITY'
+    PAN_PE_DESC_UNP: Final[str] = 'UNPACK UTILITY'
 
-    PAN_PE_DESC_UPD: str = 'BIOS UPDATE'
+    PAN_PE_DESC_UPD: Final[str] = 'BIOS UPDATE'
 
     def check_format(self, input_object: str | bytes | bytearray) -> bool:
         """ Check if input is Panasonic BIOS Package PE """
@@ -51,7 +53,7 @@ class PanasonicBiosExtract(BIOSUtility):
 
         return True
 
-    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> int:
+    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool:
         """ Parse & Extract Panasonic BIOS Package PE """
 
         upd_pe_file: pefile.PE = ms_pe(in_file=input_object, padding=padding)  # type: ignore
@@ -89,7 +91,7 @@ class PanasonicBiosExtract(BIOSUtility):
             is_upd_extracted = self._panasonic_img_extract(pe_file=upd_pe_file, extract_path=extract_path,
                                                            pe_name=upd_pe_name, padding=upd_padding + 8)
 
-        return 0 if is_upd_extracted else 1
+        return is_upd_extracted
 
     @staticmethod
     def _panasonic_pkg_name(input_object: str | bytes | bytearray) -> str:
@@ -123,7 +125,7 @@ class PanasonicBiosExtract(BIOSUtility):
                 printer(message=f'Panasonic BIOS Package > PE > CAB {cab_tag}', padding=padding)
 
                 if szip_decompress(in_path=cab_path, out_path=extract_path, in_name='CAB',
-                                   padding=padding + 4, check=True) == 0:
+                                   padding=padding + 4, check=True):
                     os.remove(path=cab_path)  # Successful extraction, delete CAB archive
 
                     for extracted_file_path in path_files(in_path=extract_path):
@@ -181,11 +183,13 @@ class PanasonicBiosExtract(BIOSUtility):
 
                         printer(message='Successful PE Resource extraction!', padding=padding + 4)
 
+                    ami_pfat_extract: AmiPfatExtract = AmiPfatExtract()
+
                     # Detect & Unpack AMI BIOS Guard (PFAT) BIOS image
-                    if AmiPfatExtract().check_format(input_object=res_raw):
+                    if ami_pfat_extract.check_format(input_object=res_raw):
                         pfat_dir: str = os.path.join(extract_path, res_tag)
 
-                        AmiPfatExtract().parse_format(input_object=res_raw, extract_path=pfat_dir,
+                        ami_pfat_extract.parse_format(input_object=res_raw, extract_path=pfat_dir,
                                                       padding=padding + 8)
                     else:
                         if is_ms_pe(in_file=res_raw):

@@ -30,7 +30,7 @@ class ToshibaComExtract(BIOSUtility):
 
         return bool(PAT_TOSHIBA_COM.search(string=input_buffer, endpos=0x100))
 
-    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> int:
+    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool:
         """ Parse & Extract Toshiba BIOS COM image """
 
         make_dirs(in_path=extract_path, delete=True)
@@ -55,14 +55,14 @@ class ToshibaComExtract(BIOSUtility):
         except Exception as error:  # pylint: disable=broad-except
             printer(message=f'Error: ToshibaComExtractor could not extract {input_path}: {error}!', padding=padding)
 
-            return 1
+            return False
 
         if input_path != input_object:
             os.remove(path=input_path)
 
         printer(message='Successful extraction via ToshibaComExtractor!', padding=padding)
 
-        return 0
+        return True
 
 
 if __name__ == '__main__':

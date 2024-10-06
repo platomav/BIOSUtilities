@@ -34,7 +34,7 @@ class FujitsuUpcExtract(BIOSUtility):
 
         return is_upc
 
-    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> int:
+    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool:
         """ Parse & Extract Fujitsu UPC image """
 
         make_dirs(in_path=extract_path, delete=True)
@@ -56,12 +56,12 @@ class FujitsuUpcExtract(BIOSUtility):
 
         output_path: str = os.path.join(extract_path, f'{input_name}.bin')
 
-        efi_code: int = efi_decompress(in_path=input_path, out_path=output_path, padding=padding)
+        efi_status: bool = efi_decompress(in_path=input_path, out_path=output_path, padding=padding)
 
         if input_path != input_object:
             os.remove(path=input_path)
 
-        return efi_code
+        return efi_status
 
 
 if __name__ == '__main__':

@@ -1,3 +1,17 @@
+24.10.06
+
+Changed BIOSUtility.parse_format() to return a boolean
+Changed 7-Zip and EFI decompressors to return booleans
+Apple EFI Package Extractor support for InstallAssistant
+Apple EFI Image Identifier support for Apple ROM Version
+Added Apple EFI Image Identifier class instance attributes
+Improved flow of non-PATH external executable dependencies
+Fixed crash when attempting to clear read-only attribute
+Fixed incompatibility with Python versions prior to 3.12
+Performance improvements when initializing BIOSUtilities
+Improved argument naming and definitions of "main" script
+Improved the README with new "main" and Apple EFI changes
+
 24.10.03
 
 Added external executable dependencies non-PATH flow (#51)

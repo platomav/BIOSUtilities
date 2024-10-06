@@ -56,9 +56,9 @@ class AppleEfiPbzxExtract(BIOSUtility):
 
         input_buffer: bytes = file_to_bytes(in_object=input_object)
 
-        return bool(PAT_APPLE_PBZX.search(string=input_buffer[:0x4]))
+        return bool(PAT_APPLE_PBZX.search(string=input_buffer, endpos=4))
 
-    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> int:
+    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool:
         """ Parse & Extract Apple PBZX image """
 
         input_buffer: bytes = file_to_bytes(in_object=input_object)
@@ -107,7 +107,7 @@ class AppleEfiPbzxExtract(BIOSUtility):
         if cpio_len != len(cpio_bin):
             printer(message='Error: Unexpected CPIO archive size!', padding=padding)
 
-            return 1
+            return False
 
         cpio_name: str = path_stem(in_path=input_object) if isinstance(input_object, str) else 'Payload'
 
@@ -119,14 +119,14 @@ class AppleEfiPbzxExtract(BIOSUtility):
         # Decompress PBZX > CPIO archive with 7-Zip
         if is_szip_supported(in_path=cpio_path, padding=padding, args=['-tCPIO'], silent=False):
             if szip_decompress(in_path=cpio_path, out_path=extract_path, in_name='CPIO',
-                               padding=padding, args=['-tCPIO'], check=True) == 0:
+                               padding=padding, args=['-tCPIO']):
                 os.remove(path=cpio_path)  # Successful extraction, delete PBZX > CPIO archive
             else:
-                return 3
+                return False
         else:
-            return 2
+            return False
 
-        return 0
+        return True
 
 
 if __name__ == '__main__':

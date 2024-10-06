@@ -31,7 +31,7 @@ class VaioPackageExtract(BIOSUtility):
 
         return bool(PAT_VAIO_CFG.search(string=input_buffer))
 
-    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> int:
+    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool:
         """ Parse & Extract or Unlock VAIO Packaging Manager """
 
         input_buffer: bytes = file_to_bytes(input_object)
@@ -47,9 +47,9 @@ class VaioPackageExtract(BIOSUtility):
         else:
             printer(message='Error: Failed to Extract or Unlock executable!', padding=padding)
 
-            return 1
+            return False
 
-        return 0
+        return True
 
     @staticmethod
     def _vaio_cabinet(name: str, buffer: bytes | bytearray, extract_path: str, padding: int = 0) -> int:
@@ -94,7 +94,7 @@ class VaioPackageExtract(BIOSUtility):
 
         if is_szip_supported(in_path=cab_path, padding=padding + 8, silent=False):
             if szip_decompress(in_path=cab_path, out_path=extract_path, in_name='VAIO CAB',
-                               padding=padding + 8, check=True) == 0:
+                               padding=padding + 8, check=True):
                 os.remove(path=cab_path)
             else:
                 return 3

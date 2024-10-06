@@ -30,7 +30,7 @@ class AwardBiosExtract(BIOSUtility):
 
         return bool(PAT_AWARD_LZH.search(string=in_buffer))
 
-    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> None:
+    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool:
         """ Parse & Extract Award BIOS image """
 
         input_buffer: bytes = file_to_bytes(in_object=input_object)
@@ -74,7 +74,7 @@ class AwardBiosExtract(BIOSUtility):
 
             # 7-Zip returns critical exit code (i.e. 2) if LZH CRC is wrong, do not check result
             szip_decompress(in_path=lzh_path, out_path=extract_path, in_name=lzh_text,
-                            padding=padding + 4, check=False)
+                            padding=padding + 4)
 
             # Manually check if 7-Zip extracted LZH due to its CRC check issue
             if os.path.isfile(path=mod_path):
@@ -87,6 +87,8 @@ class AwardBiosExtract(BIOSUtility):
                     # Recursively extract nested Award BIOS modules
                     self.parse_format(input_object=mod_path, extract_path=extract_folder(mod_path),
                                       padding=padding + 8)
+
+        return True
 
 
 if __name__ == '__main__':

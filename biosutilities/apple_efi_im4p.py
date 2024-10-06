@@ -13,7 +13,7 @@ from re import Match
 from typing import Final
 
 from biosutilities.common.paths import make_dirs, path_stem
-from biosutilities.common.patterns import PAT_APPLE_IM4P, PAT_INTEL_IFD
+from biosutilities.common.patterns import PAT_APPLE_IM4P, PAT_INTEL_FD
 from biosutilities.common.system import printer
 from biosutilities.common.templates import BIOSUtility
 from biosutilities.common.texts import file_to_bytes
@@ -32,15 +32,15 @@ class AppleEfiIm4pSplit(BIOSUtility):
 
         input_buffer: bytes = file_to_bytes(in_object=input_object)
 
-        if PAT_APPLE_IM4P.search(string=input_buffer) and PAT_INTEL_IFD.search(string=input_buffer):
+        if PAT_APPLE_IM4P.search(string=input_buffer) and PAT_INTEL_FD.search(string=input_buffer):
             return True
 
         return False
 
-    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> int:
+    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool:
         """ Parse & Split Apple EFI IM4P image """
 
-        exit_codes: list[int] = []
+        parse_success: bool = True
 
         input_buffer: bytes = file_to_bytes(in_object=input_object)
 
@@ -50,7 +50,7 @@ class AppleEfiIm4pSplit(BIOSUtility):
         im4p_match: Match[bytes] | None = PAT_APPLE_IM4P.search(string=input_buffer)
 
         if not im4p_match:
-            return 1
+            return False
 
         # After IM4P mefi (0x15), multi EFI payloads have _MEFIBIN (0x100) but is difficult to RE w/o varying samples.
         # However, _MEFIBIN is not required for splitting SPI images due to Intel Flash Descriptor Components Density.
@@ -75,7 +75,7 @@ class AppleEfiIm4pSplit(BIOSUtility):
         input_buffer = input_buffer[efi_data_bgn:efi_data_bgn + efi_data_len]
 
         # Parse Intel Flash Descriptor pattern matches
-        for ifd in PAT_INTEL_IFD.finditer(string=input_buffer):
+        for ifd in PAT_INTEL_FD.finditer(string=input_buffer):
             # Component Base Address from FD start (ICH8-ICH10 = 1, IBX = 2, CPT+ = 3)
             ifd_flmap0_fcba: int = input_buffer[ifd.start() + 0x4] * 0x10
 
@@ -148,9 +148,9 @@ class AppleEfiIm4pSplit(BIOSUtility):
                 printer(message=f'Error: Bad image size 0x{output_size:07X}, expected 0x{ifd_comp_all_size:07X}!',
                         padding=padding + 4)
 
-                exit_codes.append(1)
+                parse_success = False
 
-        return sum(exit_codes)
+        return parse_success
 
 
 if __name__ == '__main__':

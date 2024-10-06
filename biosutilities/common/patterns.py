@@ -19,9 +19,8 @@ PAT_AMI_UCP: Final[re.Pattern[bytes]] = re.compile(
     flags=re.DOTALL
 )
 
-PAT_APPLE_EFI: Final[re.Pattern[bytes]] = re.compile(
-    pattern=br'\$IBIOSI\$.{16}\x2E\x00.{6}\x2E\x00.{8}\x2E\x00.{6}\x2E\x00.{20}\x00{2}',
-    flags=re.DOTALL
+PAT_APPLE_ROM_VER: Final[re.Pattern[bytes]] = re.compile(
+    pattern=br'Apple ROM Version\x0A\x20{2}'
 )
 
 PAT_APPLE_IM4P: Final[re.Pattern[bytes]] = re.compile(
@@ -32,12 +31,16 @@ PAT_APPLE_PBZX: Final[re.Pattern[bytes]] = re.compile(
     pattern=br'pbzx'
 )
 
-PAT_APPLE_PKG_XAR: Final[re.Pattern[bytes]] = re.compile(
-    pattern=br'xar!'
+PAT_APPLE_PKG_DMG: Final[re.Pattern[bytes]] = re.compile(
+    pattern=br'EFI PART'
 )
 
 PAT_APPLE_PKG_TAR: Final[re.Pattern[bytes]] = re.compile(
     pattern=br'<key>IFPkgDescriptionDescription</key>'
+)
+
+PAT_APPLE_PKG_XAR: Final[re.Pattern[bytes]] = re.compile(
+    pattern=br'xar!'
 )
 
 PAT_AWARD_LZH: Final[re.Pattern[bytes]] = re.compile(
@@ -71,13 +74,18 @@ PAT_INSYDE_SFX: Final[re.Pattern[bytes]] = re.compile(
     pattern=br'\x0D\x0A;!@InstallEnd@!\x0D\x0A(7z\xBC\xAF\x27|\x6E\xF4\x79\x5F\x4E)'
 )
 
-PAT_INTEL_ENG: Final[re.Pattern[bytes]] = re.compile(
+PAT_INTEL_ENGINE: Final[re.Pattern[bytes]] = re.compile(
     pattern=br'\x04\x00{3}[\xA1\xE1]\x00{3}.{8}\x86\x80.{9}\x00\$((MN2)|(MAN))',
     flags=re.DOTALL
 )
 
-PAT_INTEL_IFD: Final[re.Pattern[bytes]] = re.compile(
+PAT_INTEL_FD: Final[re.Pattern[bytes]] = re.compile(
     pattern=br'\x5A\xA5\xF0\x0F.{172}\xFF{16}',
+    flags=re.DOTALL
+)
+
+PAT_INTEL_IBIOSI: Final[re.Pattern[bytes]] = re.compile(
+    pattern=br'\$IBIOSI\$.{16}\x2E\x00.{6}\x2E\x00.{8}\x2E\x00.{6}\x2E\x00.{20}\x00{2}',
     flags=re.DOTALL
 )
 

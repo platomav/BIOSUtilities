@@ -11,6 +11,7 @@ import logging
 import os
 
 from re import Match
+from typing import Final
 
 from pefile import PE
 
@@ -28,7 +29,7 @@ class PortwellEfiExtract(BIOSUtility):
 
     TITLE: str = 'Portwell EFI Update Extractor'
 
-    FILE_NAMES: dict[int, str] = {
+    FILE_NAMES: Final[dict[int, str]] = {
         0: 'Flash.efi',
         1: 'Fparts.txt',
         2: 'Update.nsh',
@@ -56,7 +57,7 @@ class PortwellEfiExtract(BIOSUtility):
 
         return False
 
-    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> None:
+    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool:
         """ Parse & Extract Portwell UEFI Unpacker """
 
         # Initialize EFI Payload file chunks
@@ -82,6 +83,8 @@ class PortwellEfiExtract(BIOSUtility):
             efi_files.append(pe_data[efi_bgn:efi_end])
 
         self._parse_efi_files(extract_path=extract_path, efi_files=efi_files, padding=padding)
+
+        return True
 
     @staticmethod
     def _get_portwell_pe(in_buffer: bytes) -> tuple:
@@ -161,7 +164,7 @@ class PortwellEfiExtract(BIOSUtility):
                 os.replace(src=file_path, dst=comp_fname)
 
                 # Successful decompression, delete compressed file
-                if efi_decompress(in_path=comp_fname, out_path=file_path, padding=padding + 8) == 0:
+                if efi_decompress(in_path=comp_fname, out_path=file_path, padding=padding + 8):
                     os.remove(path=comp_fname)
 
 

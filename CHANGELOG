@@ -1,3 +1,7 @@
+24.10.07
+
+Downgraded pefile dependency from 2024.8.26 to 2023.2.7
+
 24.10.06
 
 Changed BIOSUtility.parse_format() to return a boolean

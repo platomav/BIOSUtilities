@@ -1,2 +1,2 @@
 dissect.util==3.18
-pefile==2024.8.26
+pefile==2023.2.7

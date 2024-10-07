@@ -35,7 +35,7 @@ classifiers = [
 
 [project.optional-dependencies]
 lznt1 = ["dissect.util == 3.18"]
-pefile = ["pefile == 2024.8.26"]
+pefile = ["pefile == 2023.2.7"]
 
 [project.urls]
 Homepage = "https://github.com/platomav/BIOSUtilities"

@@ -131,7 +131,7 @@ def make_dirs(in_path: str, parents: bool = True, exist_ok: bool = False, delete
 def delete_dirs(in_path: str) -> None:
     """ Delete folder(s), if present """
 
-    if Path(in_path).is_dir():
+    if is_dir(in_path=in_path):
         shutil.rmtree(path=in_path, onerror=clear_readonly_callback)  # pylint: disable=deprecated-argument
 
 
@@ -167,16 +167,52 @@ def clear_readonly_callback(in_func: Callable, in_path: str, _) -> None:
     in_func(path=in_path)
 
 
-def path_files(in_path: str, follow_links: bool = False) -> list[str]:
+def path_files(in_path: str, follow_links: bool = False, root_only: bool = False) -> list[str]:
     """ Walk path to get all files """
 
     file_paths: list[str] = []
 
-    for root, _, filenames in os.walk(top=in_path, followlinks=follow_links):
-        for filename in filenames:
-            file_paths.append(os.path.abspath(path=os.path.join(root, filename)))
+    for root_path, _, file_names in os.walk(top=in_path, followlinks=follow_links):
+        for file_name in file_names:
+            file_path: str = os.path.abspath(path=os.path.join(root_path, file_name))
+
+            if is_file(in_path=file_path):
+                file_paths.append(file_path)
+
+        if root_only:
+            break
 
     return file_paths
+
+
+def is_dir(in_path: str) -> bool:
+    """ Check if path is a directory """
+
+    return Path(in_path).is_dir()
+
+
+def is_file(in_path: str, allow_broken_links: bool = False) -> bool:
+    """ Check if path is a regural file or symlink (valid or broken) """
+
+    in_path_abs: str = os.path.abspath(path=in_path)
+
+    if os.path.lexists(path=in_path_abs):
+        if not is_dir(in_path=in_path_abs):
+            if allow_broken_links:
+                return os.path.isfile(path=in_path_abs) or os.path.islink(path=in_path_abs)
+
+            return os.path.isfile(path=in_path_abs)
+
+    return False
+
+
+def is_access(in_path: str, access_mode: int = os.R_OK, follow_links: bool = False) -> bool:
+    """ Check if path is accessible """
+
+    if not follow_links and os.access not in os.supports_follow_symlinks:
+        follow_links = True
+
+    return os.access(path=in_path, mode=access_mode, follow_symlinks=follow_links)
 
 
 def is_empty_dir(in_path: str, follow_links: bool = False) -> bool:

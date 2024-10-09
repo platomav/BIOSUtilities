@@ -11,7 +11,7 @@ import os
 import stat
 
 from biosutilities.common.compression import szip_decompress
-from biosutilities.common.paths import extract_folder, make_dirs, safe_name
+from biosutilities.common.paths import extract_folder, is_file, make_dirs, safe_name
 from biosutilities.common.patterns import PAT_AWARD_LZH
 from biosutilities.common.system import printer
 from biosutilities.common.templates import BIOSUtility
@@ -77,7 +77,7 @@ class AwardBiosExtract(BIOSUtility):
                             padding=padding + 4)
 
             # Manually check if 7-Zip extracted LZH due to its CRC check issue
-            if os.path.isfile(path=mod_path):
+            if is_file(in_path=mod_path):
                 os.chmod(path=lzh_path, mode=stat.S_IWRITE)
 
                 os.remove(path=lzh_path)  # Successful extraction, delete LZH archive

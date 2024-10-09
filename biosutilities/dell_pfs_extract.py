@@ -19,8 +19,8 @@ from typing import Any, Final
 
 from biosutilities.common.checksums import checksum_8_xor
 from biosutilities.common.compression import is_szip_supported, szip_decompress
-from biosutilities.common.paths import (delete_dirs, path_files, make_dirs, path_name,
-                                        path_parent, path_stem, safe_name)
+from biosutilities.common.paths import (delete_dirs, path_files, is_access, is_file, make_dirs,
+                                        path_name, path_parent, path_stem, safe_name)
 from biosutilities.common.patterns import PAT_DELL_FTR, PAT_DELL_HDR, PAT_DELL_PKG
 from biosutilities.common.structs import CHAR, ctypes_struct, UINT8, UINT16, UINT32, UINT64
 from biosutilities.common.system import printer
@@ -265,8 +265,8 @@ class DellPfsExtract(BIOSUtility):
             pfs_results: dict[str, bytes] = self._thinos_pkg_extract(
                 input_object=input_buffer, extract_path=extract_path)
         else:
-            pfs_results = {path_stem(in_path=str(input_object)) if os.path.isfile(path=input_object)
-                           else 'Image': input_buffer}
+            pfs_results = {path_stem(in_path=input_object) if isinstance(input_object, str) and is_file(
+                in_path=input_object) else 'Image': input_buffer}
 
         # Parse each Dell PFS image contained in the input file
         for pfs_index, (pfs_name, pfs_buffer) in enumerate(iterable=pfs_results.items(), start=1):
@@ -363,10 +363,11 @@ class DellPfsExtract(BIOSUtility):
             return pfs_results
 
         for pkg_file in path_files(in_path=working_path):
-            if self._is_pfs_hdr(input_object=pkg_file):
-                pfs_name: str = path_name(in_path=str(path_parent(pkg_file)))
+            if is_file(in_path=pkg_file) and is_access(in_path=pkg_file):
+                if self._is_pfs_hdr(input_object=pkg_file):
+                    pfs_name: str = path_name(in_path=str(path_parent(in_path=pkg_file)))
 
-                pfs_results.update({pfs_name: file_to_bytes(in_object=pkg_file)})
+                    pfs_results.update({pfs_name: file_to_bytes(in_object=pkg_file)})
 
         delete_dirs(in_path=working_path)
 

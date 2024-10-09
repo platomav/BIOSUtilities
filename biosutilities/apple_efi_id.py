@@ -19,7 +19,7 @@ from re import Match
 from typing import Any, Final
 
 from biosutilities.common.externals import uefiextract_path, uefifind_path
-from biosutilities.common.paths import delete_dirs, delete_file, path_suffixes, runtime_root
+from biosutilities.common.paths import delete_dirs, delete_file, is_access, is_file, path_suffixes, runtime_root
 from biosutilities.common.patterns import PAT_INTEL_IBIOSI, PAT_APPLE_ROM_VER
 from biosutilities.common.structs import CHAR, ctypes_struct, UINT8
 from biosutilities.common.system import printer
@@ -116,7 +116,11 @@ class AppleEfiIdentify(BIOSUtility):
 
     TITLE: str = 'Apple EFI Image Identifier'
 
-    PAT_UEFIFIND: Final[str] = f'244942494F534924{"." * 32}2E00{"." * 12}2E00{"." * 16}2E00{"." * 12}2E00{"." * 40}0000'
+    ARGUMENTS: list[tuple[list[str], dict[str, str]]] = [
+        (['-q', '--silent'], {'help': 'suppress structure display', 'action': 'store_true'})
+    ]
+
+    PAT_UEFIFIND: Final[str] = f'244942494F534924{"." * 32}2E00{"." * 12}2E00{"." * 16}2E00{"." * 12}2E00{"." * 40}00'
 
     def __init__(self, arguments: list[str] | None = None) -> None:
         super().__init__(arguments=arguments)
@@ -128,20 +132,25 @@ class AppleEfiIdentify(BIOSUtility):
     def check_format(self, input_object: str | bytes | bytearray) -> bool:
         """ Check if input is Apple EFI image """
 
-        input_buffer: bytes = file_to_bytes(in_object=input_object)
+        if isinstance(input_object, str) and is_file(in_path=input_object) and is_access(in_path=input_object):
+            if path_suffixes(in_path=input_object)[-1].lower() not in ('.fd', '.scap', '.im4p'):
+                return False
 
-        if PAT_INTEL_IBIOSI.search(string=input_buffer):
-            return True
-
-        if isinstance(input_object, str) and os.path.isfile(path=input_object):
             input_path: str = input_object
-        else:
+            input_buffer: bytes = file_to_bytes(in_object=input_path)
+        elif isinstance(input_object, (bytes, bytearray)):
             input_path = os.path.join(runtime_root(), 'APPLE_EFI_ID_INPUT_BUFFER_CHECK.tmp')
+            input_buffer = input_object
 
             with open(file=input_path, mode='wb') as check_out:
                 check_out.write(input_buffer)
+        else:
+            return False
 
         try:
+            if PAT_INTEL_IBIOSI.search(string=input_buffer):
+                return True
+
             _ = subprocess.run([uefifind_path(), input_path, 'body', 'list', self.PAT_UEFIFIND],
                                check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
@@ -159,7 +168,7 @@ class AppleEfiIdentify(BIOSUtility):
 
         input_buffer: bytes = file_to_bytes(in_object=input_object)
 
-        if isinstance(input_object, str) and os.path.isfile(path=input_object):
+        if isinstance(input_object, str) and is_file(in_path=input_object):
             input_path: str = input_object
         else:
             input_path = os.path.join(runtime_root(), 'APPLE_EFI_ID_INPUT_BUFFER_PARSE.bin')
@@ -204,9 +213,10 @@ class AppleEfiIdentify(BIOSUtility):
 
                 return False
 
-        printer(message=f'Detected Intel BIOS Info at {bios_id_res}\n', padding=padding)
+        if not self.arguments.silent:
+            printer(message=f'Detected Intel BIOS Info at {bios_id_res}\n', padding=padding)
 
-        bios_id_hdr.struct_print(padding=padding + 4)
+            bios_id_hdr.struct_print(padding=padding + 4)
 
         self.intel_bios_info = bios_id_hdr.get_bios_id()
 
@@ -245,9 +255,10 @@ class AppleEfiIdentify(BIOSUtility):
 
                         self.apple_rom_version[rom_version_parts[0].strip()].add(rom_version_parts[1].strip())
 
-                    printer(message=f'Detected Apple ROM Version at 0x{rom_version_match_off:X}', padding=padding)
+                    if not self.arguments.silent:
+                        printer(message=f'Detected Apple ROM Version at 0x{rom_version_match_off:X}', padding=padding)
 
-                    printer(message=rom_version_text, strip=True, padding=padding + 4)
+                        printer(message=rom_version_text, strip=True, padding=padding + 4)
 
                     return True
 

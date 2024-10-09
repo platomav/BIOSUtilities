@@ -17,7 +17,7 @@ from typing import Any, Final
 
 from pefile import PE
 
-from biosutilities.common.paths import make_dirs, safe_name
+from biosutilities.common.paths import is_file, make_dirs, safe_name
 from biosutilities.common.executables import ms_pe, ms_pe_info
 from biosutilities.common.patterns import PAT_MICROSOFT_MZ, PAT_MICROSOFT_PE, PAT_PHOENIX_TDK
 from biosutilities.common.structs import CHAR, ctypes_struct, UINT32
@@ -192,7 +192,7 @@ class PhoenixTdkExtract(BIOSUtility):
             mod_file: str = os.path.join(extract_path, safe_name(mod_name))
 
             # Account for potential duplicate file names
-            if os.path.isfile(path=mod_file):
+            if is_file(in_path=mod_file):
                 mod_file += f'_{entry_index + 1:02d}'
 
             # Save TDK Entry data to output file

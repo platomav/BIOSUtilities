@@ -16,7 +16,7 @@ from importlib.util import module_from_spec, spec_from_file_location
 from types import ModuleType
 from typing import Type
 
-from biosutilities.common.paths import project_root
+from biosutilities.common.paths import is_dir, is_file, project_root
 from biosutilities.common.texts import to_string
 
 
@@ -25,12 +25,12 @@ def get_external_path(cmd: str | list | tuple) -> str:
 
     external_root: str = os.path.join(project_root(), 'external')
 
-    external_path: str | None = external_root if os.path.isdir(external_root) else None
+    external_path: str | None = external_root if is_dir(in_path=external_root) else None
 
     for command in cmd if isinstance(cmd, (list, tuple)) else [to_string(in_object=cmd)]:
         command_path: str | None = shutil.which(cmd=command, path=external_path)
 
-        if command_path and os.path.isfile(path=command_path):
+        if command_path and is_file(in_path=command_path):
             return command_path
 
     raise OSError(f'{to_string(in_object=cmd, sep_char=", ")} could not be found!')
@@ -63,7 +63,7 @@ def big_script_tool() -> Type | None:
 def comextract_path() -> str:
     """ Get ToshibaComExtractor path """
 
-    return get_external_path(cmd='comextract')
+    return get_external_path(cmd=['comextract', 'ComExtract'])
 
 
 def szip_path() -> str:
@@ -75,16 +75,16 @@ def szip_path() -> str:
 def tiano_path() -> str:
     """ Get TianoCompress path """
 
-    return get_external_path(cmd='TianoCompress')
+    return get_external_path(cmd=['TianoCompress', 'tianocompress'])
 
 
 def uefifind_path() -> str:
     """ Get UEFIFind path """
 
-    return get_external_path(cmd='UEFIFind')
+    return get_external_path(cmd=['uefifind', 'UEFIFind'])
 
 
 def uefiextract_path() -> str:
     """ Get UEFIExtract path """
 
-    return get_external_path(cmd='UEFIExtract')
+    return get_external_path(cmd=['uefiextract', 'UEFIExtract'])

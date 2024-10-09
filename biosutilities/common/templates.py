@@ -12,8 +12,8 @@ from argparse import ArgumentParser, Namespace
 from typing import Final
 
 from biosutilities import __version__
-from biosutilities.common.paths import (delete_dirs, extract_folder, is_empty_dir, path_files,
-                                        path_name, path_parent, real_path, runtime_root)
+from biosutilities.common.paths import (delete_dirs, extract_folder, is_access, is_dir, is_file, is_empty_dir,
+                                        path_files, path_name, path_parent, real_path, runtime_root)
 from biosutilities.common.system import system_platform, python_version, printer
 from biosutilities.common.texts import remove_quotes, to_boxed, to_ordinal
 
@@ -76,11 +76,11 @@ class BIOSUtility:
 
             extract_path: str = os.path.join(self._output_path, extract_folder(in_path=input_name))
 
-            if os.path.isdir(extract_path):
+            if is_dir(in_path=extract_path):
                 for suffix in range(2, self.MAX_FAT32_ITEMS):
                     renamed_path: str = f'{os.path.normpath(path=extract_path)}_{to_ordinal(in_number=suffix)}'
 
-                    if not os.path.isdir(renamed_path):
+                    if not is_dir(in_path=renamed_path):
                         extract_path = renamed_path
 
                         break
@@ -121,9 +121,11 @@ class BIOSUtility:
         for input_path in [input_path for input_path in input_paths if input_path]:
             input_path_real: str = real_path(in_path=input_path)
 
-            if os.path.isdir(input_path_real):
-                self._input_files.extend(path_files(input_path_real))
-            else:
+            if is_dir(in_path=input_path_real):
+                for input_file in path_files(in_path=input_path_real):
+                    if is_file(in_path=input_file) and is_access(in_path=input_file):
+                        self._input_files.append(input_file)
+            elif is_file(in_path=input_path_real) and is_access(in_path=input_path_real):
                 self._input_files.append(input_path_real)
 
     def _setup_output_dir(self, padding: int = 0) -> None:
@@ -137,7 +139,10 @@ class BIOSUtility:
             if not output_path and self._input_files:
                 output_path = str(path_parent(in_path=self._input_files[0]))
 
-        self._output_path = output_path or runtime_root()
+        if output_path and is_dir(in_path=output_path) and is_access(in_path=output_path):
+            self._output_path = output_path
+        else:
+            self._output_path = runtime_root()
 
     def _check_sys_py(self) -> None:
         """ Check Python Version """

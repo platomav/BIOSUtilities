@@ -8,15 +8,42 @@ Copyright (C) 2022-2024 Plato Mavropoulos
 import os
 import subprocess
 
+from typing import Final
+
 from biosutilities.common.externals import szip_path, tiano_path
+from biosutilities.common.paths import is_dir, is_empty_dir
 from biosutilities.common.system import printer
+
+# 7-Zip switches to auto rename, ignore passwords, ignore prompts, ignore wildcards,
+# eliminate root duplication, set UTF-8 charset, suppress stdout, suppress stderr,
+# suppress progress, disable headers, disable progress, disable output logs
+SZIP_COMMON: Final[list[str]] = ['-aou', '-p', '-y', '-spd', '-spe', '-sccUTF-8',
+                                 '-bso0', '-bse0', '-bsp0', '-ba', '-bd', '-bb0']
+
+# Success exit codes (0 = OK, 1 = Warnings)
+SZIP_SUCCESS: Final[list[int]] = [0, 1]
 
 
 def szip_code_assert(exit_code: int) -> None:
     """ Check 7-Zip bad exit codes (0 OK, 1 Warning) """
 
-    if exit_code not in (0, 1):
+    if exit_code not in SZIP_SUCCESS:
         raise ValueError(f'Bad exit code: {exit_code}')
+
+
+def szip_switches(in_switches: list[str]) -> list[str]:
+    """ Generate 7-Zip command line switches """
+
+    common_switches: list[str] = SZIP_COMMON
+
+    for in_switch in in_switches:
+        for sw_pattern in ('-p', '-ao', '-bs', '-bb', '-scc'):
+            if in_switch.startswith(sw_pattern):
+                common_switches = [sw for sw in common_switches if not sw.startswith(sw_pattern)]
+
+                break
+
+    return [*set(common_switches + in_switches), '--']
 
 
 def is_szip_supported(in_path: str, padding: int = 0, args: list | None = None, silent: bool = True) -> bool:
@@ -26,7 +53,7 @@ def is_szip_supported(in_path: str, padding: int = 0, args: list | None = None, 
         if args is None:
             args = []
 
-        szip_c: list[str] = [szip_path(), 't', in_path, *args, '-bso0', '-bse0', '-bsp0']
+        szip_c: list[str] = [szip_path(), 't', *szip_switches(in_switches=[*args]), in_path]
 
         szip_t: subprocess.CompletedProcess[bytes] = subprocess.run(args=szip_c, check=False)
 
@@ -40,26 +67,23 @@ def is_szip_supported(in_path: str, padding: int = 0, args: list | None = None, 
     return True
 
 
-def szip_decompress(in_path: str, out_path: str, in_name: str | None, padding: int = 0, args: list | None = None,
+def szip_decompress(in_path: str, out_path: str, in_name: str = 'archive', padding: int = 0, args: list | None = None,
                     check: bool = False, silent: bool = False) -> bool:
     """ Archive decompression via 7-Zip """
-
-    if not in_name:
-        in_name = 'archive'
 
     try:
         if args is None:
             args = []
 
-        szip_c: list[str] = [szip_path(), 'x', *args, '-aou', '-bso0', '-bse0', '-bsp0', f'-o{out_path}', in_path]
+        szip_c: list[str] = [szip_path(), 'x', *szip_switches(in_switches=[*args, f'-o{out_path}']), in_path]
 
         szip_x: subprocess.CompletedProcess[bytes] = subprocess.run(args=szip_c, check=False)
 
         if check:
             szip_code_assert(exit_code=szip_x.returncode)
 
-        if not os.path.isdir(out_path):
-            raise OSError(f'Extraction directory not found: {out_path}')
+        if not (is_dir(in_path=out_path) and not is_empty_dir(in_path=out_path)):
+            raise OSError(f'Extraction directory is empty or missing: {out_path}')
     except Exception as error:  # pylint: disable=broad-except
         if not silent:
             printer(message=f'Error: 7-Zip could not extract {in_name} file {in_path}: {error}!', padding=padding)

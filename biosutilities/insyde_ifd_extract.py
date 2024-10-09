@@ -14,7 +14,8 @@ import re
 from typing import Any, Final
 
 from biosutilities.common.compression import is_szip_supported, szip_decompress
-from biosutilities.common.paths import extract_folder, path_files, make_dirs, path_name, safe_name
+from biosutilities.common.paths import (extract_folder, is_access, is_file, path_files,
+                                        make_dirs, path_name, safe_name)
 from biosutilities.common.patterns import PAT_INSYDE_IFL, PAT_INSYDE_SFX
 from biosutilities.common.structs import CHAR, ctypes_struct, UINT32
 from biosutilities.common.system import printer
@@ -229,13 +230,14 @@ class InsydeIfdExtract(BIOSUtility):
         exit_codes: list[int] = []
 
         for sfx_file in path_files(in_path=extract_path):
-            if self.check_format(input_object=sfx_file):
-                printer(message=path_name(in_path=sfx_file), padding=padding + 12)
+            if is_file(in_path=sfx_file) and is_access(in_path=sfx_file):
+                if self.check_format(input_object=sfx_file):
+                    printer(message=path_name(in_path=sfx_file), padding=padding + 12)
 
-                ifd_status: int = self.parse_format(input_object=sfx_file, extract_path=extract_folder(sfx_file),
-                                                    padding=padding + 16)
+                    ifd_status: int = self.parse_format(input_object=sfx_file, extract_path=extract_folder(sfx_file),
+                                                        padding=padding + 16)
 
-                exit_codes.append(0 if ifd_status else 1)
+                    exit_codes.append(0 if ifd_status else 1)
 
         return sum(exit_codes)
 

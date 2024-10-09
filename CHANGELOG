@@ -1,3 +1,13 @@
+24.10.09
+
+Added Apple EFI EFI Image Identifier new argument -q
+Improved Apple EFI EFI Image Identifier detection flow
+Improved Apple EFI Package Extractor file parsing flow
+Improved file vs link detection and read access control
+Improved common switches handling of 7-Zip decompressor
+Improved non-PATH external executable dependencies names
+Fixed requirement instruction misalignments at the README
+
 24.10.07
 
 Downgraded pefile dependency from 2024.8.26 to 2023.2.7

@@ -20,7 +20,7 @@ import pefile
 from dissect.util.compression import lznt1
 
 from biosutilities.common.compression import is_szip_supported, szip_decompress
-from biosutilities.common.paths import path_files, make_dirs, path_stem, safe_name
+from biosutilities.common.paths import is_access, is_file, path_files, make_dirs, path_stem, safe_name
 from biosutilities.common.executables import ms_pe_desc, ms_pe, is_ms_pe, ms_pe_info_show
 from biosutilities.common.patterns import PAT_MICROSOFT_CAB
 from biosutilities.common.system import printer
@@ -97,7 +97,7 @@ class PanasonicBiosExtract(BIOSUtility):
     def _panasonic_pkg_name(input_object: str | bytes | bytearray) -> str:
         """ Get Panasonic BIOS Package file name, when applicable """
 
-        if isinstance(input_object, str) and os.path.isfile(path=input_object):
+        if isinstance(input_object, str) and is_file(in_path=input_object):
             return safe_name(in_name=path_stem(in_path=input_object))
 
         return ''
@@ -129,15 +129,16 @@ class PanasonicBiosExtract(BIOSUtility):
                     os.remove(path=cab_path)  # Successful extraction, delete CAB archive
 
                     for extracted_file_path in path_files(in_path=extract_path):
-                        extracted_pe_file: pefile.PE | None = ms_pe(
-                            in_file=extracted_file_path, padding=padding, silent=True)
+                        if is_file(in_path=extracted_file_path) and is_access(in_path=extracted_file_path):
+                            extracted_pe_file: pefile.PE | None = ms_pe(
+                                in_file=extracted_file_path, padding=padding, silent=True)
 
-                        if extracted_pe_file:
-                            extracted_pe_desc: bytes = ms_pe_desc(pe_file=extracted_pe_file, silent=True)
+                            if extracted_pe_file:
+                                extracted_pe_desc: bytes = ms_pe_desc(pe_file=extracted_pe_file, silent=True)
 
-                            if extracted_pe_desc.decode(encoding='utf-8', errors='ignore'
-                                                        ).upper() == self.PAN_PE_DESC_UPD:
-                                return extracted_file_path
+                                if extracted_pe_desc.decode(encoding='utf-8', errors='ignore'
+                                                            ).upper() == self.PAN_PE_DESC_UPD:
+                                    return extracted_file_path
 
         return ''
 

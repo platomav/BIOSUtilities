@@ -135,9 +135,13 @@ Show title and version of utility
 show_version(is_boxed: bool = True, padding: int = 0) -> None
 ```
 
+## Compatibility
+
+Unless explicitely noted, all utilities should work under Windows, Linux or macOS operating systems which have Python 3.10 - 3.12 support.
+
 ## Requirements
 
-There are two main types of requirements (dependencies), depending on the utility.
+There are two main types of requirements, depending on the utility.
 
 ### Python Packages
 
@@ -148,7 +152,7 @@ python -m pip install --upgrade -r requirements.txt
 ```
 
 ``` bash
-python -m pip install --upgrade pefile dissect.util
+python -m pip install pefile==2023.2.7 dissect.util==3.18
 ```
 
 ### External Executables / Scripts
@@ -171,7 +175,7 @@ sudo install "/path/to/downloaded/external/executable/to/install" /usr/local/bin
 
 [Windows Path](https://www.computerhope.com/issues/ch000549.htm)
 
-**Note:** In the "Environment Variables" window, you can modify the "Path" variable under "User variables" instead of "System variables", as many guides suggest.
+Note: In the "Environment Variables" window, you can modify the "Path" variable under "User variables" instead of "System variables", as many guides suggest.
 
 #### MacOS
 
@@ -179,62 +183,54 @@ sudo install "/path/to/downloaded/external/executable/to/install" /usr/local/bin
 
 ## Utilities
 
-* [**AMI BIOS Guard Extractor**](#ami-bios-guard-extractor)
-* [**AMI UCP Update Extractor**](#ami-ucp-update-extractor)
-* [**Apple EFI IM4P Splitter**](#apple-efi-im4p-splitter)
-* [**Apple EFI Image Identifier**](#apple-efi-image-identifier)
-* [**Apple EFI Package Extractor**](#apple-efi-package-extractor)
-* [**Apple EFI PBZX Extractor**](#apple-efi-pbzx-extractor)
-* [**Award BIOS Module Extractor**](#award-bios-module-extractor)
-* [**Dell PFS Update Extractor**](#dell-pfs-update-extractor)
-* [**Fujitsu SFX BIOS Extractor**](#fujitsu-sfx-bios-extractor)
-* [**Fujitsu UPC BIOS Extractor**](#fujitsu-upc-bios-extractor)
-* [**Insyde iFlash/iFdPacker Extractor**](#insyde-iflashifdpacker-extractor)
-* [**Panasonic BIOS Package Extractor**](#panasonic-bios-package-extractor)
-* [**Phoenix TDK Packer Extractor**](#phoenix-tdk-packer-extractor)
-* [**Portwell EFI Update Extractor**](#portwell-efi-update-extractor)
-* [**Toshiba BIOS COM Extractor**](#toshiba-bios-com-extractor)
-* [**VAIO Packaging Manager Extractor**](#vaio-packaging-manager-extractor)
+* [AMI BIOS Guard Extractor](#ami-bios-guard-extractor)
+* [AMI UCP Update Extractor](#ami-ucp-update-extractor)
+* [Apple EFI IM4P Splitter](#apple-efi-im4p-splitter)
+* [Apple EFI Image Identifier](#apple-efi-image-identifier)
+* [Apple EFI Package Extractor](#apple-efi-package-extractor)
+* [Apple EFI PBZX Extractor](#apple-efi-pbzx-extractor)
+* [Award BIOS Module Extractor](#award-bios-module-extractor)
+* [Dell PFS Update Extractor](#dell-pfs-update-extractor)
+* [Fujitsu SFX BIOS Extractor](#fujitsu-sfx-bios-extractor)
+* [Fujitsu UPC BIOS Extractor](#fujitsu-upc-bios-extractor)
+* [Insyde iFlash/iFdPacker Extractor](#insyde-iflashifdpacker-extractor)
+* [Panasonic BIOS Package Extractor](#panasonic-bios-package-extractor)
+* [Phoenix TDK Packer Extractor](#phoenix-tdk-packer-extractor)
+* [Portwell EFI Update Extractor](#portwell-efi-update-extractor)
+* [Toshiba BIOS COM Extractor](#toshiba-bios-com-extractor)
+* [VAIO Packaging Manager Extractor](#vaio-packaging-manager-extractor)
 
-### **AMI BIOS Guard Extractor**
+### AMI BIOS Guard Extractor
 
-#### **Description**
+#### Description
 
 Parses AMI BIOS Guard (a.k.a. PFAT, Platform Firmware Armoring Technology) images, extracts their SPI/BIOS/UEFI firmware components and optionally decompiles the Intel BIOS Guard Scripts. It supports all AMI PFAT revisions and formats, including those with Index Information tables or nested AMI PFAT structures. The output comprises only final firmware components which are directly usable by end users.
 
 Note that the AMI PFAT structure may not have an explicit component order. AMI's BIOS Guard Firmware Update Tool (AFUBGT) updates components based on the user/OEM provided Parameters and Options or Index Information table, when applicable. Thus, merging all the components together does not usually yield a proper SPI/BIOS/UEFI image. The utility does generate such a merged file with the name "00 -- \<filename\>\_ALL.bin" but it is up to the end user to determine its usefulness. Additionally, any custom OEM data, after the AMI PFAT structure, is stored in the last file with the name "\<n+1\> -- \_OOB.bin" and it is once again up to the end user to determine its usefulness. In cases where the trailing custom OEM data includes a nested AMI PFAT structure, the utility will process and extract it automatically as well.
 
-#### **Usage**
+#### Usage
 
 No additional optional arguments are provided for this utility.
 
-#### **Compatibility**
-
-Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
-
-#### **Prerequisites**
+#### Prerequisites
 
 Optionally, to decompile the AMI PFAT \> Intel BIOS Guard Scripts, you must have the following 3rd party python script at PATH or "external":
 
 * [BIOS Guard Script Tool](https://github.com/platomav/BGScriptTool) (i.e. big_script_tool.py)
 
-### **AMI UCP Update Extractor**
+### AMI UCP Update Extractor
 
-#### **Description**
+#### Description
 
 Parses AMI UCP (Utility Configuration Program) Update executables, extracts their firmware components (e.g. SPI/BIOS/UEFI, EC, ME etc) and shows all relevant info. It supports all AMI UCP revisions and formats, including those with nested AMI PFAT, AMI UCP or Insyde iFlash/iFdPacker structures. The output comprises only final firmware components and utilities which are directly usable by end users.
 
-#### **Usage**
+#### Usage
 
 Additional optional arguments are provided for this utility:
 
 * -c or --checksum : verify AMI UCP Checksums (slow)
 
-#### **Compatibility**
-
-Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
-
-#### **Prerequisites**
+#### Prerequisites
 
 To run the utility, you must have the following 3rd party tools at PATH or "external":
 
@@ -245,205 +241,173 @@ Optionally, to decompile the AMI UCP \> AMI PFAT \> Intel BIOS Guard Scripts (wh
 
 * [BIOS Guard Script Tool](https://github.com/platomav/BGScriptTool) (i.e. big_script_tool.py)
 
-### **Apple EFI IM4P Splitter**
+Note: On Linux and macOS, you'll need to compile TianoCompress from sources as no pre-built binary exists.
 
-#### **Description**
+### Apple EFI IM4P Splitter
+
+#### Description
 
 Parses Apple IM4P multi-EFI files and splits all detected EFI firmware into separate Intel SPI/BIOS images. The output comprises only final firmware components and utilities which are directly usable by end users.
 
-#### **Usage**
+#### Usage
 
 No additional optional arguments are provided for this utility.
 
-#### **Compatibility**
-
-Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
-
-Note: On Linux and macOS, you'll need to compile TianoCompress from sources as no pre-built binary exists.
-
-#### **Prerequisites**
+#### Prerequisites
 
 To run the utility, you do not need any prerequisites.
 
-### **Apple EFI Image Identifier**
+### Apple EFI Image Identifier
 
-#### **Description**
+#### Description
 
 Parses Apple EFI images and identifies them based on Intel's official "IBIOSI" tag, which contains info such as Model, Version, Build, Date and Time. Additionally, the utility can provide both "IBIOSI" and "Apple ROM Version" structure info, when available, as well as a suggested EFI image filename, while also making sure to differentiate any EFI images with the same "IBIOSI" tag (e.g. Production, Pre-Production) by appending a checksum of their data.
 
-#### **Usage**
+#### Usage
 
-No additional optional arguments are provided for this utility.
+Additional optional arguments are provided for this utility:
 
-#### **Compatibility**
+* -q or --silent : suppress structure display
 
-Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
+The utility exposes certain public class attributes, once parse_format() method has been successfully executed:
 
-#### **Prerequisites**
+* _efi_file_name_ -> str : Suggested image filename, based on Intel "IBIOSI" information
+* _intel_bios_info_ -> dict[str, str] : Information contained at Intel "IBIOSI" structure
+* _apple_rom_version_ -> defaultdict[str, set] : Information contained at "Apple ROM Version" structure
+
+#### Prerequisites
 
 To run the utility, you must have the following 3rd party tools at PATH or "external":
 
 * [UEFIFind](https://github.com/LongSoft/UEFITool/) (i.e. [UEFIFind.exe for Windows or UEFIFind for Linux/macOS](https://github.com/LongSoft/UEFITool/releases))
 * [UEFIExtract](https://github.com/LongSoft/UEFITool/) (i.e. [UEFIExtract.exe for Windows or UEFIExtract for Linux/macOS](https://github.com/LongSoft/UEFITool/releases))
 
-### **Apple EFI Package Extractor**
+### Apple EFI Package Extractor
 
-#### **Description**
+#### Description
 
 Parses Apple EFI PKG firmware packages (e.g. FirmwareUpdate.pkg, BridgeOSUpdateCustomer.pkg, InstallAssistant.pkg, iMacEFIUpdate.pkg, iMacFirmwareUpdate.tar), extracts their EFI images, splits those in IM4P format and identifies/renames the final Intel SPI/BIOS images accordingly. The output comprises only final firmware components which are directly usable by end users.
 
-#### **Usage**
+#### Usage
 
 No additional optional arguments are provided for this utility.
 
-#### **Compatibility**
-
-Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
-
-#### **Prerequisites**
+#### Prerequisites
 
 To run the utility, you must have the following 3rd party tools at PATH or "external":
 
 * [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zz for macOS or 7zz, 7zzs for Linux)
 
-### **Apple EFI PBZX Extractor**
+### Apple EFI PBZX Extractor
 
-#### **Description**
+#### Description
 
 Parses Apple EFI PBZX images, re-assembles their CPIO payload and extracts its firmware components (e.g. IM4P, EFI, Utilities, Scripts etc). It supports CPIO re-assembly from both Raw and XZ compressed PBZX Chunks. The output comprises only final firmware components and utilities which are directly usable by end users.
 
-#### **Usage**
+#### Usage
 
 No additional optional arguments are provided for this utility.
 
-#### **Compatibility**
-
-Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
-
-#### **Prerequisites**
+#### Prerequisites
 
 To run the utility, you must have the following 3rd party tools at PATH or "external":
 
 * [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zz for macOS or 7zz, 7zzs for Linux)
 
-### **Award BIOS Module Extractor**
+### Award BIOS Module Extractor
 
-#### **Description**
+#### Description
 
 Parses Award BIOS images and extracts their modules (e.g. RAID, MEMINIT, \_EN_CODE, awardext etc). It supports all Award BIOS image revisions and formats, including those which contain LZH compressed files. The output comprises only final firmware components which are directly usable by end users.
 
-#### **Usage**
+#### Usage
 
 No additional optional arguments are provided for this utility.
 
-#### **Compatibility**
-
-Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
-
-#### **Prerequisites**
+#### Prerequisites
 
 To run the utility, you must have the following 3rd party tool at PATH or "external":
 
 * [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zz for macOS or 7zz, 7zzs for Linux)
 
-### **Dell PFS Update Extractor**
+### Dell PFS Update Extractor
 
-#### **Description**
+#### Description
 
 Parses Dell PFS Update images and extracts their Firmware (e.g. SPI, BIOS/UEFI, EC, ME etc) and Utilities (e.g. Flasher etc) component sections. It supports all Dell PFS revisions and formats, including those which are originally LZMA compressed in ThinOS packages (PKG), ZLIB compressed or Intel BIOS Guard (PFAT) protected. The output comprises only final firmware components which are directly usable by end users.
 
-#### **Usage**
+#### Usage
 
 Additional optional arguments are provided for this utility:
 
 * -a or --advanced : extract signatures and metadata
 * -s or --structure : show PFS structure information
 
-#### **Compatibility**
-
-Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
-
-#### **Prerequisites**
+#### Prerequisites
 
 Optionally, to decompile the Intel BIOS Guard (PFAT) Scripts, you must have the following 3rd party utility at PATH or "external":
 
 * [BIOS Guard Script Tool](https://github.com/platomav/BGScriptTool) (i.e. big_script_tool.py)
 
-### **Fujitsu SFX BIOS Extractor**
+### Fujitsu SFX BIOS Extractor
 
-#### **Description**
+#### Description
 
 Parses Fujitsu SFX BIOS images and extracts their obfuscated Microsoft CAB archived firmware (e.g. SPI, BIOS/UEFI, EC, ME etc) and utilities (e.g. WinPhlash, PHLASH.INI etc) components. The output comprises only final firmware components which are directly usable by end users.
 
-#### **Usage**
+#### Usage
 
 No additional optional arguments are provided for this utility.
 
-#### **Compatibility**
-
-Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
-
-#### **Prerequisites**
+#### Prerequisites
 
 To run the utility, you must have the following 3rd party tool at PATH or "external":
 
 * [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zz for macOS or 7zz, 7zzs for Linux)
 
-### **Fujitsu UPC BIOS Extractor**
+### Fujitsu UPC BIOS Extractor
 
-#### **Description**
+#### Description
 
 Parses Fujitsu UPC BIOS images and extracts their EFI compressed SPI/BIOS/UEFI firmware component. The output comprises only a final firmware component which is directly usable by end users.
 
-#### **Usage**
+#### Usage
 
 No additional optional arguments are provided for this utility.
 
-#### **Compatibility**
-
-Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
-
-#### **Prerequisites**
+#### Prerequisites
 
 To run the utility, you must have the following 3rd party tool at PATH or "external":
 
 * [TianoCompress](https://github.com/tianocore/edk2/tree/master/BaseTools/Source/C/TianoCompress/) (i.e. [TianoCompress.exe for Windows](https://github.com/tianocore/edk2-BaseTools-win32/) or TianoCompress for Linux/macOS)
 
-### **Insyde iFlash/iFdPacker Extractor**
+Note: On Linux and macOS, you'll need to compile TianoCompress from sources as no pre-built binary exists.
 
-#### **Description**
+### Insyde iFlash/iFdPacker Extractor
+
+#### Description
 
 Parses Insyde iFlash/iFdPacker Update images and extracts their firmware (e.g. SPI, BIOS/UEFI, EC, ME etc) and utilities (e.g. InsydeFlash, H2OFFT, FlsHook, iscflash, platform.ini etc) components. It supports all Insyde iFlash/iFdPacker revisions and formats, including those which are 7-Zip SFX 7z compressed in raw, obfuscated or password-protected form. The output comprises only final firmware components which are directly usable by end users.
 
-#### **Usage**
+#### Usage
 
 No additional optional arguments are provided for this utility.
 
-#### **Compatibility**
-
-Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
-
-Note: On Linux and macOS, you'll need to compile TianoCompress from sources as no pre-built binary exists.
-
-#### **Prerequisites**
+#### Prerequisites
 
 To run the utility, you do not need any prerequisites.
 
-### **Panasonic BIOS Package Extractor**
+### Panasonic BIOS Package Extractor
 
-#### **Description**
+#### Description
 
 Parses Panasonic BIOS Package executables and extracts their firmware (e.g. SPI, BIOS/UEFI, EC etc) and utilities (e.g. winprom, configuration etc) components. It supports all Panasonic BIOS Package revisions and formats, including those which contain LZNT1 compressed files and/or AMI PFAT payloads. The output comprises only final firmware components which are directly usable by end users.
 
-#### **Usage**
+#### Usage
 
 No additional optional arguments are provided for this utility.
 
-#### **Compatibility**
-
-Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
-
-#### **Prerequisites**
+#### Prerequisites
 
 To run the utility, you must have the following 3rd party Python modules installed:
 
@@ -454,41 +418,33 @@ Moreover, you must have the following 3rd party tool at PATH or "external":
 
 * [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zz for macOS or 7zz, 7zzs for Linux)
 
-### **Phoenix TDK Packer Extractor**
+### Phoenix TDK Packer Extractor
 
-#### **Description**
+#### Description
 
 Parses Phoenix Tools Development Kit (TDK) Packer executables and extracts their firmware (e.g. SPI, BIOS/UEFI, EC etc) and utilities (e.g. WinFlash etc) components. It supports all Phoenix TDK Packer revisions and formats, including those which contain LZMA compressed files. The output comprises only final firmware components which are directly usable by end users.
 
-#### **Usage**
+#### Usage
 
 No additional optional arguments are provided for this utility.
 
-#### **Compatibility**
-
-Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
-
-#### **Prerequisites**
+#### Prerequisites
 
 To run the utility, you must have the following 3rd party Python module installed:
 
 * [pefile](https://pypi.org/project/pefile/)
 
-### **Portwell EFI Update Extractor**
+### Portwell EFI Update Extractor
 
-#### **Description**
+#### Description
 
 Parses Portwell UEFI Unpacker EFI executables (usually named "Update.efi") and extracts their firmware (e.g. SPI, BIOS/UEFI, EC etc) and utilities (e.g. Flasher etc) components. It supports all known Portwell UEFI Unpacker revisions (v1.1, v1.2, v2.0) and formats (used, empty, null), including those which contain EFI compressed files. The output comprises only final firmware components and utilities which are directly usable by end users.
 
-#### **Usage**
+#### Usage
 
 No additional optional arguments are provided for this utility.
 
-#### **Compatibility**
-
-Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
-
-#### **Prerequisites**
+#### Prerequisites
 
 To run the utility, you must have the following 3rd party Python module installed:
 
@@ -498,45 +454,37 @@ Moreover, you must have the following 3rd party tool at PATH or "external":
 
 * [TianoCompress](https://github.com/tianocore/edk2/tree/master/BaseTools/Source/C/TianoCompress/) (i.e. [TianoCompress.exe for Windows](https://github.com/tianocore/edk2-BaseTools-win32/) or TianoCompress for Linux/macOS)
 
-### **Toshiba BIOS COM Extractor**
+Note: On Linux and macOS, you'll need to compile TianoCompress from sources as no pre-built binary exists.
 
-#### **Description**
+### Toshiba BIOS COM Extractor
+
+#### Description
 
 Parses Toshiba BIOS COM images and extracts their raw or compressed SPI/BIOS/UEFI firmware component. This utility is effectively a python wrapper around [ToshibaComExtractor by LongSoft](https://github.com/LongSoft/ToshibaComExtractor). The output comprises only a final firmware component which is directly usable by end users.
 
-#### **Usage**
+#### Usage
 
 No additional optional arguments are provided for this utility.
 
-#### **Compatibility**
-
-Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
-
-Note: On Linux and macOS, you'll need to compile TianoCompress from sources as no pre-built binary exists.
-
-#### **Prerequisites**
+#### Prerequisites
 
 To run the utility, you must have the following 3rd party tool at PATH or "external":
 
 * [ToshibaComExtractor](https://github.com/LongSoft/ToshibaComExtractor) (i.e. [comextract.exe for Windows or comextract for Linux/macOS](https://github.com/LongSoft/ToshibaComExtractor/releases))
 
-### **VAIO Packaging Manager Extractor**
+Note: On Linux, you'll need to compile comextract from sources as no pre-built binary exists.
 
-#### **Description**
+### VAIO Packaging Manager Extractor
+
+#### Description
 
 Parses VAIO Packaging Manager executables and extracts their firmware (e.g. SPI, BIOS/UEFI, EC, ME etc), utilities (e.g. WBFLASH etc) and driver (audio, video etc) components. If direct extraction fails, it attempts to unlock the executable in order to run at all non-VAIO systems and allow the user to choose the extraction location. It supports all VAIO Packaging Manager revisions and formats, including those which contain obfuscated Microsoft CAB archives or obfuscated unlock values. The output comprises only final firmware components which are directly usable by end users.
 
-#### **Usage**
+#### Usage
 
 No additional optional arguments are provided for this utility.
 
-#### **Compatibility**
-
-Should work at all Windows, Linux or macOS operating systems which have Python 3.10 or newer support.
-
-Note: On Linux, you'll need to compile comextract from sources as no pre-built binary exists.
-
-#### **Prerequisites**
+#### Prerequisites
 
 To run the utility, you must have the following 3rd party tool at PATH or "external":
 

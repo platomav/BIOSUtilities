@@ -11,7 +11,7 @@ import os
 import subprocess
 
 from biosutilities.common.externals import comextract_path
-from biosutilities.common.paths import make_dirs, path_stem, safe_name
+from biosutilities.common.paths import is_file, make_dirs, path_stem, safe_name
 from biosutilities.common.patterns import PAT_TOSHIBA_COM
 from biosutilities.common.system import printer
 from biosutilities.common.templates import BIOSUtility
@@ -35,7 +35,7 @@ class ToshibaComExtract(BIOSUtility):
 
         make_dirs(in_path=extract_path, delete=True)
 
-        if isinstance(input_object, str) and os.path.isfile(path=input_object):
+        if isinstance(input_object, str) and is_file(in_path=input_object):
             input_path: str = input_object
         else:
             input_path = os.path.join(extract_path, 'toshiba_bios.com')
@@ -50,7 +50,7 @@ class ToshibaComExtract(BIOSUtility):
         try:
             subprocess.run([comextract_path(), input_path, output_path], check=True, stdout=subprocess.DEVNULL)
 
-            if not os.path.isfile(path=output_path):
+            if not is_file(in_path=output_path):
                 raise FileNotFoundError('EXTRACTED_FILE_MISSING')
         except Exception as error:  # pylint: disable=broad-except
             printer(message=f'Error: ToshibaComExtractor could not extract {input_path}: {error}!', padding=padding)

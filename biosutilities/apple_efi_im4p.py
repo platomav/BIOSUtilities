@@ -24,11 +24,14 @@ class AppleEfiIm4pSplit(BIOSUtility):
 
     TITLE: str = 'Apple EFI IM4P Splitter'
 
-    # Intel Flash Descriptor Component Sizes (4MB, 8MB, 16MB and 32MB)
-    IFD_COMP_LEN: Final[dict[int, int]] = {3: 0x400000, 4: 0x800000, 5: 0x1000000, 6: 0x2000000}
+    # Intel Flash Descriptor Component Sizes (2MB, 4MB, 8MB, 16MB and 32MB)
+    IFD_COMP_LEN: Final[dict[int, int]] = {2: 0x200000, 3: 0x400000, 4: 0x800000, 5: 0x1000000, 6: 0x2000000}
 
     def check_format(self, input_object: str | bytes | bytearray) -> bool:
         """ Check if input is Apple EFI IM4P image """
+
+        if isinstance(input_object, str) and not input_object.lower().endswith('.im4p'):
+            return False
 
         input_buffer: bytes = file_to_bytes(in_object=input_object)
 

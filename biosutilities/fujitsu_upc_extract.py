@@ -10,7 +10,7 @@ Copyright (C) 2021-2024 Plato Mavropoulos
 import os
 
 from biosutilities.common.compression import efi_decompress, is_efi_compressed
-from biosutilities.common.paths import make_dirs, path_name, path_suffixes
+from biosutilities.common.paths import make_dirs, is_file, path_name, path_suffixes
 from biosutilities.common.templates import BIOSUtility
 from biosutilities.common.texts import file_to_bytes
 
@@ -24,7 +24,7 @@ class FujitsuUpcExtract(BIOSUtility):
         """ Check if input is Fujitsu UPC image """
         is_upc: bool = False
 
-        if isinstance(input_object, str) and os.path.isfile(path=input_object):
+        if isinstance(input_object, str) and is_file(in_path=input_object):
             is_upc = path_suffixes(input_object)[-1].upper() == '.UPC'
         elif isinstance(input_object, (bytes, bytearray)):
             is_upc = True
@@ -39,7 +39,7 @@ class FujitsuUpcExtract(BIOSUtility):
 
         make_dirs(in_path=extract_path, delete=True)
 
-        if isinstance(input_object, str) and os.path.isfile(path=input_object):
+        if isinstance(input_object, str) and is_file(in_path=input_object):
             input_name: str = path_name(in_path=input_object)
 
             input_path: str = input_object

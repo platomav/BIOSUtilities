@@ -31,18 +31,6 @@ PAT_APPLE_PBZX: Final[re.Pattern[bytes]] = re.compile(
     pattern=br'pbzx'
 )
 
-PAT_APPLE_PKG_DMG: Final[re.Pattern[bytes]] = re.compile(
-    pattern=br'EFI PART'
-)
-
-PAT_APPLE_PKG_TAR: Final[re.Pattern[bytes]] = re.compile(
-    pattern=br'<key>IFPkgDescriptionDescription</key>'
-)
-
-PAT_APPLE_PKG_XAR: Final[re.Pattern[bytes]] = re.compile(
-    pattern=br'xar!'
-)
-
 PAT_AWARD_LZH: Final[re.Pattern[bytes]] = re.compile(
     pattern=br'-lh[04567]-'
 )

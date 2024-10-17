@@ -146,7 +146,7 @@ class PortwellEfiExtract(BIOSUtility):
 
             if file_name.startswith('Unknown_'):
                 printer(message=f'Note: Detected new Portwell EFI file ID {file_index}!',
-                        padding=padding + 8, pause=True)
+                        padding=padding + 8, pause=not self.arguments.auto_exit)
 
             # Store EFI file output path
             file_path: str = os.path.join(extract_path, safe_name(in_name=file_name))

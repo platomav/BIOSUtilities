@@ -169,7 +169,7 @@ class InsydeIfdExtract(BIOSUtility):
 
             if img_val == [img_tag, img_ext]:
                 printer(message=f'Note: Detected new Insyde iFlash tag {img_tag}!',
-                        padding=padding + 12, pause=True)
+                        padding=padding + 12, pause=not self.arguments.auto_exit)
 
             out_name: str = f'{img_name}.{img_ext}'
 

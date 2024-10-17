@@ -59,7 +59,7 @@ Enter output directory path: "C:\P5405CSA.303_output"
 All utilities form the "biosutilities" python package, which can be installed from PyPi:
 
 ``` bash
-python -m pip install --upgrade biosutilities
+python -m pip install --upgrade biosutilities[pefile,lznt1]
 ```
 
 Installing the python package is the recommended way to call one or more utilities programatically, while fully controlling arguments and options.
@@ -411,8 +411,8 @@ No additional optional arguments are provided for this utility.
 
 To run the utility, you must have the following 3rd party Python modules installed:
 
-* [pefile](https://pypi.org/project/pefile/)
-* [dissect.util](https://pypi.org/project/dissect.util/)
+* [pefile](https://pypi.org/project/pefile/2023.2.7/)
+* [dissect.util](https://pypi.org/project/dissect.util/3.18/)
 
 Moreover, you must have the following 3rd party tool at PATH or "external":
 
@@ -432,7 +432,7 @@ No additional optional arguments are provided for this utility.
 
 To run the utility, you must have the following 3rd party Python module installed:
 
-* [pefile](https://pypi.org/project/pefile/)
+* [pefile](https://pypi.org/project/pefile/2023.2.7/)
 
 ### Portwell EFI Update Extractor
 
@@ -448,7 +448,7 @@ No additional optional arguments are provided for this utility.
 
 To run the utility, you must have the following 3rd party Python module installed:
 
-* [pefile](https://pypi.org/project/pefile/)
+* [pefile](https://pypi.org/project/pefile/2023.2.7/)
 
 Moreover, you must have the following 3rd party tool at PATH or "external":
 

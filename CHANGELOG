@@ -1,3 +1,8 @@
+24.10.17
+
+Fixed "skip user action prompts" argument being ignored
+Improved AMI UCP tag dictionary for better NAL parsing
+
 24.10.09
 
 Added Apple EFI EFI Image Identifier new argument -q

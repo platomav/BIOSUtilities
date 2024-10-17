@@ -215,6 +215,8 @@ class AmiUcpExtract(BIOSUtility):
         '@CML': ['CMOSD4.txt', 'CMOS Item Number-Value (MSI)', 'Text'],
         '@CMS': ['CMOSD4.exe', 'Get or Set CMOS Item (MSI)', ''],
         '@CPM': ['AC_Message.txt', 'Confirm Power Message', ''],
+        '@D32': ['amifldrv32.sys', 'amifldrv32.sys', ''],
+        '@D64': ['amifldrv64.sys', 'amifldrv64.sys', ''],
         '@DCT': ['DevCon32.exe', 'Device Console WIN32', ''],
         '@DCX': ['DevCon64.exe', 'Device Console WIN64', ''],
         '@DFE': ['HpDevFwUpdate.efi', 'HpDevFwUpdate.efi', ''],
@@ -249,8 +251,7 @@ class AmiUcpExtract(BIOSUtility):
         '@VER': ['OEM_Version.txt', 'OEM Version', 'Text'],
         '@VXD': ['amifldrv.vxd', 'amifldrv.vxd', ''],
         '@W32': ['amifldrv32.sys', 'amifldrv32.sys', ''],
-        '@W64': ['amifldrv64.sys', 'amifldrv64.sys', ''],
-        '@D64': ['amifldrv64.sys', 'amifldrv64.sys', '']
+        '@W64': ['amifldrv64.sys', 'amifldrv64.sys', '']
     }
 
     def check_format(self, input_object: str | bytes | bytearray) -> bool:
@@ -420,7 +421,7 @@ class AmiUcpExtract(BIOSUtility):
                 not uaf_tag.startswith(('@ROM', '@R0', '@S0', '@DR', '@DS')):
 
             printer(message=f'Note: Detected new AMI UCP Module {uaf_tag} ({nal_dict[uaf_tag][1]}) in @NAL!',
-                    padding=padding + 4, pause=True)
+                    padding=padding + 4, pause=not self.arguments.auto_exit)
 
         # Generate @UAF|@HPU Module File name, depending on whether decompression will be required
         uaf_sname: str = safe_name(in_name=uaf_name + ('.temp' if is_comp else uaf_fext))

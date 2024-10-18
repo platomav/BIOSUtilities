@@ -29,7 +29,7 @@ class VaioPackageExtract(BIOSUtility):
 
         input_buffer: bytes = file_to_bytes(in_object=input_object)
 
-        return bool(PAT_VAIO_CFG.search(string=input_buffer))
+        return bool(PAT_VAIO_CFG.search(input_buffer))
 
     def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool:
         """ Parse & Extract or Unlock VAIO Packaging Manager """
@@ -56,7 +56,7 @@ class VaioPackageExtract(BIOSUtility):
         """ Extract VAIO Packaging Manager executable """
 
         # Microsoft CAB Header XOR 0xFF
-        match_cab: Match[bytes] | None = PAT_VAIO_CAB.search(string=buffer)
+        match_cab: Match[bytes] | None = PAT_VAIO_CAB.search(buffer)
 
         if not match_cab:
             return 1
@@ -64,11 +64,10 @@ class VaioPackageExtract(BIOSUtility):
         printer(message='Detected obfuscated CAB archive!', padding=padding)
 
         # Get LE XOR CAB size
-        cab_size: int = int.from_bytes(bytes=buffer[match_cab.start() + 0x8:match_cab.start() + 0xC],
-                                       byteorder='little')
+        cab_size: int = int.from_bytes(buffer[match_cab.start() + 0x8:match_cab.start() + 0xC], byteorder='little')
 
         # Create CAB size XOR value
-        xor_size: int = int.from_bytes(bytes=b'\xFF' * 0x4, byteorder='little')
+        xor_size: int = int.from_bytes(b'\xFF' * 0x4, byteorder='little')
 
         # Perform XOR 0xFF and get actual CAB size
         cab_size ^= xor_size
@@ -76,10 +75,10 @@ class VaioPackageExtract(BIOSUtility):
         printer(message='Removing obfuscation...', padding=padding + 4)
 
         # Get BE XOR CAB data
-        cab_data: int = int.from_bytes(bytes=buffer[match_cab.start():match_cab.start() + cab_size], byteorder='big')
+        cab_data: int = int.from_bytes(buffer[match_cab.start():match_cab.start() + cab_size], byteorder='big')
 
         # Create CAB data XOR value
-        xor_data: int = int.from_bytes(bytes=b'\xFF' * cab_size, byteorder='big')
+        xor_data: int = int.from_bytes(b'\xFF' * cab_size, byteorder='big')
 
         # Perform XOR 0xFF and get actual CAB data
         raw_data: bytes = (cab_data ^ xor_data).to_bytes(cab_size, 'big')
@@ -89,13 +88,13 @@ class VaioPackageExtract(BIOSUtility):
         cab_path: str = os.path.join(extract_path, f'{name}_Temporary.cab')
 
         # Create temporary CAB archive
-        with open(file=cab_path, mode='wb') as cab_file:
+        with open(cab_path, 'wb') as cab_file:
             cab_file.write(raw_data)
 
         if is_szip_supported(in_path=cab_path, padding=padding + 8, silent=False):
             if szip_decompress(in_path=cab_path, out_path=extract_path, in_name='VAIO CAB',
                                padding=padding + 8, check=True):
-                os.remove(path=cab_path)
+                os.remove(cab_path)
             else:
                 return 3
         else:
@@ -109,7 +108,7 @@ class VaioPackageExtract(BIOSUtility):
 
         input_buffer: bytearray = bytearray(buffer) if isinstance(buffer, bytes) else buffer
 
-        match_cfg: Match[bytes] | None = PAT_VAIO_CFG.search(string=input_buffer)
+        match_cfg: Match[bytes] | None = PAT_VAIO_CFG.search(input_buffer)
 
         if not match_cfg:
             return 1
@@ -144,7 +143,7 @@ class VaioPackageExtract(BIOSUtility):
         printer(message='Adjusting UseVAIOCheck entry...', padding=padding + 4)
 
         # Find and replace UseVAIOCheck entry from 1/Yes/True to 0/No/False
-        vaio_check: Match[bytes] | None = PAT_VAIO_CHK.search(string=input_buffer[cfg_bgn:])
+        vaio_check: Match[bytes] | None = PAT_VAIO_CHK.search(input_buffer[cfg_bgn:])
 
         if vaio_check:
             input_buffer[cfg_bgn + vaio_check.end():cfg_bgn + vaio_check.end() + len(cfg_true)] = cfg_false
@@ -156,7 +155,7 @@ class VaioPackageExtract(BIOSUtility):
         printer(message='Adjusting ExtractPathByUser entry...', padding=padding + 4)
 
         # Find and replace ExtractPathByUser entry from 0/No/False to 1/Yes/True
-        user_path: Match[bytes] | None = PAT_VAIO_EXT.search(string=input_buffer[cfg_bgn:])
+        user_path: Match[bytes] | None = PAT_VAIO_EXT.search(input_buffer[cfg_bgn:])
 
         if user_path:
             input_buffer[cfg_bgn + user_path.end():cfg_bgn + user_path.end() + len(cfg_false)] = cfg_true
@@ -171,7 +170,7 @@ class VaioPackageExtract(BIOSUtility):
         if vaio_check and user_path:
             unlock_path: str = os.path.join(extract_path, f'{name}_Unlocked.exe')
 
-            with open(file=unlock_path, mode='wb') as unl_file:
+            with open(unlock_path, 'wb') as unl_file:
                 unl_file.write(input_buffer)
 
         return 0

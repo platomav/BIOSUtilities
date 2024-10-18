@@ -44,7 +44,7 @@ class DellPfsHeader(ctypes.LittleEndianStructure):
     def struct_print(self, padding: int = 0) -> None:
         """ Display structure information """
 
-        printer(message=['Header Tag    :', self.Tag.decode(encoding='utf-8')], padding=padding, new_line=False)
+        printer(message=['Header Tag    :', self.Tag.decode('utf-8')], padding=padding, new_line=False)
         printer(message=['Header Version:', self.HeaderVersion], padding=padding, new_line=False)
         printer(message=['Payload Size  :', f'0x{self.PayloadSize:X}'], padding=padding, new_line=False)
 
@@ -65,7 +65,7 @@ class DellPfsFooter(ctypes.LittleEndianStructure):
 
         printer(message=['Payload Size    :', f'0x{self.PayloadSize:X}'], padding=padding, new_line=False)
         printer(message=['Payload Checksum:', f'0x{self.Checksum:08X}'], padding=padding, new_line=False)
-        printer(message=['Footer Tag      :', self.Tag.decode(encoding='utf-8')], padding=padding, new_line=False)
+        printer(message=['Footer Tag      :', self.Tag.decode('utf-8')], padding=padding, new_line=False)
 
 
 class DellPfsEntryBase(ctypes.LittleEndianStructure):
@@ -88,8 +88,8 @@ class DellPfsEntryBase(ctypes.LittleEndianStructure):
     def struct_print(self, padding: int = 0) -> None:
         """ Display structure information """
 
-        guid: str = f'{int.from_bytes(bytes=self.GUID, byteorder="little"):0{0x10 * 2}X}'
-        unknown: str = f'{int.from_bytes(bytes=self.Unknown, byteorder="little"):0{len(self.Unknown) * 8}X}'
+        guid: str = f'{int.from_bytes(self.GUID, byteorder="little"):0{0x10 * 2}X}'
+        unknown: str = f'{int.from_bytes(self.Unknown, byteorder="little"):0{len(self.Unknown) * 8}X}'
         version: str = DellPfsExtract.get_entry_ver(version_fields=self.Version, version_types=self.VersionType)
 
         printer(message=['Entry GUID             :', guid], padding=padding, new_line=False)
@@ -136,7 +136,7 @@ class DellPfsInfo(ctypes.LittleEndianStructure):
     def struct_print(self, padding: int = 0) -> None:
         """ Display structure information """
 
-        guid: str = f'{int.from_bytes(bytes=self.GUID, byteorder="little"):0{0x10 * 2}X}'
+        guid: str = f'{int.from_bytes(self.GUID, byteorder="little"):0{0x10 * 2}X}'
 
         printer(message=['Info Version:', self.HeaderVersion], padding=padding, new_line=False)
         printer(message=['Entry GUID  :', guid], padding=padding, new_line=False)
@@ -182,16 +182,16 @@ class DellPfsMetadata(ctypes.LittleEndianStructure):
     def struct_print(self, padding: int = 0) -> None:
         """ Display structure information """
 
-        model_ids: str = self.ModelIDs.decode(encoding='utf-8').removesuffix(',END')
+        model_ids: str = self.ModelIDs.decode('utf-8').removesuffix(',END')
 
         printer(message=['Model IDs    :', model_ids], padding=padding, new_line=False)
-        printer(message=['File Name    :', self.FileName.decode(encoding='utf-8')], padding=padding, new_line=False)
-        printer(message=['File Version :', self.FileVersion.decode(encoding='utf-8')], padding=padding, new_line=False)
-        printer(message=['Date         :', self.Date.decode(encoding='utf-8')], padding=padding, new_line=False)
-        printer(message=['Brand        :', self.Brand.decode(encoding='utf-8')], padding=padding, new_line=False)
-        printer(message=['Model File   :', self.ModelFile.decode(encoding='utf-8')], padding=padding, new_line=False)
-        printer(message=['Model Name   :', self.ModelName.decode(encoding='utf-8')], padding=padding, new_line=False)
-        printer(message=['Model Version:', self.ModelVersion.decode(encoding='utf-8')], padding=padding, new_line=False)
+        printer(message=['File Name    :', self.FileName.decode('utf-8')], padding=padding, new_line=False)
+        printer(message=['File Version :', self.FileVersion.decode('utf-8')], padding=padding, new_line=False)
+        printer(message=['Date         :', self.Date.decode('utf-8')], padding=padding, new_line=False)
+        printer(message=['Brand        :', self.Brand.decode('utf-8')], padding=padding, new_line=False)
+        printer(message=['Model File   :', self.ModelFile.decode('utf-8')], padding=padding, new_line=False)
+        printer(message=['Model Name   :', self.ModelName.decode('utf-8')], padding=padding, new_line=False)
+        printer(message=['Model Version:', self.ModelVersion.decode('utf-8')], padding=padding, new_line=False)
 
 
 class DellPfsPfatMetadata(ctypes.LittleEndianStructure):
@@ -269,7 +269,7 @@ class DellPfsExtract(BIOSUtility):
                 in_path=input_object) else 'Image': input_buffer}
 
         # Parse each Dell PFS image contained in the input file
-        for pfs_index, (pfs_name, pfs_buffer) in enumerate(iterable=pfs_results.items(), start=1):
+        for pfs_index, (pfs_name, pfs_buffer) in enumerate(pfs_results.items(), start=1):
             # At ThinOS PKG packages, multiple PFS images may be included in separate model-named folders
             pfs_path: str = os.path.join(extract_path, f'{pfs_index} {pfs_name}') if is_dell_pkg else extract_path
 
@@ -335,7 +335,7 @@ class DellPfsExtract(BIOSUtility):
             return pfs_results
 
         lzma_len_off: int = thinos_pkg_match.start() + 0x10
-        lzma_len_int: int = int.from_bytes(bytes=input_buffer[lzma_len_off:lzma_len_off + 0x4], byteorder='little')
+        lzma_len_int: int = int.from_bytes(input_buffer[lzma_len_off:lzma_len_off + 0x4], byteorder='little')
         lzma_bin_off: int = thinos_pkg_match.end() - 0x5
 
         lzma_bin_dat: bytes = input_buffer[lzma_bin_off:lzma_bin_off + lzma_len_int]
@@ -350,13 +350,13 @@ class DellPfsExtract(BIOSUtility):
 
         pkg_tar_path: str = os.path.join(working_path, 'THINOS_PKG.TAR')
 
-        with open(file=pkg_tar_path, mode='wb') as pkg_payload:
+        with open(pkg_tar_path, 'wb') as pkg_payload:
             pkg_payload.write(lzma.decompress(lzma_bin_dat))
 
         if is_szip_supported(in_path=pkg_tar_path, padding=0, args=['-tTAR']):
             if szip_decompress(in_path=pkg_tar_path, out_path=working_path, in_name='TAR', padding=0,
                                args=['-tTAR'], check=True, silent=True):
-                os.remove(path=pkg_tar_path)
+                os.remove(pkg_tar_path)
             else:
                 return pfs_results
         else:
@@ -389,7 +389,7 @@ class DellPfsExtract(BIOSUtility):
             is_duplicate: bool = False  # Initialize duplicate/nested PFS ZLIB offset
 
             for zlib_o in pfs_zlib_init:
-                zlib_o_size: int = int.from_bytes(bytes=buffer[zlib_o.start() - 0x5:zlib_o.start() - 0x1],
+                zlib_o_size: int = int.from_bytes(buffer[zlib_o.start() - 0x5:zlib_o.start() - 0x1],
                                                   byteorder='little')
 
                 # If current PFS ZLIB offset is within another PFS ZLIB range (start-end), set as duplicate
@@ -438,7 +438,7 @@ class DellPfsExtract(BIOSUtility):
             is_zlib_error = True
 
         # Store the compressed zlib stream size from the header contents
-        compressed_size_hdr: int = int.from_bytes(bytes=header_data[:0x4], byteorder='little')
+        compressed_size_hdr: int = int.from_bytes(header_data[:0x4], byteorder='little')
 
         # Store the compressed zlib stream end offset
         compressed_end: int = compressed_start + compressed_size_hdr
@@ -468,7 +468,7 @@ class DellPfsExtract(BIOSUtility):
             is_zlib_error = True
 
         # Store the compressed zlib stream size from the footer contents
-        compressed_size_ftr: int = int.from_bytes(bytes=footer_data[:0x4], byteorder='little')
+        compressed_size_ftr: int = int.from_bytes(footer_data[:0x4], byteorder='little')
 
         # Check if the compressed zlib stream is complete, based on footer
         if compressed_size_ftr != compressed_size_hdr:
@@ -590,7 +590,7 @@ class DellPfsExtract(BIOSUtility):
 
             # Get PFS Information Header GUID in Big Endian format, in order
             # to match each Info to the equivalent stored PFS Entry details.
-            entry_guid = f'{int.from_bytes(bytes=filename_info_hdr.GUID, byteorder="little"):0{0x10 * 2}X}'
+            entry_guid = f'{int.from_bytes(filename_info_hdr.GUID, byteorder="little"):0{0x10 * 2}X}'
 
             # Get PFS FileName Structure values
             entry_info_mod: Any = ctypes_struct(buffer=filename_info, start_offset=info_start + self.PFS_INFO_LEN,
@@ -607,7 +607,7 @@ class DellPfsExtract(BIOSUtility):
             name_data: bytes = filename_info[name_start:name_start + name_size]  # PFS Entry's FileName buffer
 
             # PFS Entry's FileName value
-            entry_name: str = safe_name(in_name=name_data.decode(encoding='utf-16').strip())
+            entry_name: str = safe_name(in_name=name_data.decode('utf-16').strip())
 
             # Show PFS FileName Structure info
             if self.arguments.structure:
@@ -646,11 +646,11 @@ class DellPfsExtract(BIOSUtility):
 
                     # As Nested PFS Entry Name, we'll use the actual PFS File Name
                     # Replace common Windows reserved/illegal filename characters
-                    entry_name = safe_name(in_name=entry_info.FileName.decode(encoding='utf-8').removesuffix('.exe')
+                    entry_name = safe_name(in_name=entry_info.FileName.decode('utf-8').removesuffix('.exe')
                                            .removesuffix('.bin'))
 
                     # As Nested PFS Entry Version, we'll use the actual PFS File Version
-                    entry_version = entry_info.FileVersion.decode(encoding='utf-8')
+                    entry_version = entry_info.FileVersion.decode('utf-8')
 
                     # Store all relevant Nested PFS Metadata/Information details
                     info_all.append([entry_guid, entry_name, entry_version])
@@ -696,12 +696,12 @@ class DellPfsExtract(BIOSUtility):
             # Show PFS Signature Size & Data (after DellPfsEntryR*)
             sign_info_start: int = sign_start + self.PFS_INFO_LEN + pfs_entry_size
 
-            sign_size: int = int.from_bytes(bytes=signature_info[sign_info_start:sign_info_start + 0x2],
+            sign_size: int = int.from_bytes(signature_info[sign_info_start:sign_info_start + 0x2],
                                             byteorder='little')
 
             sign_data_raw: bytes = signature_info[sign_info_start + 0x2:sign_info_start + 0x2 + sign_size]
 
-            sign_data_txt: str = f'{int.from_bytes(bytes=sign_data_raw, byteorder="little"):0{sign_size * 2}X}'
+            sign_data_txt: str = f'{int.from_bytes(sign_data_raw, byteorder="little"):0{sign_size * 2}X}'
 
             if self.arguments.structure:
                 printer(message='Signature Information:\n', padding=padding + 8)
@@ -912,7 +912,7 @@ class DellPfsExtract(BIOSUtility):
         entry_version: str = self.get_entry_ver(version_fields=pfs_entry.Version, version_types=pfs_entry.VersionType)
 
         # Get PFS Entry GUID in Big Endian format
-        entry_guid: str = f'{int.from_bytes(bytes=pfs_entry.GUID, byteorder="little"):0{0x10 * 2}X}'
+        entry_guid: str = f'{int.from_bytes(pfs_entry.GUID, byteorder="little"):0{0x10 * 2}X}'
 
         # PFS Entry Data starts after the PFS Entry Structure
         entry_data_start: int = entry_start + entry_size
@@ -1043,11 +1043,11 @@ class DellPfsExtract(BIOSUtility):
             # The payload of sub-PFS PFAT Entries is not in proper order by default
             # We can get each payload's order from PFAT Script > OpCode #2 (set I0 imm)
             # PFAT Script OpCode #2 > Operand #3 stores the payload Offset in final image
-            pfat_entry_off: int = int.from_bytes(bytes=pfat_script_data[0xC:0x10], byteorder='little')
+            pfat_entry_off: int = int.from_bytes(pfat_script_data[0xC:0x10], byteorder='little')
 
             # We can get each payload's length from PFAT Script > OpCode #4 (set I2 imm)
             # PFAT Script OpCode #4 > Operand #3 stores the payload Length in final image
-            pfat_entry_len: int = int.from_bytes(bytes=pfat_script_data[0x1C:0x20], byteorder='little')
+            pfat_entry_len: int = int.from_bytes(pfat_script_data[0x1C:0x20], byteorder='little')
 
             # Check that the PFAT Entry Length from Header & Script match
             if pfat_hdr.DataSize != pfat_entry_len:
@@ -1157,7 +1157,7 @@ class DellPfsExtract(BIOSUtility):
         """ Get Dell PFS Entry Structure & Size via its Version """
 
         # PFS Entry Version
-        pfs_entry_ver: int = int.from_bytes(bytes=buffer[offset + 0x10:offset + 0x14], byteorder='little')
+        pfs_entry_ver: int = int.from_bytes(buffer[offset + 0x10:offset + 0x14], byteorder='little')
 
         if pfs_entry_ver == 1:
             return DellPfsEntryR1, ctypes.sizeof(DellPfsEntryR1)
@@ -1175,7 +1175,7 @@ class DellPfsExtract(BIOSUtility):
 
         # Version Type (1 byte) determines the type of Version Value (2 bytes)
         # Version Type 'N' is Number, 'A' is Text and ' ' is Empty/Unused
-        for index, field in enumerate(iterable=version_fields):
+        for index, field in enumerate(version_fields):
             eol: str = '' if index == len(version_fields) - 1 else '.'
 
             if version_types[index] == 65:
@@ -1234,7 +1234,7 @@ class DellPfsExtract(BIOSUtility):
 
             final_path: str = os.path.join(out_path, final_name)
 
-            with open(file=final_path, mode='wb') as pfs_out:
+            with open(final_path, 'wb') as pfs_out:
                 pfs_out.write(bin_buff)  # Write final Data/Metadata Signature
 
             return  # Skip further processing for Signatures
@@ -1253,7 +1253,7 @@ class DellPfsExtract(BIOSUtility):
         final_path = os.path.join(out_path, final_name)
 
         # Write final Data/Metadata Payload
-        with open(file=final_path, mode='w' if is_text else 'wb', encoding='utf-8' if is_text else None) as pfs_out:
+        with open(final_path, 'w' if is_text else 'wb', encoding='utf-8' if is_text else None) as pfs_out:
             pfs_out.write(final_data)
 
     def _bin_is_text(self, buffer: bytes | bytearray, file_type: str, is_metadata: bool, padding: int = 0) -> tuple:
@@ -1273,15 +1273,15 @@ class DellPfsExtract(BIOSUtility):
         if b',END' in buffer[-0x8:]:  # Text Type 1
             extension = '.txt'
 
-            buffer_text = buffer.decode(encoding='utf-8').split(',END')[0].replace(';', '\n')
+            buffer_text = buffer.decode('utf-8').split(',END')[0].replace(';', '\n')
         elif buffer.startswith(b'VendorName=Dell'):  # Text Type 2
             extension = '.txt'
 
-            buffer_text = buffer.split(b'\x00')[0].decode(encoding='utf-8').replace(';', '\n')
+            buffer_text = buffer.split(b'\x00')[0].decode('utf-8').replace(';', '\n')
         elif b'<Rimm x-schema="' in buffer[:0x50]:  # XML Type
             extension = '.xml'
 
-            buffer_text = buffer.decode(encoding='utf-8')
+            buffer_text = buffer.decode('utf-8')
         elif file_type in ('NESTED_PFS', 'ZLIB') and is_metadata and len(buffer) == self.PFS_META_LEN:  # Text Type 3
             extension = '.txt'
 

@@ -51,7 +51,7 @@ class FujitsuUpcExtract(BIOSUtility):
 
             input_path = os.path.join(extract_path, f'{input_name}.UPC')
 
-            with open(file=input_path, mode='wb') as input_path_object:
+            with open(input_path, 'wb') as input_path_object:
                 input_path_object.write(file_to_bytes(in_object=input_object))
 
         output_path: str = os.path.join(extract_path, f'{input_name}.bin')
@@ -59,7 +59,7 @@ class FujitsuUpcExtract(BIOSUtility):
         efi_status: bool = efi_decompress(in_path=input_path, out_path=output_path, padding=padding)
 
         if input_path != input_object:
-            os.remove(path=input_path)
+            os.remove(input_path)
 
         return efi_status
 

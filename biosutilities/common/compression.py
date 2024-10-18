@@ -55,7 +55,7 @@ def is_szip_supported(in_path: str, padding: int = 0, args: list | None = None, 
 
         szip_c: list[str] = [szip_path(), 't', *szip_switches(in_switches=[*args]), in_path]
 
-        szip_t: subprocess.CompletedProcess[bytes] = subprocess.run(args=szip_c, check=False)
+        szip_t: subprocess.CompletedProcess[bytes] = subprocess.run(szip_c, check=False)
 
         szip_code_assert(exit_code=szip_t.returncode)
     except Exception as error:  # pylint: disable=broad-except
@@ -77,7 +77,7 @@ def szip_decompress(in_path: str, out_path: str, in_name: str = 'archive', paddi
 
         szip_c: list[str] = [szip_path(), 'x', *szip_switches(in_switches=[*args, f'-o{out_path}']), in_path]
 
-        szip_x: subprocess.CompletedProcess[bytes] = subprocess.run(args=szip_c, check=False)
+        szip_x: subprocess.CompletedProcess[bytes] = subprocess.run(szip_c, check=False)
 
         if check:
             szip_code_assert(exit_code=szip_x.returncode)
@@ -99,9 +99,9 @@ def szip_decompress(in_path: str, out_path: str, in_name: str = 'archive', paddi
 def efi_compress_sizes(data: bytes | bytearray) -> tuple[int, int]:
     """ Get EFI compression sizes """
 
-    size_compress: int = int.from_bytes(bytes=data[0x0:0x4], byteorder='little')
+    size_compress: int = int.from_bytes(data[0x0:0x4], byteorder='little')
 
-    size_original: int = int.from_bytes(bytes=data[0x4:0x8], byteorder='little')
+    size_original: int = int.from_bytes(data[0x4:0x8], byteorder='little')
 
     return size_compress, size_original
 
@@ -126,10 +126,10 @@ def efi_decompress(in_path: str, out_path: str, padding: int = 0, silent: bool =
     """ EFI/Tiano Decompression via TianoCompress """
 
     try:
-        subprocess.run(args=[tiano_path(), '-d', in_path, '-o', out_path, '-q', comp_type],
+        subprocess.run([tiano_path(), '-d', in_path, '-o', out_path, '-q', comp_type],
                        check=True, stdout=subprocess.DEVNULL)
 
-        with open(file=in_path, mode='rb') as file:
+        with open(in_path, 'rb') as file:
             _, size_orig = efi_compress_sizes(data=file.read())
 
         if os.path.getsize(out_path) != size_orig:

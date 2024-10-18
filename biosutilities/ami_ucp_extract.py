@@ -45,9 +45,9 @@ class UafHeader(ctypes.LittleEndianStructure):
     def _get_reserved(self) -> str:
         res_bytes: bytes = bytes(self.Reserved)
 
-        res_hex: str = f'0x{int.from_bytes(bytes=res_bytes, byteorder="big"):0{0x4 * 2}X}'
+        res_hex: str = f'0x{int.from_bytes(res_bytes, byteorder="big"):0{0x4 * 2}X}'
 
-        res_str: str = re.sub(r'[\n\t\r\x00 ]', '', res_bytes.decode(encoding='utf-8', errors='ignore'))
+        res_str: str = re.sub(r'[\n\t\r\x00 ]', '', res_bytes.decode('utf-8', 'ignore'))
 
         res_txt: str = f' ({res_str})' if len(res_str) else ''
 
@@ -56,7 +56,7 @@ class UafHeader(ctypes.LittleEndianStructure):
     def struct_print(self, padding: int = 0) -> None:
         """ Display structure information """
 
-        printer(message=['Tag          :', self.ModuleTag.decode(encoding='utf-8')], padding=padding, new_line=False)
+        printer(message=['Tag          :', self.ModuleTag.decode('utf-8')], padding=padding, new_line=False)
         printer(message=['Size         :', f'0x{self.ModuleSize:X}'], padding=padding, new_line=False)
         printer(message=['Checksum     :', f'0x{self.Checksum:04X}'], padding=padding, new_line=False)
         printer(message=['Unknown 0    :', f'0x{self.Unknown0:02X}'], padding=padding, new_line=False)
@@ -146,7 +146,7 @@ class DisHeader(ctypes.LittleEndianStructure):
 
         printer(message=['Password Size:', f'0x{self.PasswordSize:X}'], padding=padding, new_line=False)
         printer(message=['Entry Count  :', self.EntryCount], padding=padding, new_line=False)
-        printer(message=['Password     :', self.Password.decode(encoding='utf-8')], padding=padding, new_line=False)
+        printer(message=['Password     :', self.Password.decode('utf-8')], padding=padding, new_line=False)
 
 
 class DisModule(ctypes.LittleEndianStructure):
@@ -169,8 +169,8 @@ class DisModule(ctypes.LittleEndianStructure):
 
         enabled_disabled: str = self.ENDIS.get(self.EnabledDisabled, f'Unknown ({self.EnabledDisabled})')
         shown_hidden: str = self.SHOWN.get(self.ShownHidden, f'Unknown ({self.ShownHidden})')
-        command: str = self.Command.decode(encoding='utf-8').strip()
-        description: str = self.Description.decode(encoding='utf-8').strip()
+        command: str = self.Command.decode('utf-8').strip()
+        description: str = self.Description.decode('utf-8').strip()
 
         printer(message=['State      :', enabled_disabled], padding=padding, new_line=False)
         printer(message=['Display    :', shown_hidden], padding=padding, new_line=False)
@@ -324,15 +324,15 @@ class AmiUcpExtract(BIOSUtility):
         uaf_buf_bin: bytes = b''  # Buffer of largest detected @UAF|@HPU
         uaf_buf_tag: str = '@UAF'  # Tag of largest detected @UAF|@HPU
 
-        for uaf in PAT_AMI_UCP.finditer(string=buffer):
-            uaf_len_cur: int = int.from_bytes(bytes=buffer[uaf.start() + 0x4:uaf.start() + 0x8], byteorder='little')
+        for uaf in PAT_AMI_UCP.finditer(buffer):
+            uaf_len_cur: int = int.from_bytes(buffer[uaf.start() + 0x4:uaf.start() + 0x8], byteorder='little')
 
             if uaf_len_cur > uaf_len_max:
                 uaf_len_max = uaf_len_cur
 
                 uaf_buf_bin = buffer[uaf.start():uaf.start() + uaf_len_max]
 
-                uaf_buf_tag = uaf.group(0)[:4].decode(encoding='utf-8', errors='ignore')
+                uaf_buf_tag = uaf.group(0)[:4].decode('utf-8', 'ignore')
 
         return uaf_buf_bin, uaf_buf_tag
 
@@ -346,7 +346,7 @@ class AmiUcpExtract(BIOSUtility):
             # Parse @UAF|@HPU Module Structure
             uaf_hdr: Any = ctypes_struct(buffer=buffer, start_offset=uaf_off, class_object=UafHeader)
 
-            uaf_tag: str = uaf_hdr.ModuleTag.decode(encoding='utf-8')  # Get unique @UAF|@HPU Module Tag
+            uaf_tag: str = uaf_hdr.ModuleTag.decode('utf-8')  # Get unique @UAF|@HPU Module Tag
 
             uaf_all.append([uaf_tag, uaf_off, uaf_hdr])  # Store @UAF|@HPU Module Info
 
@@ -357,7 +357,7 @@ class AmiUcpExtract(BIOSUtility):
 
         # Check if @UAF|@HPU Module @NAL exists and place it first
         # Parsing @NAL first allows naming all @UAF|@HPU Modules
-        for mod_idx, mod_val in enumerate(iterable=uaf_all):
+        for mod_idx, mod_val in enumerate(uaf_all):
             if mod_val[0] == '@NAL':
                 uaf_all.insert(1, uaf_all.pop(mod_idx))  # After UII for visual purposes
 
@@ -447,7 +447,7 @@ class AmiUcpExtract(BIOSUtility):
             info_data: bytes = uaf_data_raw[max(self.UII_HDR_LEN, info_hdr.InfoSize):info_hdr.UIISize]
 
             # Get @UII Module Info/Description text field
-            info_desc: str = info_data.decode(encoding='utf-8', errors='ignore').strip('\x00 ')
+            info_desc: str = info_data.decode('utf-8', 'ignore').strip('\x00 ')
 
             printer(message='Utility Identification Information:\n', padding=padding + 4)
 
@@ -457,7 +457,7 @@ class AmiUcpExtract(BIOSUtility):
                 self._chk16_validate(data=uaf_data_raw, tag='@UII > Info', padding=padding + 8)
 
             # Store/Save @UII Module Info in file
-            with open(file=uaf_fname[:-4] + '.txt', mode='a', encoding='utf-8') as uii_out:
+            with open(uaf_fname[:-4] + '.txt', 'a', encoding='utf-8') as uii_out:
                 with contextlib.redirect_stdout(uii_out):
                     info_hdr.struct_print(description=info_desc, padding=0)  # Store @UII Module Info
 
@@ -478,7 +478,7 @@ class AmiUcpExtract(BIOSUtility):
 
         # Store/Save @UAF|@HPU Module file
         if uaf_tag != '@UII':  # Skip @UII binary, already parsed
-            with open(file=uaf_fname, mode='wb') as uaf_out:
+            with open(uaf_fname, 'wb') as uaf_out:
                 uaf_out.write(uaf_data_raw)
 
         # @UAF|@HPU Module EFI/Tiano Decompression
@@ -487,10 +487,10 @@ class AmiUcpExtract(BIOSUtility):
             dec_fname: str = uaf_fname.replace('.temp', uaf_fext)
 
             if efi_decompress(in_path=uaf_fname, out_path=dec_fname, padding=padding + 4):
-                with open(file=dec_fname, mode='rb') as dec:
+                with open(dec_fname, 'rb') as dec:
                     uaf_data_raw = dec.read()  # Read back the @UAF|@HPU Module decompressed Raw data
 
-                os.remove(path=uaf_fname)  # Successful decompression, delete compressed @UAF|@HPU Module file
+                os.remove(uaf_fname)  # Successful decompression, delete compressed @UAF|@HPU Module file
 
                 uaf_fname = dec_fname  # Adjust @UAF|@HPU Module file path to the decompressed one
 
@@ -498,7 +498,7 @@ class AmiUcpExtract(BIOSUtility):
         if uaf_tag in self.UAF_TAG_DICT and self.UAF_TAG_DICT[uaf_tag][2] == 'Text':
             printer(message=f'{self.UAF_TAG_DICT[uaf_tag][1]}:', padding=padding + 4)
 
-            printer(message=uaf_data_raw.decode(encoding='utf-8', errors='ignore'), padding=padding + 8)
+            printer(message=uaf_data_raw.decode('utf-8', 'ignore'), padding=padding + 8)
 
         # Parse Default Command Status @UAF|@HPU Module (@DIS)
         if len(uaf_data_raw) and uaf_tag == '@DIS':
@@ -510,7 +510,7 @@ class AmiUcpExtract(BIOSUtility):
             dis_hdr.struct_print(padding=padding + 8)  # Print @DIS Module Raw Header Info
 
             # Store/Save @DIS Module Header Info in file
-            with open(file=uaf_fname[:-3] + 'txt', mode='a', encoding='utf-8') as dis:
+            with open(uaf_fname[:-3] + 'txt', 'a', encoding='utf-8') as dis:
                 with contextlib.redirect_stdout(dis):
                     dis_hdr.struct_print(padding=0)  # Store @DIS Module Header Info
 
@@ -528,17 +528,17 @@ class AmiUcpExtract(BIOSUtility):
                 dis_mod.struct_print(padding=padding + 12)  # Print @DIS Module Raw Entry Info
 
                 # Store/Save @DIS Module Entry Info in file
-                with open(file=uaf_fname[:-3] + 'txt', mode='a', encoding='utf-8') as dis:
+                with open(uaf_fname[:-3] + 'txt', 'a', encoding='utf-8') as dis:
                     with contextlib.redirect_stdout(dis):
                         printer(message=None)
 
                         dis_mod.struct_print(padding=4)  # Store @DIS Module Entry Info
 
-            os.remove(path=uaf_fname)  # Delete @DIS Module binary, info exported as text
+            os.remove(uaf_fname)  # Delete @DIS Module binary, info exported as text
 
         # Parse Name List @UAF|@HPU Module (@NAL)
         if len(uaf_data_raw) >= 5 and (uaf_tag, uaf_data_raw[0], uaf_data_raw[4]) == ('@NAL', 0x40, 0x3A):
-            nal_info: list[str] = uaf_data_raw.decode(encoding='utf-8',
+            nal_info: list[str] = uaf_data_raw.decode('utf-8',
                                                       errors='ignore').replace('\r', '').strip().split('\n')
 
             printer(message='AMI UCP Module Name List:\n', padding=padding + 4)
@@ -571,7 +571,7 @@ class AmiUcpExtract(BIOSUtility):
 
             if insyde_ifd_extract.parse_format(input_object=uaf_fname, extract_path=extract_folder(ins_dir),
                                                padding=padding + 4):
-                os.remove(path=uaf_fname)  # Delete raw nested Insyde IFD image after successful extraction
+                os.remove(uaf_fname)  # Delete raw nested Insyde IFD image after successful extraction
 
         ami_pfat_extract: AmiPfatExtract = AmiPfatExtract()
 
@@ -582,10 +582,10 @@ class AmiUcpExtract(BIOSUtility):
             ami_pfat_extract.parse_format(input_object=uaf_data_raw, extract_path=extract_folder(pfat_dir),
                                           padding=padding + 4)
 
-            os.remove(path=uaf_fname)  # Delete raw PFAT BIOS image after successful extraction
+            os.remove(uaf_fname)  # Delete raw PFAT BIOS image after successful extraction
 
         # Detect Intel Engine firmware image and show ME Analyzer advice
-        if uaf_tag.startswith('@ME') and PAT_INTEL_ENGINE.search(string=uaf_data_raw):
+        if uaf_tag.startswith('@ME') and PAT_INTEL_ENGINE.search(uaf_data_raw):
             printer(message='Intel Management Engine (ME) Firmware:\n', padding=padding + 4)
             printer(message='Use "ME Analyzer" from https://github.com/platomav/MEAnalyzer',
                     padding=padding + 8, new_line=False)
@@ -598,7 +598,7 @@ class AmiUcpExtract(BIOSUtility):
             self.parse_format(input_object=uaf_data_raw, extract_path=extract_folder(uaf_dir),
                               padding=padding + 4)  # Call recursively
 
-            os.remove(path=uaf_fname)  # Delete raw nested AMI UCP image after successful extraction
+            os.remove(uaf_fname)  # Delete raw nested AMI UCP image after successful extraction
 
         return nal_dict
 

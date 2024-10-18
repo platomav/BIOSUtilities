@@ -1,3 +1,7 @@
+24.10.18
+
+Removed all Python built-in library keyword arguments (#55)
+
 24.10.17
 
 Fixed "skip user action prompts" argument being ignored

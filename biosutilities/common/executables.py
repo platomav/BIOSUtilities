@@ -65,8 +65,8 @@ def ms_pe_info_show(pe_file: pefile.PE, padding: int = 0) -> None:
 
     if isinstance(pe_info, dict):
         for title, value in pe_info.items():
-            info_title: str = title.decode(encoding='utf-8', errors='ignore').strip()
-            info_value: str = value.decode(encoding='utf-8', errors='ignore').strip()
+            info_title: str = title.decode('utf-8', 'ignore').strip()
+            info_value: str = value.decode('utf-8', 'ignore').strip()
 
             if info_title and info_value:
                 printer(message=f'{info_title}: {info_value}', padding=padding, new_line=False)

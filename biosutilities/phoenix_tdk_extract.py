@@ -38,7 +38,7 @@ class PhoenixTdkHeader(ctypes.LittleEndianStructure):
     ]
 
     def _get_tag(self) -> str:
-        return self.Tag.decode(encoding='utf-8', errors='ignore').strip()
+        return self.Tag.decode('utf-8', 'ignore').strip()
 
     def struct_print(self, padding: int = 0) -> None:
         """ Display structure information """
@@ -71,7 +71,7 @@ class PhoenixTdkEntry(ctypes.LittleEndianStructure):
     def get_name(self) -> str:
         """ Get TDK Entry decoded name """
 
-        return self.Name.decode(encoding='utf-8', errors='replace').strip()
+        return self.Name.decode('utf-8', 'replace').strip()
 
     def get_offset(self) -> int:
         """ Get TDK Entry absolute offset """
@@ -196,7 +196,7 @@ class PhoenixTdkExtract(BIOSUtility):
                 mod_file += f'_{entry_index + 1:02d}'
 
             # Save TDK Entry data to output file
-            with open(file=mod_file, mode='wb') as out_file:
+            with open(mod_file, 'wb') as out_file:
                 out_file.write(mod_data)
 
         return exit_code == 0
@@ -209,7 +209,7 @@ class PhoenixTdkExtract(BIOSUtility):
         tdk_base_off: int | None = None
 
         # Scan input file for all Microsoft executable patterns (MZ) before TDK Header Offset
-        mz_all: list[Match[bytes]] = [mz for mz in PAT_MICROSOFT_MZ.finditer(string=in_buffer) if mz.start() < pack_off]
+        mz_all: list[Match[bytes]] = [mz for mz in PAT_MICROSOFT_MZ.finditer(in_buffer) if mz.start() < pack_off]
 
         # Phoenix TDK Header structure is an index table for all TDK files
         # Each TDK file is referenced from the TDK Packer executable base
@@ -223,14 +223,14 @@ class PhoenixTdkExtract(BIOSUtility):
             mz_off: int = mz_match.start()
 
             # MZ (DOS) > PE (NT) image Offset is found at offset 0x3C-0x40 relative to MZ base
-            pe_off: int = mz_off + int.from_bytes(bytes=in_buffer[mz_off + 0x3C:mz_off + 0x40], byteorder='little')
+            pe_off: int = mz_off + int.from_bytes(in_buffer[mz_off + 0x3C:mz_off + 0x40], byteorder='little')
 
             # Skip MZ (DOS) with bad PE (NT) image Offset
             if pe_off == mz_off or pe_off >= pack_off:
                 continue
 
             # Check if potential MZ > PE image magic value is valid
-            if PAT_MICROSOFT_PE.search(string=in_buffer[pe_off:pe_off + 0x4]):
+            if PAT_MICROSOFT_PE.search(in_buffer[pe_off:pe_off + 0x4]):
                 try:
                     # Parse detected MZ > PE > Image, quickly (fast_load)
                     pe_file: PE | None = ms_pe(in_file=in_buffer[mz_off:], silent=True)
@@ -268,7 +268,7 @@ class PhoenixTdkExtract(BIOSUtility):
         """ Scan input buffer for valid Phoenix TDK image """
 
         # Scan input buffer for Phoenix TDK pattern
-        tdk_match: Match[bytes] | None = PAT_PHOENIX_TDK.search(string=in_buffer)
+        tdk_match: Match[bytes] | None = PAT_PHOENIX_TDK.search(in_buffer)
 
         if not tdk_match:
             return None, None

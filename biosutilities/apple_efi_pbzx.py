@@ -56,7 +56,7 @@ class AppleEfiPbzxExtract(BIOSUtility):
 
         input_buffer: bytes = file_to_bytes(in_object=input_object)
 
-        return bool(PAT_APPLE_PBZX.search(string=input_buffer, endpos=4))
+        return bool(PAT_APPLE_PBZX.search(input_buffer, 0, 4))
 
     def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool:
         """ Parse & Extract Apple PBZX image """
@@ -113,14 +113,14 @@ class AppleEfiPbzxExtract(BIOSUtility):
 
         cpio_path: str = os.path.join(extract_path, f'{cpio_name}.cpio')
 
-        with open(file=cpio_path, mode='wb') as cpio_object:
+        with open(cpio_path, 'wb') as cpio_object:
             cpio_object.write(cpio_bin)
 
         # Decompress PBZX > CPIO archive with 7-Zip
         if is_szip_supported(in_path=cpio_path, padding=padding, args=['-tCPIO'], silent=False):
             if szip_decompress(in_path=cpio_path, out_path=extract_path, in_name='CPIO',
                                padding=padding, args=['-tCPIO']):
-                os.remove(path=cpio_path)  # Successful extraction, delete PBZX > CPIO archive
+                os.remove(cpio_path)  # Successful extraction, delete PBZX > CPIO archive
             else:
                 return False
         else:

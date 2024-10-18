@@ -35,7 +35,7 @@ class AppleEfiIm4pSplit(BIOSUtility):
 
         input_buffer: bytes = file_to_bytes(in_object=input_object)
 
-        if PAT_APPLE_IM4P.search(string=input_buffer) and PAT_INTEL_FD.search(string=input_buffer):
+        if PAT_APPLE_IM4P.search(input_buffer) and PAT_INTEL_FD.search(input_buffer):
             return True
 
         return False
@@ -50,7 +50,7 @@ class AppleEfiIm4pSplit(BIOSUtility):
         make_dirs(in_path=extract_path, delete=True)
 
         # Detect IM4P EFI pattern
-        im4p_match: Match[bytes] | None = PAT_APPLE_IM4P.search(string=input_buffer)
+        im4p_match: Match[bytes] | None = PAT_APPLE_IM4P.search(input_buffer)
 
         if not im4p_match:
             return False
@@ -62,7 +62,7 @@ class AppleEfiIm4pSplit(BIOSUtility):
         mefi_data_bgn: int = im4p_match.start() + input_buffer[im4p_match.start() - 0x1]
 
         # IM4P mefi payload size
-        mefi_data_len: int = int.from_bytes(bytes=input_buffer[im4p_match.end() + 0x5:im4p_match.end() + 0x9],
+        mefi_data_len: int = int.from_bytes(input_buffer[im4p_match.end() + 0x5:im4p_match.end() + 0x9],
                                             byteorder='big')
 
         # Check if mefi is followed by _MEFIBIN
@@ -78,7 +78,7 @@ class AppleEfiIm4pSplit(BIOSUtility):
         input_buffer = input_buffer[efi_data_bgn:efi_data_bgn + efi_data_len]
 
         # Parse Intel Flash Descriptor pattern matches
-        for ifd in PAT_INTEL_FD.finditer(string=input_buffer):
+        for ifd in PAT_INTEL_FD.finditer(input_buffer):
             # Component Base Address from FD start (ICH8-ICH10 = 1, IBX = 2, CPT+ = 3)
             ifd_flmap0_fcba: int = input_buffer[ifd.start() + 0x4] * 0x10
 
@@ -107,7 +107,7 @@ class AppleEfiIm4pSplit(BIOSUtility):
             # Calculate Intel Flash Descriptor Flash Component Total Size
 
             # Component Count (00 = 1, 01 = 2)
-            ifd_flmap0_nc: int = ((int.from_bytes(bytes=input_buffer[ifd_match_end:ifd_match_end + 0x4],
+            ifd_flmap0_nc: int = ((int.from_bytes(input_buffer[ifd_match_end:ifd_match_end + 0x4],
                                                   byteorder='little') >> 8) & 3) + 1
 
             # PCH/ICH Strap Length (ME 2-8 & TXE 0-2 & SPS 1-2 <= 0x12, ME 9+ & TXE 3+ & SPS 3+ >= 0x13)
@@ -142,7 +142,7 @@ class AppleEfiIm4pSplit(BIOSUtility):
 
             output_path: str = os.path.join(extract_path, f'{output_name}_[{ifd_data_txt}].fd')
 
-            with open(file=output_path, mode='wb') as output_image:
+            with open(output_path, 'wb') as output_image:
                 output_image.write(output_data)
 
             printer(message=f'Split Apple EFI image at {ifd_data_txt}!', padding=padding)

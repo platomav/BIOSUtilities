@@ -40,7 +40,7 @@ class AmiBiosGuardHeader(ctypes.LittleEndianStructure):
 
         printer(message=['Size    :', f'0x{self.Size:X}'], padding=padding, new_line=False)
         printer(message=['Checksum:', f'0x{self.Checksum:04X}'], padding=padding, new_line=False)
-        printer(message=['Tag     :', self.Tag.decode(encoding='utf-8')], padding=padding, new_line=False)
+        printer(message=['Tag     :', self.Tag.decode('utf-8')], padding=padding, new_line=False)
         printer(message=['Flags   :', f'0x{self.Flags:02X}'], padding=padding, new_line=False)
 
 
@@ -68,9 +68,9 @@ class IntelBiosGuardHeader(ctypes.LittleEndianStructure):
 
         id_byte: bytes = bytes(self.PlatformID)
 
-        id_text: str = re.sub(r'[\n\t\r\x00 ]', '', id_byte.decode(encoding='utf-8', errors='ignore'))
+        id_text: str = re.sub(r'[\n\t\r\x00 ]', '', id_byte.decode('utf-8', 'ignore'))
 
-        id_hexs: str = f'{int.from_bytes(bytes=id_byte, byteorder="big"):0{0x10 * 2}X}'
+        id_hexs: str = f'{int.from_bytes(id_byte, byteorder="big"):0{0x10 * 2}X}'
 
         id_guid: str = f'{{{id_hexs[:8]}-{id_hexs[8:12]}-{id_hexs[12:16]}-{id_hexs[16:20]}-{id_hexs[20:]}}}'
 
@@ -192,9 +192,9 @@ class IntelBiosGuardSignatureRsa3k(ctypes.LittleEndianStructure):
     def struct_print(self, padding: int = 0) -> None:
         """ Display structure information """
 
-        modulus: str = f'{int.from_bytes(bytes=self.Modulus, byteorder="little"):0{0x180 * 2}X}'[:64]
+        modulus: str = f'{int.from_bytes(self.Modulus, byteorder="little"):0{0x180 * 2}X}'[:64]
         exponent: str = f'0x{self.Exponent:X}'
-        signature: str = f'{int.from_bytes(bytes=self.Signature, byteorder="little"):0{0x180 * 2}X}'[:64]
+        signature: str = f'{int.from_bytes(self.Signature, byteorder="little"):0{0x180 * 2}X}'[:64]
 
         printer(message=['Modulus  :', modulus], padding=padding, new_line=False)
         printer(message=['Exponent :', exponent], padding=padding, new_line=False)
@@ -286,7 +286,7 @@ class AmiPfatExtract(BIOSUtility):
 
             _ = self.parse_bg_script(script_data=pfat_buffer[bg_script_bgn:bg_script_end], padding=padding + 12)
 
-            with open(file=file_path, mode='ab') as out_dat:
+            with open(file_path, 'ab') as out_dat:
                 out_dat.write(bg_data_bin)
 
             all_blocks_dict[file_index] += bg_data_bin
@@ -302,12 +302,11 @@ class AmiPfatExtract(BIOSUtility):
 
         pfat_oob_path: str = os.path.join(extract_path, pfat_oob_name)
 
-        with open(file=pfat_oob_path, mode='wb') as out_oob:
+        with open(pfat_oob_path, 'wb') as out_oob:
             out_oob.write(pfat_oob_data)
 
         if self.check_format(input_object=pfat_oob_data):
-            self.parse_format(input_object=pfat_oob_data, extract_path=extract_folder(pfat_oob_path),
-                              padding=padding)
+            self.parse_format(input_object=pfat_oob_data, extract_path=extract_folder(pfat_oob_path), padding=padding)
 
         in_all_data: bytes = b''.join([block[1] for block in sorted(all_blocks_dict.items())])
 
@@ -315,7 +314,7 @@ class AmiPfatExtract(BIOSUtility):
 
         in_all_path: str = os.path.join(extract_path, in_all_name)
 
-        with open(file=in_all_path, mode='wb') as out_all:
+        with open(in_all_path, 'wb') as out_all:
             out_all.write(in_all_data + pfat_oob_data)
 
         return True
@@ -364,7 +363,7 @@ class AmiPfatExtract(BIOSUtility):
 
         input_buffer: bytes = file_to_bytes(in_object=input_object)
 
-        match: re.Match[bytes] | None = PAT_AMI_PFAT.search(string=input_buffer)
+        match: re.Match[bytes] | None = PAT_AMI_PFAT.search(input_buffer)
 
         return input_buffer[match.start() - 0x8:] if match else b''
 
@@ -431,7 +430,7 @@ class AmiPfatExtract(BIOSUtility):
 
         hdr_data: bytes = buffer[self.PFAT_AMI_HDR_LEN:hdr_size]
 
-        hdr_text: list[str] = hdr_data.decode(encoding='utf-8').splitlines()
+        hdr_text: list[str] = hdr_data.decode('utf-8').splitlines()
 
         printer(message='AMI BIOS Guard Header:\n', padding=padding)
 

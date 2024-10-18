@@ -47,7 +47,7 @@ class PanasonicBiosExtract(BIOSUtility):
         if not pe_file:
             return False
 
-        if ms_pe_desc(pe_file=pe_file, silent=True).decode(encoding='utf-8', errors='ignore').upper() not in (
+        if ms_pe_desc(pe_file=pe_file, silent=True).decode('utf-8', 'ignore').upper() not in (
                 self.PAN_PE_DESC_UNP, self.PAN_PE_DESC_UPD):
             return False
 
@@ -82,7 +82,7 @@ class PanasonicBiosExtract(BIOSUtility):
 
             ms_pe_info_show(pe_file=upd_pe_file, padding=upd_padding + 4)
 
-            os.remove(path=upd_pe_path)
+            os.remove(upd_pe_path)
 
         is_upd_extracted: bool = self._panasonic_res_extract(pe_file=upd_pe_file, extract_path=extract_path,
                                                              pe_name=upd_pe_name, padding=upd_padding + 8)
@@ -107,18 +107,18 @@ class PanasonicBiosExtract(BIOSUtility):
 
         input_data: bytes = file_to_bytes(in_object=input_object)
 
-        cab_match: re.Match[bytes] | None = PAT_MICROSOFT_CAB.search(string=input_data)
+        cab_match: re.Match[bytes] | None = PAT_MICROSOFT_CAB.search(input_data)
 
         if cab_match:
             cab_bgn: int = cab_match.start()
 
-            cab_end: int = cab_bgn + int.from_bytes(bytes=input_data[cab_bgn + 0x8:cab_bgn + 0xC], byteorder='little')
+            cab_end: int = cab_bgn + int.from_bytes(input_data[cab_bgn + 0x8:cab_bgn + 0xC], byteorder='little')
 
             cab_tag: str = f'[0x{cab_bgn:06X}-0x{cab_end:06X}]'
 
             cab_path: str = os.path.join(extract_path, f'CAB_{cab_tag}.cab')
 
-            with open(file=cab_path, mode='wb') as cab_file_object:
+            with open(cab_path, 'wb') as cab_file_object:
                 cab_file_object.write(input_data[cab_bgn:cab_end])
 
             if is_szip_supported(in_path=cab_path, padding=padding, silent=False):
@@ -126,7 +126,7 @@ class PanasonicBiosExtract(BIOSUtility):
 
                 if szip_decompress(in_path=cab_path, out_path=extract_path, in_name='CAB',
                                    padding=padding + 4, check=True):
-                    os.remove(path=cab_path)  # Successful extraction, delete CAB archive
+                    os.remove(cab_path)  # Successful extraction, delete CAB archive
 
                     for extracted_file_path in path_files(in_path=extract_path):
                         if is_file(in_path=extracted_file_path) and is_access(in_path=extracted_file_path):
@@ -136,7 +136,7 @@ class PanasonicBiosExtract(BIOSUtility):
                             if extracted_pe_file:
                                 extracted_pe_desc: bytes = ms_pe_desc(pe_file=extracted_pe_file, silent=True)
 
-                                if extracted_pe_desc.decode(encoding='utf-8', errors='ignore'
+                                if extracted_pe_desc.decode('utf-8', 'ignore'
                                                             ).upper() == self.PAN_PE_DESC_UPD:
                                     return extracted_file_path
 
@@ -173,7 +173,7 @@ class PanasonicBiosExtract(BIOSUtility):
                     try:
                         res_raw: bytes = lznt1.decompress(src=res_bin[0x8:])
 
-                        if len(res_raw) != int.from_bytes(bytes=res_bin[0x4:0x8], byteorder='little'):
+                        if len(res_raw) != int.from_bytes(res_bin[0x4:0x8], byteorder='little'):
                             raise ValueError('LZNT1_DECOMPRESS_BAD_SIZE')
 
                         printer(message='Successful LZNT1 decompression via Dissect!', padding=padding + 4)
@@ -204,11 +204,11 @@ class PanasonicBiosExtract(BIOSUtility):
                             printer(message=None, new_line=False)
 
                             for line in io.BytesIO(res_raw).readlines():
-                                line_text: str = line.decode(encoding='utf-8', errors='ignore').rstrip()
+                                line_text: str = line.decode('utf-8', 'ignore').rstrip()
 
                                 printer(message=line_text, padding=padding + 8, new_line=False)
 
-                        with open(file=f'{res_out}.{res_ext}', mode='wb') as out_file_object:
+                        with open(f'{res_out}.{res_ext}', 'wb') as out_file_object:
                             out_file_object.write(res_raw)
 
         return is_rcdata
@@ -236,7 +236,7 @@ class PanasonicBiosExtract(BIOSUtility):
 
         printer(message=img_tag, padding=padding)
 
-        with open(file=img_out, mode='wb') as out_img_object:
+        with open(img_out, 'wb') as out_img_object:
             out_img_object.write(img_bin)
 
         printer(message='Successful PE Data extraction!', padding=padding + 4)

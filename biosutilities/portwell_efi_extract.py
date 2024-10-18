@@ -50,9 +50,9 @@ class PortwellEfiExtract(BIOSUtility):
             return False
 
         # EFI images start with PE Header MZ
-        if PAT_MICROSOFT_MZ.search(string=input_buffer[:0x2]):
+        if PAT_MICROSOFT_MZ.search(input_buffer[:0x2]):
             # Portwell EFI files start with <UU>
-            if PAT_PORTWELL_EFI.search(string=pe_buffer[:0x4]):
+            if PAT_PORTWELL_EFI.search(pe_buffer[:0x4]):
                 return True
 
         return False
@@ -74,9 +74,9 @@ class PortwellEfiExtract(BIOSUtility):
         printer(message=efi_title, padding=padding)
 
         # Split EFI Payload into <UU> file chunks
-        efi_list: list[Match[bytes]] = list(PAT_PORTWELL_EFI.finditer(string=pe_data))
+        efi_list: list[Match[bytes]] = list(PAT_PORTWELL_EFI.finditer(pe_data))
 
-        for idx, val in enumerate(iterable=efi_list):
+        for idx, val in enumerate(efi_list):
             efi_bgn: int = val.end()
             efi_end: int = len(pe_data) if idx == len(efi_list) - 1 else efi_list[idx + 1].start()
 
@@ -112,7 +112,7 @@ class PortwellEfiExtract(BIOSUtility):
                 pe_data_end: int = pe_data_bgn + pe_section.SizeOfRawData
 
                 # Decode any valid UTF-16 .data PE section info to a parsable text buffer
-                pe_data_txt: str = input_buffer[pe_data_bgn:pe_data_end].decode(encoding='utf-16', errors='ignore')
+                pe_data_txt: str = input_buffer[pe_data_bgn:pe_data_end].decode('utf-16', 'ignore')
 
                 # Search .data for UEFI Unpacker tag
                 unpacker_tag_bgn: int = pe_data_txt.find(unpacker_tag_txt)
@@ -152,7 +152,7 @@ class PortwellEfiExtract(BIOSUtility):
             file_path: str = os.path.join(extract_path, safe_name(in_name=file_name))
 
             # Store EFI file data to drive
-            with open(file=file_path, mode='wb') as out_file:
+            with open(file_path, 'wb') as out_file:
                 out_file.write(file_data)
 
             # Attempt to detect EFI compression & decompress when applicable
@@ -161,11 +161,11 @@ class PortwellEfiExtract(BIOSUtility):
                 comp_fname: str = file_path + '.temp'
 
                 # Rename initial/compressed file
-                os.replace(src=file_path, dst=comp_fname)
+                os.replace(file_path, comp_fname)
 
                 # Successful decompression, delete compressed file
                 if efi_decompress(in_path=comp_fname, out_path=file_path, padding=padding + 8):
-                    os.remove(path=comp_fname)
+                    os.remove(comp_fname)
 
 
 if __name__ == '__main__':

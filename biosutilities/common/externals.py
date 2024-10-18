@@ -28,7 +28,7 @@ def get_external_path(cmd: str | list | tuple) -> str:
     external_path: str | None = external_root if is_dir(in_path=external_root) else None
 
     for command in cmd if isinstance(cmd, (list, tuple)) else [to_string(in_object=cmd)]:
-        command_path: str | None = shutil.which(cmd=command, path=external_path)
+        command_path: str | None = shutil.which(command, path=external_path)
 
         if command_path and is_file(in_path=command_path):
             return command_path
@@ -42,16 +42,15 @@ def big_script_tool() -> Type | None:
     try:
         bgst: str = get_external_path(cmd='big_script_tool')
 
-        bgst_spec: ModuleSpec | None = spec_from_file_location(
-            name='big_script_tool', location=re.sub(r'\.PY$', '.py', bgst))
+        bgst_spec: ModuleSpec | None = spec_from_file_location('big_script_tool', re.sub(r'\.PY$', '.py', bgst))
 
         if bgst_spec and isinstance(bgst_spec.loader, Loader):
-            bgst_module: ModuleType | None = module_from_spec(spec=bgst_spec)
+            bgst_module: ModuleType | None = module_from_spec(bgst_spec)
 
             if bgst_module:
                 sys.modules['big_script_tool'] = bgst_module
 
-                bgst_spec.loader.exec_module(module=bgst_module)
+                bgst_spec.loader.exec_module(bgst_module)
 
                 return getattr(bgst_module, 'BigScript')
     except OSError:

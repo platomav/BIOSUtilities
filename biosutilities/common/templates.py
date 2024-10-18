@@ -78,7 +78,7 @@ class BIOSUtility:
 
             if is_dir(in_path=extract_path):
                 for suffix in range(2, self.MAX_FAT32_ITEMS):
-                    renamed_path: str = f'{os.path.normpath(path=extract_path)}_{to_ordinal(in_number=suffix)}'
+                    renamed_path: str = f'{os.path.normpath(extract_path)}_{to_ordinal(in_number=suffix)}'
 
                     if not is_dir(in_path=renamed_path):
                         extract_path = renamed_path

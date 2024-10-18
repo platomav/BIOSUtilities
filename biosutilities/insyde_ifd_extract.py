@@ -41,12 +41,12 @@ class IflashHeader(ctypes.LittleEndianStructure):
     def get_image_tag(self) -> str:
         """ Get Insyde iFlash image tag """
 
-        return self.ImageTag.decode(encoding='utf-8', errors='ignore').strip('_')
+        return self.ImageTag.decode('utf-8', 'ignore').strip('_')
 
     def struct_print(self, padding: int = 0) -> None:
         """ Display structure information """
 
-        printer(message=['Signature :', self.Signature.decode(encoding='utf-8')], padding=padding, new_line=False)
+        printer(message=['Signature :', self.Signature.decode('utf-8')], padding=padding, new_line=False)
         printer(message=['Image Name:', self.get_image_tag()], padding=padding, new_line=False)
         printer(message=['Image Size:', f'0x{self.ImageSize:X}'], padding=padding, new_line=False)
         printer(message=['Total Size:', f'0x{self.TotalSize:X}'], padding=padding, new_line=False)
@@ -88,7 +88,7 @@ class InsydeIfdExtract(BIOSUtility):
         if bool(self._insyde_iflash_detect(input_buffer=input_buffer)):
             return True
 
-        if bool(PAT_INSYDE_SFX.search(string=input_buffer)):
+        if bool(PAT_INSYDE_SFX.search(input_buffer)):
             return True
 
         return False
@@ -114,7 +114,7 @@ class InsydeIfdExtract(BIOSUtility):
         iflash_match_all: list = []
         iflash_match_nan: list = [0x0, 0xFFFFFFFF]
 
-        for iflash_match in PAT_INSYDE_IFL.finditer(string=input_buffer):
+        for iflash_match in PAT_INSYDE_IFL.finditer(input_buffer):
             ifl_bgn: int = iflash_match.start()
 
             if len(input_buffer[ifl_bgn:]) <= self.INS_IFL_LEN:
@@ -175,7 +175,7 @@ class InsydeIfdExtract(BIOSUtility):
 
             out_path: str = os.path.join(extract_path, safe_name(in_name=out_name))
 
-            with open(file=out_path, mode='wb') as out_image:
+            with open(out_path, 'wb') as out_image:
                 out_image.write(img_bin)
 
             printer(message=f'Successful Insyde iFlash > {img_tag} extraction!', padding=padding + 12)
@@ -187,7 +187,7 @@ class InsydeIfdExtract(BIOSUtility):
     def _insyde_packer_extract(self, input_buffer: bytes, extract_path: str, padding: int = 0) -> int:
         """ Extract Insyde iFdPacker 7-Zip SFX 7z Update image """
 
-        match_sfx: re.Match[bytes] | None = PAT_INSYDE_SFX.search(string=input_buffer)
+        match_sfx: re.Match[bytes] | None = PAT_INSYDE_SFX.search(input_buffer)
 
         if not match_sfx:
             return 127
@@ -201,7 +201,7 @@ class InsydeIfdExtract(BIOSUtility):
         if sfx_buffer[:0x5] == b'\x6E\xF4\x79\x5F\x4E':
             printer(message='Detected Insyde iFdPacker > 7-Zip SFX > Obfuscation!', padding=padding + 4)
 
-            for index, byte in enumerate(iterable=sfx_buffer):
+            for index, byte in enumerate(sfx_buffer):
                 sfx_buffer[index] = byte // 2 + (128 if byte % 2 else 0)
 
             printer(message='Removed Insyde iFdPacker > 7-Zip SFX > Obfuscation!', padding=padding + 8)
@@ -215,13 +215,13 @@ class InsydeIfdExtract(BIOSUtility):
 
         sfx_path: str = os.path.join(extract_path, 'Insyde_iFdPacker_SFX.7z')
 
-        with open(file=sfx_path, mode='wb') as sfx_file_object:
+        with open(sfx_path, 'wb') as sfx_file_object:
             sfx_file_object.write(sfx_buffer)
 
         if is_szip_supported(in_path=sfx_path, padding=padding + 8, args=[f'-p{self.INS_SFX_PWD}'], silent=False):
             if szip_decompress(in_path=sfx_path, out_path=extract_path, in_name='Insyde iFdPacker > 7-Zip SFX',
                                padding=padding + 8, args=[f'-p{self.INS_SFX_PWD}'], check=True):
-                os.remove(path=sfx_path)
+                os.remove(sfx_path)
             else:
                 return 125
         else:

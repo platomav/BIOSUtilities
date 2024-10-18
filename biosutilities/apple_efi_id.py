@@ -57,12 +57,12 @@ class IntelBiosId(ctypes.LittleEndianStructure):
 
     @staticmethod
     def _decode(field: bytes) -> str:
-        return struct.pack('B' * len(field), *field).decode(encoding='utf-16', errors='ignore').strip('\x00 ')
+        return struct.pack('B' * len(field), *field).decode('utf-16', 'ignore').strip('\x00 ')
 
     def get_bios_id(self) -> dict[str, str]:
         """ Get Apple/Intel EFI BIOS ID """
 
-        intel_sig: str = self.Signature.decode(encoding='utf-8')
+        intel_sig: str = self.Signature.decode('utf-8')
 
         board_id: str = self._decode(field=self.BoardID)
         board_ext: str = self._decode(field=self.BoardExt)
@@ -142,13 +142,13 @@ class AppleEfiIdentify(BIOSUtility):
             input_path = os.path.join(runtime_root(), 'APPLE_EFI_ID_INPUT_BUFFER_CHECK.tmp')
             input_buffer = input_object
 
-            with open(file=input_path, mode='wb') as check_out:
+            with open(input_path, 'wb') as check_out:
                 check_out.write(input_buffer)
         else:
             return False
 
         try:
-            if PAT_INTEL_IBIOSI.search(string=input_buffer):
+            if PAT_INTEL_IBIOSI.search(input_buffer):
                 return True
 
             _ = subprocess.run([uefifind_path(), input_path, 'body', 'list', self.PAT_UEFIFIND],
@@ -173,10 +173,10 @@ class AppleEfiIdentify(BIOSUtility):
         else:
             input_path = os.path.join(runtime_root(), 'APPLE_EFI_ID_INPUT_BUFFER_PARSE.bin')
 
-            with open(file=input_path, mode='wb') as parse_out:
+            with open(input_path, 'wb') as parse_out:
                 parse_out.write(input_buffer)
 
-        bios_id_match: Match[bytes] | None = PAT_INTEL_IBIOSI.search(string=input_buffer)
+        bios_id_match: Match[bytes] | None = PAT_INTEL_IBIOSI.search(input_buffer)
 
         if bios_id_match:
             bios_id_res: str = f'0x{bios_id_match.start():X}'
@@ -195,11 +195,11 @@ class AppleEfiIdentify(BIOSUtility):
                 _ = subprocess.run([uefiextract_path(), input_path, bios_id_res, '-o', extract_path, '-m', 'body'],
                                    check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-                with open(file=os.path.join(extract_path, 'body.bin'), mode='rb') as raw_body:
+                with open(os.path.join(extract_path, 'body.bin'), 'rb') as raw_body:
                     body_buffer: bytes = raw_body.read()
 
                 # Detect decompressed $IBIOSI$ pattern
-                bios_id_match = PAT_INTEL_IBIOSI.search(string=body_buffer)
+                bios_id_match = PAT_INTEL_IBIOSI.search(body_buffer)
 
                 if not bios_id_match:
                     raise RuntimeError('Failed to detect decompressed $IBIOSI$ pattern!')
@@ -231,7 +231,7 @@ class AppleEfiIdentify(BIOSUtility):
         return True
 
     def _apple_rom_version(self, input_buffer: bytes | bytearray, padding: int = 0) -> bool:
-        rom_version_match: Match[bytes] | None = PAT_APPLE_ROM_VER.search(string=input_buffer)
+        rom_version_match: Match[bytes] | None = PAT_APPLE_ROM_VER.search(input_buffer)
 
         if rom_version_match:
             rom_version_match_off: int = rom_version_match.start()

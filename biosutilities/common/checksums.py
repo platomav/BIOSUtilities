@@ -12,7 +12,7 @@ def checksum_16(data: bytes | bytearray, value: int = 0, order: str = 'little') 
 
     for idx in range(0, len(data), 2):
         # noinspection PyTypeChecker
-        value += int.from_bytes(bytes=data[idx:idx + 2], byteorder=order)  # type: ignore
+        value += int.from_bytes(data[idx:idx + 2], byteorder=order)  # type: ignore
 
     value &= 0xFFFF
 

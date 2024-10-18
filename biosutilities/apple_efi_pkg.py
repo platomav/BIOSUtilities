@@ -38,7 +38,7 @@ class AppleEfiPkgExtract(BIOSUtility):
         else:
             input_path = os.path.join(runtime_root(), 'APPLE_EFI_PKG_INPUT_BUFFER_CHECK.bin')
 
-            with open(file=input_path, mode='wb') as input_path_object:
+            with open(input_path, 'wb') as input_path_object:
                 input_path_object.write(input_buffer)
 
         for pkg_type in ('XAR', 'TAR', 'DMG'):
@@ -48,7 +48,7 @@ class AppleEfiPkgExtract(BIOSUtility):
                 break
 
         if input_path != input_object:
-            os.remove(path=input_path)
+            os.remove(input_path)
 
         return is_apple_efi_pkg
 
@@ -60,7 +60,7 @@ class AppleEfiPkgExtract(BIOSUtility):
         else:
             input_path = os.path.join(runtime_root(), 'APPLE_EFI_PKG_INPUT_BUFFER_PARSE.bin')
 
-            with open(file=input_path, mode='wb') as input_path_object:
+            with open(input_path, 'wb') as input_path_object:
                 input_path_object.write(file_to_bytes(in_object=input_object))
 
         make_dirs(in_path=extract_path, delete=True)
@@ -78,7 +78,7 @@ class AppleEfiPkgExtract(BIOSUtility):
             return False
 
         if input_path != input_object:
-            os.remove(path=input_path)
+            os.remove(input_path)
 
         for work_file in path_files(in_path=working_dir):
             if is_file(in_path=work_file) and is_access(in_path=work_file):
@@ -205,7 +205,7 @@ class AppleEfiPkgExtract(BIOSUtility):
                             in_path=efi_source), padding=padding + 8):
                         efi_dest: str = os.path.join(path_parent(in_path=efi_source), efi_id_module.efi_file_name)
 
-                        os.rename(src=efi_source, dst=efi_dest)
+                        os.replace(efi_source, efi_dest)
 
         for efi_final in path_files(in_path=working_dir):
             if is_file(in_path=efi_final) and is_access(in_path=efi_final):

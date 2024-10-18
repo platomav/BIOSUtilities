@@ -28,7 +28,7 @@ def safe_name(in_name: str) -> str:
 
     name_repr: str = repr(in_name).strip("'")
 
-    return re.sub(pattern=r'[\\/:"*?<>|]+', repl='_', string=name_repr)
+    return re.sub(r'[\\/:"*?<>|]+', '_', name_repr)
 
 
 def safe_path(base_path: str, user_paths: str | list | tuple) -> str:
@@ -65,7 +65,7 @@ def is_safe_path(base_path: str, target_path: str) -> bool:
 
     target_path = real_path(in_path=target_path)
 
-    common_path: str = os.path.commonpath(paths=(base_path, target_path))
+    common_path: str = os.path.commonpath((base_path, target_path))
 
     return base_path == common_path
 
@@ -73,7 +73,7 @@ def is_safe_path(base_path: str, target_path: str) -> bool:
 def norm_path(base_path: str, user_path: str) -> str:
     """ Create normalized base path + OS separator + user path """
 
-    return os.path.normpath(path=base_path + os.sep + user_path)
+    return os.path.normpath(base_path + os.sep + user_path)
 
 
 def real_path(in_path: str) -> str:
@@ -132,7 +132,7 @@ def delete_dirs(in_path: str) -> None:
     """ Delete folder(s), if present """
 
     if is_dir(in_path=in_path):
-        shutil.rmtree(path=in_path, onerror=clear_readonly_callback)  # pylint: disable=deprecated-argument
+        shutil.rmtree(in_path, onerror=clear_readonly_callback)  # pylint: disable=deprecated-argument
 
 
 def delete_file(in_path: str) -> None:
@@ -141,22 +141,22 @@ def delete_file(in_path: str) -> None:
     if Path(in_path).is_file():
         clear_readonly(in_path=in_path)
 
-        os.remove(path=in_path)
+        os.remove(in_path)
 
 
 def copy_file(in_path: str, out_path: str, metadata: bool = False) -> None:
     """ Copy file to path with or w/o metadata """
 
     if metadata:
-        shutil.copy2(src=in_path, dst=out_path)
+        shutil.copy2(in_path, out_path)
     else:
-        shutil.copy(src=in_path, dst=out_path)
+        shutil.copy(in_path, out_path)
 
 
 def clear_readonly(in_path: str) -> None:
     """ Clear read-only file attribute """
 
-    os.chmod(path=in_path, mode=stat.S_IWRITE)
+    os.chmod(in_path, stat.S_IWRITE)
 
 
 def clear_readonly_callback(in_func: Callable, in_path: str, _) -> None:
@@ -164,7 +164,7 @@ def clear_readonly_callback(in_func: Callable, in_path: str, _) -> None:
 
     clear_readonly(in_path=in_path)
 
-    in_func(path=in_path)
+    in_func(in_path)
 
 
 def path_files(in_path: str, follow_links: bool = False, root_only: bool = False) -> list[str]:
@@ -172,9 +172,9 @@ def path_files(in_path: str, follow_links: bool = False, root_only: bool = False
 
     file_paths: list[str] = []
 
-    for root_path, _, file_names in os.walk(top=in_path, followlinks=follow_links):
+    for root_path, _, file_names in os.walk(in_path, followlinks=follow_links):
         for file_name in file_names:
-            file_path: str = os.path.abspath(path=os.path.join(root_path, file_name))
+            file_path: str = os.path.abspath(os.path.join(root_path, file_name))
 
             if is_file(in_path=file_path):
                 file_paths.append(file_path)
@@ -194,14 +194,14 @@ def is_dir(in_path: str) -> bool:
 def is_file(in_path: str, allow_broken_links: bool = False) -> bool:
     """ Check if path is a regural file or symlink (valid or broken) """
 
-    in_path_abs: str = os.path.abspath(path=in_path)
+    in_path_abs: str = os.path.abspath(in_path)
 
-    if os.path.lexists(path=in_path_abs):
+    if os.path.lexists(in_path_abs):
         if not is_dir(in_path=in_path_abs):
             if allow_broken_links:
-                return os.path.isfile(path=in_path_abs) or os.path.islink(path=in_path_abs)
+                return os.path.isfile(in_path_abs) or os.path.islink(in_path_abs)
 
-            return os.path.isfile(path=in_path_abs)
+            return os.path.isfile(in_path_abs)
 
     return False
 
@@ -212,13 +212,13 @@ def is_access(in_path: str, access_mode: int = os.R_OK, follow_links: bool = Fal
     if not follow_links and os.access not in os.supports_follow_symlinks:
         follow_links = True
 
-    return os.access(path=in_path, mode=access_mode, follow_symlinks=follow_links)
+    return os.access(in_path, access_mode, follow_symlinks=follow_links)
 
 
 def is_empty_dir(in_path: str, follow_links: bool = False) -> bool:
     """ Check if directory is empty (file-wise) """
 
-    for _, _, filenames in os.walk(top=in_path, followlinks=follow_links):
+    for _, _, filenames in os.walk(in_path, followlinks=follow_links):
         if filenames:
             return False
 

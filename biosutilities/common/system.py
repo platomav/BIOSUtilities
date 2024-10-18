@@ -37,7 +37,7 @@ def printer(message: str | list | tuple | None = None, padding: int = 0, new_lin
 
     message_output: str = '\n' if new_line else ''
 
-    for message_line_index, message_line_text in enumerate(iterable=message_string.split('\n')):
+    for message_line_index, message_line_text in enumerate(message_string.split('\n')):
         line_new: str = '' if message_line_index == 0 else '\n'
 
         line_text: str = message_line_text.strip() if strip else message_line_text

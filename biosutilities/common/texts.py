@@ -38,7 +38,7 @@ def file_to_bytes(in_object: str | bytes | bytearray) -> bytes:
     """ Get bytes from given buffer or file path """
 
     if not isinstance(in_object, (bytes, bytearray)):
-        with open(file=to_string(in_object=in_object), mode='rb') as object_data:
+        with open(to_string(in_object=in_object), 'rb') as object_data:
             object_bytes: bytes = object_data.read()
     else:
         object_bytes = in_object
@@ -50,7 +50,7 @@ def bytes_to_hex(in_buffer: bytes, order: str, data_len: int, slice_len: int | N
     """ Converts bytes to hex string, controlling endianess, data size and string slicing """
 
     # noinspection PyTypeChecker
-    return f'{int.from_bytes(bytes=in_buffer, byteorder=order):0{data_len * 2}X}'[:slice_len]  # type: ignore
+    return f'{int.from_bytes(in_buffer, byteorder=order):0{data_len * 2}X}'[:slice_len]  # type: ignore
 
 
 def remove_quotes(in_text: str) -> str:

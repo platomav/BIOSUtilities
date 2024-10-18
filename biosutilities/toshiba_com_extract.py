@@ -28,7 +28,7 @@ class ToshibaComExtract(BIOSUtility):
 
         input_buffer: bytes = file_to_bytes(in_object=input_object)
 
-        return bool(PAT_TOSHIBA_COM.search(string=input_buffer, endpos=0x100))
+        return bool(PAT_TOSHIBA_COM.search(input_buffer, 0, 0x100))
 
     def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool:
         """ Parse & Extract Toshiba BIOS COM image """
@@ -40,7 +40,7 @@ class ToshibaComExtract(BIOSUtility):
         else:
             input_path = os.path.join(extract_path, 'toshiba_bios.com')
 
-            with open(file=input_path, mode='wb') as input_buffer:
+            with open(input_path, 'wb') as input_buffer:
                 input_buffer.write(file_to_bytes(in_object=input_object))
 
         output_name: str = f'{safe_name(in_name=path_stem(in_path=input_path))}_extracted.bin'
@@ -58,7 +58,7 @@ class ToshibaComExtract(BIOSUtility):
             return False
 
         if input_path != input_object:
-            os.remove(path=input_path)
+            os.remove(input_path)
 
         printer(message='Successful extraction via ToshibaComExtractor!', padding=padding)
 

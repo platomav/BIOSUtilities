@@ -20,49 +20,45 @@ class FujitsuUpcExtract(BIOSUtility):
 
     TITLE: str = 'Fujitsu UPC BIOS Extractor'
 
-    def check_format(self, input_object: str | bytes | bytearray) -> bool:
+    def check_format(self) -> bool:
         """ Check if input is Fujitsu UPC image """
         is_upc: bool = False
 
-        if isinstance(input_object, str) and is_file(in_path=input_object):
-            is_upc = path_suffixes(input_object)[-1].upper() == '.UPC'
-        elif isinstance(input_object, (bytes, bytearray)):
+        if isinstance(self.input_object, str) and is_file(in_path=self.input_object):
+            is_upc = path_suffixes(self.input_object)[-1].upper() == '.UPC'
+        elif isinstance(self.input_object, (bytes, bytearray)):
             is_upc = True
 
         if is_upc:
-            is_upc = is_efi_compressed(data=file_to_bytes(in_object=input_object))
+            is_upc = is_efi_compressed(data=file_to_bytes(in_object=self.input_object))
 
         return is_upc
 
-    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool:
+    def parse_format(self) -> bool:
         """ Parse & Extract Fujitsu UPC image """
 
-        make_dirs(in_path=extract_path, delete=True)
+        make_dirs(in_path=self.extract_path, delete=True)
 
-        if isinstance(input_object, str) and is_file(in_path=input_object):
-            input_name: str = path_name(in_path=input_object)
+        if isinstance(self.input_object, str) and is_file(in_path=self.input_object):
+            input_name: str = path_name(in_path=self.input_object)
 
-            input_path: str = input_object
+            input_path: str = self.input_object
 
             if input_name.upper().endswith('.UPC'):
                 input_name = input_name[:-4]
         else:
             input_name = 'Fujitsu_UPC_Image'
 
-            input_path = os.path.join(extract_path, f'{input_name}.UPC')
+            input_path = os.path.join(self.extract_path, f'{input_name}.UPC')
 
             with open(input_path, 'wb') as input_path_object:
-                input_path_object.write(file_to_bytes(in_object=input_object))
+                input_path_object.write(file_to_bytes(in_object=self.input_object))
 
-        output_path: str = os.path.join(extract_path, f'{input_name}.bin')
+        output_path: str = os.path.join(self.extract_path, f'{input_name}.bin')
 
-        efi_status: bool = efi_decompress(in_path=input_path, out_path=output_path, padding=padding)
+        efi_status: bool = efi_decompress(in_path=input_path, out_path=output_path, padding=self.padding)
 
-        if input_path != input_object:
+        if input_path != self.input_object:
             os.remove(input_path)
 
         return efi_status
-
-
-if __name__ == '__main__':
-    FujitsuUpcExtract().run_utility()

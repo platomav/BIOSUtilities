@@ -213,17 +213,17 @@ class AmiPfatExtract(BIOSUtility):
     PFAT_INT_SIG_R3K_LEN: Final[int] = ctypes.sizeof(IntelBiosGuardSignatureRsa3k)
     PFAT_INT_SIG_MAX_LEN: Final[int] = PFAT_INT_SIG_HDR_LEN + PFAT_INT_SIG_R3K_LEN
 
-    def check_format(self, input_object: str | bytes | bytearray) -> bool:
+    def check_format(self) -> bool:
         """ Check if input is AMI BIOS Guard """
 
-        input_buffer: bytes = file_to_bytes(in_object=input_object)
+        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
 
         return bool(self._get_ami_pfat(input_object=input_buffer))
 
-    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool:
+    def parse_format(self) -> bool:
         """ Process and store AMI BIOS Guard output file """
 
-        input_buffer: bytes = file_to_bytes(in_object=input_object)
+        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
 
         pfat_buffer: bytes = self._get_ami_pfat(input_object=input_buffer)
 
@@ -233,19 +233,19 @@ class AmiPfatExtract(BIOSUtility):
 
         bg_sign_len: int = 0
 
-        extract_name: str = path_name(in_path=extract_path).removesuffix(extract_suffix())
+        extract_name: str = path_name(in_path=self.extract_path).removesuffix(extract_suffix())
 
-        make_dirs(in_path=extract_path, delete=True)
+        make_dirs(in_path=self.extract_path, delete=True)
 
-        block_all, block_off, file_count = self._parse_pfat_hdr(buffer=pfat_buffer, padding=padding)
+        block_all, block_off, file_count = self._parse_pfat_hdr(buffer=pfat_buffer, padding=self.padding)
 
         for block in block_all:
             file_desc, file_name, _, _, _, file_index, block_index, block_count = block
 
             if block_index == 0:
-                printer(message=file_desc, padding=padding + 4)
+                printer(message=file_desc, padding=self.padding + 4)
 
-                file_path = os.path.join(extract_path, self._get_file_name(index=file_index + 1, name=file_name))
+                file_path = os.path.join(self.extract_path, self._get_file_name(index=file_index + 1, name=file_name))
 
                 all_blocks_dict[file_index] = b''
 
@@ -253,9 +253,9 @@ class AmiPfatExtract(BIOSUtility):
 
             bg_hdr: Any = ctypes_struct(buffer=pfat_buffer, start_offset=block_off, class_object=IntelBiosGuardHeader)
 
-            printer(message=f'Intel BIOS Guard {block_status} Header:\n', padding=padding + 8)
+            printer(message=f'Intel BIOS Guard {block_status} Header:\n', padding=self.padding + 8)
 
-            bg_hdr.struct_print(padding=padding + 12)
+            bg_hdr.struct_print(padding=self.padding + 12)
 
             bg_script_bgn: int = block_off + self.PFAT_INT_HDR_LEN
             bg_script_end: int = bg_script_bgn + bg_hdr.ScriptSize
@@ -270,7 +270,7 @@ class AmiPfatExtract(BIOSUtility):
             is_sfam, _, _, _, _ = bg_hdr.get_flags()  # SFAM, ProtectEC, GFXMitDis, FTU, Reserved
 
             if is_sfam:
-                printer(message=f'Intel BIOS Guard {block_status} Signature:\n', padding=padding + 8)
+                printer(message=f'Intel BIOS Guard {block_status} Signature:\n', padding=self.padding + 8)
 
                 # Manual BIOS Guard Signature length detection from Header pattern (e.g. Panasonic)
                 if bg_sign_len == 0:
@@ -280,11 +280,11 @@ class AmiPfatExtract(BIOSUtility):
 
                 # Adjust next block to start after current block Data + Signature
                 block_off += self.parse_bg_sign(input_data=pfat_buffer, sign_offset=bg_data_end,
-                                                sign_length=bg_sign_len, print_info=True, padding=padding + 12)
+                                                sign_length=bg_sign_len, print_info=True, padding=self.padding + 12)
 
-            printer(message=f'Intel BIOS Guard {block_status} Script:\n', padding=padding + 8)
+            printer(message=f'Intel BIOS Guard {block_status} Script:\n', padding=self.padding + 8)
 
-            _ = self.parse_bg_script(script_data=pfat_buffer[bg_script_bgn:bg_script_end], padding=padding + 12)
+            _ = self.parse_bg_script(script_data=pfat_buffer[bg_script_bgn:bg_script_end], padding=self.padding + 12)
 
             with open(file_path, 'ab') as out_dat:
                 out_dat.write(bg_data_bin)
@@ -292,27 +292,33 @@ class AmiPfatExtract(BIOSUtility):
             all_blocks_dict[file_index] += bg_data_bin
 
             if block_index + 1 == block_count:
-                if self.check_format(input_object=all_blocks_dict[file_index]):
-                    self.parse_format(input_object=all_blocks_dict[file_index],
-                                      extract_path=extract_folder(file_path), padding=padding + 8)
+                ami_pfat_extract: AmiPfatExtract = AmiPfatExtract(
+                    input_object=all_blocks_dict[file_index], extract_path=extract_folder(file_path),
+                    padding=self.padding + 8)
+
+                if ami_pfat_extract.check_format():
+                    ami_pfat_extract.parse_format()
 
         pfat_oob_data: bytes = pfat_buffer[block_off:]  # Store out-of-bounds data after the end of PFAT files
 
         pfat_oob_name: str = self._get_file_name(index=file_count + 1, name=f'{extract_name}_OOB.bin')
 
-        pfat_oob_path: str = os.path.join(extract_path, pfat_oob_name)
+        pfat_oob_path: str = os.path.join(self.extract_path, pfat_oob_name)
 
         with open(pfat_oob_path, 'wb') as out_oob:
             out_oob.write(pfat_oob_data)
 
-        if self.check_format(input_object=pfat_oob_data):
-            self.parse_format(input_object=pfat_oob_data, extract_path=extract_folder(pfat_oob_path), padding=padding)
+        ami_pfat_extract = AmiPfatExtract(
+            input_object=pfat_oob_data, extract_path=extract_folder(pfat_oob_path), padding=self.padding)
+
+        if ami_pfat_extract.check_format():
+            ami_pfat_extract.parse_format()
 
         in_all_data: bytes = b''.join([block[1] for block in sorted(all_blocks_dict.items())])
 
         in_all_name: str = self._get_file_name(index=0, name=f'{extract_name}_ALL.bin')
 
-        in_all_path: str = os.path.join(extract_path, in_all_name)
+        in_all_path: str = os.path.join(self.extract_path, in_all_name)
 
         with open(in_all_path, 'wb') as out_all:
             out_all.write(in_all_data + pfat_oob_data)
@@ -471,7 +477,3 @@ class AmiPfatExtract(BIOSUtility):
                 printer(message=block[0], padding=padding + 8, new_line=False)
 
         return block_all, hdr_size, files_count
-
-
-if __name__ == '__main__':
-    AmiPfatExtract().run_utility()

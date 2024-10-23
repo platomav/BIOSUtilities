@@ -226,11 +226,6 @@ class DellPfsExtract(BIOSUtility):
 
     TITLE: str = 'Dell PFS Update Extractor'
 
-    ARGUMENTS: list[tuple[list[str], dict[str, str]]] = [
-        (['-a', '--advanced'], {'help': 'extract signatures and metadata', 'action': 'store_true'}),
-        (['-s', '--structure'], {'help': 'show PFS structure information', 'action': 'store_true'})
-    ]
-
     PFS_HEAD_LEN: Final[int] = ctypes.sizeof(DellPfsHeader)
     PFS_FOOT_LEN: Final[int] = ctypes.sizeof(DellPfsFooter)
     PFS_INFO_LEN: Final[int] = ctypes.sizeof(DellPfsInfo)
@@ -239,10 +234,17 @@ class DellPfsExtract(BIOSUtility):
     PFS_PFAT_LEN: Final[int] = ctypes.sizeof(DellPfsPfatMetadata)
     PFAT_HDR_LEN: Final[int] = ctypes.sizeof(IntelBiosGuardHeader)
 
-    def check_format(self, input_object: str | bytes | bytearray) -> bool:
+    def __init__(self, input_object: str | bytes | bytearray = b'', extract_path: str = '', padding: int = 0,
+                 advanced: bool = False, structure: bool = False) -> None:
+        super().__init__(input_object=input_object, extract_path=extract_path, padding=padding)
+
+        self.advanced: bool = advanced
+        self.structure: bool = structure
+
+    def check_format(self) -> bool:
         """ Check if input is Dell PFS/PKG image """
 
-        input_buffer: bytes = file_to_bytes(in_object=input_object)
+        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
 
         if self._is_pfs_pkg(input_object=input_buffer):
             return True
@@ -252,33 +254,34 @@ class DellPfsExtract(BIOSUtility):
 
         return False
 
-    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool:
+    def parse_format(self) -> bool:
         """ Parse & Extract Dell PFS Update image """
 
-        input_buffer: bytes = file_to_bytes(in_object=input_object)
+        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
 
-        make_dirs(in_path=extract_path, delete=True)
+        make_dirs(in_path=self.extract_path, delete=True)
 
         is_dell_pkg: bool = self._is_pfs_pkg(input_object=input_buffer)
 
         if is_dell_pkg:
             pfs_results: dict[str, bytes] = self._thinos_pkg_extract(
-                input_object=input_buffer, extract_path=extract_path)
+                input_object=input_buffer, extract_path=self.extract_path)
         else:
-            pfs_results = {path_stem(in_path=input_object) if isinstance(input_object, str) and is_file(
-                in_path=input_object) else 'Image': input_buffer}
+            pfs_results = {path_stem(in_path=self.input_object) if isinstance(self.input_object, str) and is_file(
+                in_path=self.input_object) else 'Image': input_buffer}
 
         # Parse each Dell PFS image contained in the input file
         for pfs_index, (pfs_name, pfs_buffer) in enumerate(pfs_results.items(), start=1):
             # At ThinOS PKG packages, multiple PFS images may be included in separate model-named folders
-            pfs_path: str = os.path.join(extract_path, f'{pfs_index} {pfs_name}') if is_dell_pkg else extract_path
+            pfs_path: str = os.path.join(
+                self.extract_path, f'{pfs_index} {pfs_name}') if is_dell_pkg else self.extract_path
 
             # Parse each PFS ZLIB section
             for zlib_offset in self._get_section_offsets(buffer=pfs_buffer):
                 # Call the PFS ZLIB section parser function
                 self._pfs_section_parse(zlib_data=pfs_buffer, zlib_start=zlib_offset, extract_path=pfs_path,
                                         pfs_name=pfs_name, pfs_index=pfs_index, pfs_count=1, is_rec=False,
-                                        padding=padding)
+                                        padding=self.padding)
 
         return True
 
@@ -496,7 +499,7 @@ class DellPfsExtract(BIOSUtility):
         """ Parse & Extract Dell PFS Volume """
 
         # Show PFS Volume indicator
-        if self.arguments.structure:
+        if self.structure:
             printer(message='PFS Volume:', padding=padding)
 
         # Get PFS Header Structure values
@@ -509,7 +512,7 @@ class DellPfsExtract(BIOSUtility):
             return  # Critical error, abort
 
         # Show PFS Header Structure info
-        if self.arguments.structure:
+        if self.structure:
             printer(message='PFS Header:\n', padding=padding + 4)
 
             pfs_hdr.struct_print(padding=padding + 8)
@@ -576,7 +579,7 @@ class DellPfsExtract(BIOSUtility):
                                                    class_object=DellPfsInfo)
 
             # Show PFS Information Header Structure info
-            if self.arguments.structure:
+            if self.structure:
                 printer(message='PFS Filename Information Header:\n', padding=padding + 4)
 
                 filename_info_hdr.struct_print(padding=padding + 8)
@@ -610,7 +613,7 @@ class DellPfsExtract(BIOSUtility):
             entry_name: str = safe_name(in_name=name_data.decode('utf-16').strip())
 
             # Show PFS FileName Structure info
-            if self.arguments.structure:
+            if self.structure:
                 printer(message='PFS FileName Entry:\n', padding=padding + 8)
 
                 entry_info_mod.struct_print(name=entry_name, padding=padding + 12)
@@ -639,7 +642,7 @@ class DellPfsExtract(BIOSUtility):
                     entry_info: Any = ctypes_struct(buffer=entry_metadata, start_offset=0, class_object=DellPfsMetadata)
 
                     # Show Nested PFS Metadata Structure info
-                    if self.arguments.structure:
+                    if self.structure:
                         printer(message='PFS Metadata Information:\n', padding=padding + 4)
 
                         entry_info.struct_print(padding=padding + 8)
@@ -667,7 +670,7 @@ class DellPfsExtract(BIOSUtility):
                                                     class_object=DellPfsInfo)
 
             # Show PFS Information Header Structure info
-            if self.arguments.structure:
+            if self.structure:
                 printer(message='PFS Signature Information Header:\n', padding=padding + 4)
 
                 signature_info_hdr.struct_print(padding=padding + 8)
@@ -688,7 +691,7 @@ class DellPfsExtract(BIOSUtility):
                                            class_object=pfs_entry_struct)
 
             # Show PFS Information Header Structure info
-            if self.arguments.structure:
+            if self.structure:
                 printer(message='PFS Information Entry:\n', padding=padding + 8)
 
                 entry_hdr.struct_print(padding=padding + 12)
@@ -703,7 +706,7 @@ class DellPfsExtract(BIOSUtility):
 
             sign_data_txt: str = f'{int.from_bytes(sign_data_raw, byteorder="little"):0{sign_size * 2}X}'
 
-            if self.arguments.structure:
+            if self.structure:
                 printer(message='Signature Information:\n', padding=padding + 8)
 
                 printer(message=f'Signature Size: 0x{sign_size:X}', padding=padding + 12, new_line=False)
@@ -757,11 +760,11 @@ class DellPfsExtract(BIOSUtility):
                                                      class_object=DellPfsHeader)
 
                 # Show PFS Volume indicator
-                if self.arguments.structure:
+                if self.structure:
                     printer(message='PFS Volume:', padding=padding + 4)
 
                 # Show sub-PFS Header Structure Info
-                if self.arguments.structure:
+                if self.structure:
                     printer(message='PFS Header:\n', padding=padding + 8)
 
                     pfat_pfs_header.struct_print(padding=padding + 12)
@@ -824,12 +827,12 @@ class DellPfsExtract(BIOSUtility):
             elif file_type == 'NAME_INFO':
                 file_name = 'Filename Information'
 
-                if not self.arguments.advanced:
+                if not self.advanced:
                     continue  # Don't store Filename Information in non-advanced user mode
             elif file_type == 'SIG_INFO':
                 file_name = 'Signature Information'
 
-                if not self.arguments.advanced:
+                if not self.advanced:
                     continue  # Don't store Signature Information in non-advanced user mode
             else:
                 file_name = ''
@@ -863,13 +866,13 @@ class DellPfsExtract(BIOSUtility):
             if file_data and not is_zlib:
                 write_files.append([file_data, 'data'])  # PFS Entry Data Payload
 
-            if file_data_sig and self.arguments.advanced:
+            if file_data_sig and self.advanced:
                 write_files.append([file_data_sig, 'sign_data'])  # PFS Entry Data Signature
 
-            if file_meta and (is_zlib or self.arguments.advanced):
+            if file_meta and (is_zlib or self.advanced):
                 write_files.append([file_meta, 'meta'])  # PFS Entry Metadata Payload
 
-            if file_meta_sig and self.arguments.advanced:
+            if file_meta_sig and self.advanced:
                 write_files.append([file_meta_sig, 'sign_meta'])  # PFS Entry Metadata Signature
 
             # Write/Extract PFS Entry files
@@ -896,7 +899,7 @@ class DellPfsExtract(BIOSUtility):
         pfs_entry: Any = ctypes_struct(buffer=entry_buffer, start_offset=entry_start, class_object=entry_struct)
 
         # Show PFS Entry Structure info
-        if self.arguments.structure:
+        if self.structure:
             printer(message='PFS Entry:\n', padding=padding + 4)
 
             pfs_entry.struct_print(padding=padding + 8)
@@ -981,7 +984,7 @@ class DellPfsExtract(BIOSUtility):
             pfat_entry_idx_ord: str = to_ordinal(in_number=pfat_entry_index)
 
             # Show sub-PFS PFAT Header Structure info
-            if self.arguments.structure:
+            if self.structure:
                 printer(message=f'PFAT Block {pfat_entry_idx_ord} - Header:\n', padding=padding + 12)
 
                 pfat_hdr.struct_print(padding=padding + 16)
@@ -1012,7 +1015,7 @@ class DellPfsExtract(BIOSUtility):
 
             # Parse sub-PFS PFAT Signature, if applicable (only when PFAT Header > SFAM flag is set)
             if is_sfam:
-                if self.arguments.structure:
+                if self.structure:
                     printer(message=f'PFAT Block {pfat_entry_idx_ord} - Signature:\n', padding=padding + 12)
 
                 # Get sub-PFS PFAT Signature Size from Header pattern (not necessary for Dell PFS)
@@ -1027,7 +1030,7 @@ class DellPfsExtract(BIOSUtility):
                 # Get sub-PFS PFAT Signature Structure values
                 pfat_sign_len: int = ami_pfat_extract.parse_bg_sign(
                     input_data=pfat_payload, sign_offset=pfat_payload_end, sign_length=_pfat_sign_len,
-                    print_info=self.arguments.structure, padding=padding + 16)
+                    print_info=self.structure, padding=padding + 16)
 
                 if not len(pfat_payload[pfat_payload_end:pfat_payload_end + pfat_sign_len]
                            ) == pfat_sign_len == _pfat_sign_len:
@@ -1035,7 +1038,7 @@ class DellPfsExtract(BIOSUtility):
                                     f'Size mismatch!', padding=padding + 12)
 
             # Show PFAT Script via BIOS Guard Script Tool
-            if self.arguments.structure:
+            if self.structure:
                 printer(message=f'PFAT Block {pfat_entry_idx_ord} - Script:\n', padding=padding + 12)
 
                 _ = ami_pfat_extract.parse_bg_script(script_data=pfat_script_data, padding=padding + 16)
@@ -1066,7 +1069,7 @@ class DellPfsExtract(BIOSUtility):
                 pfat_entry_adr = pfat_met.Address
 
                 # Show sub-PFS PFAT Metadata Structure info
-                if self.arguments.structure:
+                if self.structure:
                     printer(message=f'PFAT Block {pfat_entry_idx_ord} - Metadata:\n', padding=padding + 12)
 
                     pfat_met.struct_print(padding=padding + 16)
@@ -1134,7 +1137,7 @@ class DellPfsExtract(BIOSUtility):
             block_data_gap: int = block_start - block_start_exp
 
             if block_data_gap > 0:
-                if self.arguments.structure:
+                if self.structure:
                     printer(message=f'Warning: Filled sub-PFS PFAT {block_index} data gap 0x{block_data_gap:X} '
                                     f'[0x{block_start_exp:X}-0x{block_start:X}]!', padding=padding + 8)
 
@@ -1206,7 +1209,7 @@ class DellPfsExtract(BIOSUtility):
         # Validate that a PFS Footer was parsed
         if pfs_ftr.Tag == b'PFS.FTR.':
             # Show PFS Footer Structure info
-            if self.arguments.structure:
+            if self.structure:
                 printer(message='PFS Footer:\n', padding=padding + 4)
 
                 pfs_ftr.struct_print(padding=padding + 8)
@@ -1240,7 +1243,7 @@ class DellPfsExtract(BIOSUtility):
             return  # Skip further processing for Signatures
 
         # Store Data/Metadata Payload (simpler Data/Metadata Extension for non-advanced users)
-        bin_ext: str = f'.{bin_name}.bin' if self.arguments.advanced else '.bin'
+        bin_ext: str = f'.{bin_name}.bin' if self.advanced else '.bin'
 
         # Some Data may be Text or XML files with useful information for non-advanced users
         final_data, file_ext = self._bin_is_text(buffer=bin_buff, file_type=bin_type,
@@ -1265,7 +1268,7 @@ class DellPfsExtract(BIOSUtility):
 
         extension: str = '.bin'
 
-        if self.arguments.advanced:
+        if self.advanced:
             return buffer, extension
 
         buffer_text: str = ''
@@ -1293,7 +1296,7 @@ class DellPfsExtract(BIOSUtility):
 
         # Show Model/PCR XML Information, if applicable
         # Metadata is shown at initial DellPfsMetadata analysis
-        if self.arguments.structure and buffer_text and not is_metadata:
+        if self.structure and buffer_text and not is_metadata:
             metadata_info_type: str = {".txt": "Model", ".xml": "PCR XML"}[extension]
 
             printer(message=f'PFS {metadata_info_type} Information:\n', padding=padding + 8)
@@ -1302,7 +1305,3 @@ class DellPfsExtract(BIOSUtility):
                 printer(message=line.strip('\r'), padding=padding + 12, new_line=False)
 
         return buffer_text or buffer, extension
-
-
-if __name__ == '__main__':
-    DellPfsExtract().run_utility()

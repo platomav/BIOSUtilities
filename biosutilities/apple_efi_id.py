@@ -116,31 +116,31 @@ class AppleEfiIdentify(BIOSUtility):
 
     TITLE: str = 'Apple EFI Image Identifier'
 
-    ARGUMENTS: list[tuple[list[str], dict[str, str]]] = [
-        (['-q', '--silent'], {'help': 'suppress structure display', 'action': 'store_true'})
-    ]
-
     PAT_UEFIFIND: Final[str] = f'244942494F534924{"." * 32}2E00{"." * 12}2E00{"." * 16}2E00{"." * 12}2E00{"." * 40}00'
 
-    def __init__(self, arguments: list[str] | None = None) -> None:
-        super().__init__(arguments=arguments)
+    def __init__(self, input_object: str | bytes | bytearray = b'', extract_path: str = '', padding: int = 0,
+                 silent: bool = False) -> None:
+        super().__init__(input_object=input_object, extract_path=extract_path, padding=padding)
+
+        self.silent: bool = silent
 
         self.efi_file_name: str = ''
         self.intel_bios_info: dict[str, str] = {}
         self.apple_rom_version: defaultdict[str, set] = defaultdict(set)
 
-    def check_format(self, input_object: str | bytes | bytearray) -> bool:
+    def check_format(self) -> bool:
         """ Check if input is Apple EFI image """
 
-        if isinstance(input_object, str) and is_file(in_path=input_object) and is_access(in_path=input_object):
-            if path_suffixes(in_path=input_object)[-1].lower() not in ('.fd', '.scap', '.im4p'):
+        if isinstance(self.input_object, str) and is_file(in_path=self.input_object) and is_access(
+                in_path=self.input_object):
+            if path_suffixes(in_path=self.input_object)[-1].lower() not in ('.fd', '.scap', '.im4p'):
                 return False
 
-            input_path: str = input_object
+            input_path: str = self.input_object
             input_buffer: bytes = file_to_bytes(in_object=input_path)
-        elif isinstance(input_object, (bytes, bytearray)):
+        elif isinstance(self.input_object, (bytes, bytearray)):
             input_path = os.path.join(runtime_root(), 'APPLE_EFI_ID_INPUT_BUFFER_CHECK.tmp')
-            input_buffer = input_object
+            input_buffer = self.input_object
 
             with open(input_path, 'wb') as check_out:
                 check_out.write(input_buffer)
@@ -160,16 +160,16 @@ class AppleEfiIdentify(BIOSUtility):
 
             return False
         finally:
-            if input_path != input_object:
+            if input_path != self.input_object:
                 delete_file(in_path=input_path)
 
-    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool:
+    def parse_format(self) -> bool:
         """ Parse & Identify (or Rename) Apple EFI image """
 
-        input_buffer: bytes = file_to_bytes(in_object=input_object)
+        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
 
-        if isinstance(input_object, str) and is_file(in_path=input_object):
-            input_path: str = input_object
+        if isinstance(self.input_object, str) and is_file(in_path=self.input_object):
+            input_path: str = self.input_object
         else:
             input_path = os.path.join(runtime_root(), 'APPLE_EFI_ID_INPUT_BUFFER_PARSE.bin')
 
@@ -190,12 +190,12 @@ class AppleEfiIdentify(BIOSUtility):
                                                        self.PAT_UEFIFIND], text=True)[:36]
 
                 # UEFIExtract must create its output folder itself
-                delete_dirs(in_path=extract_path)
+                delete_dirs(in_path=self.extract_path)
 
-                _ = subprocess.run([uefiextract_path(), input_path, bios_id_res, '-o', extract_path, '-m', 'body'],
+                _ = subprocess.run([uefiextract_path(), input_path, bios_id_res, '-o', self.extract_path, '-m', 'body'],
                                    check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-                with open(os.path.join(extract_path, 'body.bin'), 'rb') as raw_body:
+                with open(os.path.join(self.extract_path, 'body.bin'), 'rb') as raw_body:
                     body_buffer: bytes = raw_body.read()
 
                 # Detect decompressed $IBIOSI$ pattern
@@ -207,25 +207,25 @@ class AppleEfiIdentify(BIOSUtility):
                 bios_id_hdr = ctypes_struct(buffer=body_buffer, start_offset=bios_id_match.start(),
                                             class_object=IntelBiosId)
 
-                delete_dirs(in_path=extract_path)  # Successful UEFIExtract extraction, remove its output folder
+                delete_dirs(in_path=self.extract_path)  # Successful UEFIExtract extraction, remove its output folder
             except Exception as error:  # pylint: disable=broad-except
-                printer(message=f'Error: Failed to parse compressed $IBIOSI$ pattern: {error}!', padding=padding)
+                printer(message=f'Error: Failed to parse compressed $IBIOSI$ pattern: {error}!', padding=self.padding)
 
                 return False
 
-        if not self.arguments.silent:
-            printer(message=f'Detected Intel BIOS Info at {bios_id_res}\n', padding=padding)
+        if not self.silent:
+            printer(message=f'Detected Intel BIOS Info at {bios_id_res}\n', padding=self.padding)
 
-            bios_id_hdr.struct_print(padding=padding + 4)
+            bios_id_hdr.struct_print(padding=self.padding + 4)
 
         self.intel_bios_info = bios_id_hdr.get_bios_id()
 
         self.efi_file_name = (f'{self.intel_bios_info["efi_name_id"]}_{zlib.adler32(input_buffer):08X}'
                               f'{path_suffixes(in_path=input_path)[-1]}')
 
-        _ = self._apple_rom_version(input_buffer=input_buffer, padding=padding)
+        _ = self._apple_rom_version(input_buffer=input_buffer, padding=self.padding)
 
-        if input_path != input_object:
+        if input_path != self.input_object:
             delete_file(in_path=input_path)
 
         return True
@@ -255,7 +255,7 @@ class AppleEfiIdentify(BIOSUtility):
 
                         self.apple_rom_version[rom_version_parts[0].strip()].add(rom_version_parts[1].strip())
 
-                    if not self.arguments.silent:
+                    if not self.silent:
                         printer(message=f'Detected Apple ROM Version at 0x{rom_version_match_off:X}', padding=padding)
 
                         printer(message=rom_version_text, strip=True, padding=padding + 4)
@@ -263,7 +263,3 @@ class AppleEfiIdentify(BIOSUtility):
                     return True
 
         return False
-
-
-if __name__ == '__main__':
-    AppleEfiIdentify().run_utility()

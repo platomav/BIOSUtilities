@@ -1,3 +1,12 @@
+24.10.23
+
+New "package" flow, arguments now provided during utility call (README)
+New "main" flow, using old "run_utility" method of BIOSUtility (README)
+Removed "run_utility" and "show_version" methods from base BIOSUtility
+Removed argparse argument parsing logic from base BIOSUtility class
+Removed notion of "pause" (i.e. user action) from BIOSUtility logic
+Adjusted the README with usage info for "main" and "package" flows
+
 24.10.18
 
 Removed all Python built-in library keyword arguments (#55)

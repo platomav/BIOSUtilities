@@ -51,19 +51,19 @@ class AppleEfiPbzxExtract(BIOSUtility):
 
     PBZX_CHUNK_HDR_LEN: Final[int] = ctypes.sizeof(PbzxChunk)
 
-    def check_format(self, input_object: str | bytes | bytearray) -> bool:
+    def check_format(self) -> bool:
         """ Check if input is Apple PBZX image """
 
-        input_buffer: bytes = file_to_bytes(in_object=input_object)
+        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
 
         return bool(PAT_APPLE_PBZX.search(input_buffer, 0, 4))
 
-    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool:
+    def parse_format(self) -> bool:
         """ Parse & Extract Apple PBZX image """
 
-        input_buffer: bytes = file_to_bytes(in_object=input_object)
+        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
 
-        make_dirs(in_path=extract_path, delete=True)
+        make_dirs(in_path=self.extract_path, delete=True)
 
         cpio_bin: bytes = b''  # Initialize PBZX > CPIO Buffer
 
@@ -74,9 +74,9 @@ class AppleEfiPbzxExtract(BIOSUtility):
         while chunk_off < len(input_buffer):
             chunk_hdr: Any = ctypes_struct(buffer=input_buffer, start_offset=chunk_off, class_object=PbzxChunk)
 
-            printer(message=f'PBZX Chunk at 0x{chunk_off:08X}\n', padding=padding)
+            printer(message=f'PBZX Chunk at 0x{chunk_off:08X}\n', padding=self.padding)
 
-            chunk_hdr.struct_print(padding=padding + 4)
+            chunk_hdr.struct_print(padding=self.padding + 4)
 
             # PBZX Chunk data starts after its Header
             comp_bgn: int = chunk_off + self.PBZX_CHUNK_HDR_LEN
@@ -90,7 +90,7 @@ class AppleEfiPbzxExtract(BIOSUtility):
                 # Attempt XZ decompression, if applicable to Chunk data
                 cpio_bin += lzma.LZMADecompressor().decompress(comp_bin)
 
-                printer(message='Successful LZMA decompression!', padding=padding + 8)
+                printer(message='Successful LZMA decompression!', padding=self.padding + 8)
             except Exception as error:  # pylint: disable=broad-except
                 logging.debug('Error: Failed to LZMA decompress PBZX Chunk 0x%X: %s', chunk_off, error)
 
@@ -105,21 +105,21 @@ class AppleEfiPbzxExtract(BIOSUtility):
 
         # Check that CPIO size is valid based on all Chunks > Initial Size
         if cpio_len != len(cpio_bin):
-            printer(message='Error: Unexpected CPIO archive size!', padding=padding)
+            printer(message='Error: Unexpected CPIO archive size!', padding=self.padding)
 
             return False
 
-        cpio_name: str = path_stem(in_path=input_object) if isinstance(input_object, str) else 'Payload'
+        cpio_name: str = path_stem(in_path=self.input_object) if isinstance(self.input_object, str) else 'Payload'
 
-        cpio_path: str = os.path.join(extract_path, f'{cpio_name}.cpio')
+        cpio_path: str = os.path.join(self.extract_path, f'{cpio_name}.cpio')
 
         with open(cpio_path, 'wb') as cpio_object:
             cpio_object.write(cpio_bin)
 
         # Decompress PBZX > CPIO archive with 7-Zip
-        if is_szip_supported(in_path=cpio_path, padding=padding, args=['-tCPIO'], silent=False):
-            if szip_decompress(in_path=cpio_path, out_path=extract_path, in_name='CPIO',
-                               padding=padding, args=['-tCPIO']):
+        if is_szip_supported(in_path=cpio_path, padding=self.padding, args=['-tCPIO'], silent=False):
+            if szip_decompress(in_path=cpio_path, out_path=self.extract_path, in_name='CPIO',
+                               padding=self.padding, args=['-tCPIO']):
                 os.remove(cpio_path)  # Successful extraction, delete PBZX > CPIO archive
             else:
                 return False
@@ -127,7 +127,3 @@ class AppleEfiPbzxExtract(BIOSUtility):
             return False
 
         return True
-
-
-if __name__ == '__main__':
-    AppleEfiPbzxExtract().run_utility()

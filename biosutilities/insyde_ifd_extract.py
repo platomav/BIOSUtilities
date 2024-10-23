@@ -80,10 +80,10 @@ class InsydeIfdExtract(BIOSUtility):
     # Get common ctypes Structure Sizes
     INS_IFL_LEN: Final[int] = ctypes.sizeof(IflashHeader)
 
-    def check_format(self, input_object: str | bytes | bytearray) -> bool:
+    def check_format(self) -> bool:
         """ Check if input is Insyde iFlash/iFdPacker Update image """
 
-        input_buffer: bytes = file_to_bytes(in_object=input_object)
+        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
 
         if bool(self._insyde_iflash_detect(input_buffer=input_buffer)):
             return True
@@ -93,18 +93,18 @@ class InsydeIfdExtract(BIOSUtility):
 
         return False
 
-    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool:
+    def parse_format(self) -> bool:
         """ Parse & Extract Insyde iFlash/iFdPacker Update images """
 
-        input_buffer: bytes = file_to_bytes(in_object=input_object)
+        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
 
-        iflash_code: int = self._insyde_iflash_extract(input_buffer=input_buffer, extract_path=extract_path,
-                                                       padding=padding)
+        iflash_code: int = self._insyde_iflash_extract(input_buffer=input_buffer, extract_path=self.extract_path,
+                                                       padding=self.padding)
 
-        ifdpack_path: str = os.path.join(extract_path, 'Insyde iFdPacker SFX')
+        ifdpack_path: str = os.path.join(self.extract_path, 'Insyde iFdPacker SFX')
 
         ifdpack_code: int = self._insyde_packer_extract(input_buffer=input_buffer, extract_path=ifdpack_path,
-                                                        padding=padding)
+                                                        padding=self.padding)
 
         return (iflash_code and ifdpack_code) == 0
 
@@ -168,8 +168,7 @@ class InsydeIfdExtract(BIOSUtility):
             ifl_hdr.struct_print(padding=padding + 8)
 
             if img_val == [img_tag, img_ext]:
-                printer(message=f'Note: Detected new Insyde iFlash tag {img_tag}!',
-                        padding=padding + 12, pause=not self.arguments.auto_exit)
+                printer(message=f'Note: Detected new Insyde iFlash tag {img_tag}!', padding=padding + 12)
 
             out_name: str = f'{img_name}.{img_ext}'
 
@@ -231,16 +230,14 @@ class InsydeIfdExtract(BIOSUtility):
 
         for sfx_file in path_files(in_path=extract_path):
             if is_file(in_path=sfx_file) and is_access(in_path=sfx_file):
-                if self.check_format(input_object=sfx_file):
+                insyde_ifd_extract: InsydeIfdExtract = InsydeIfdExtract(
+                    input_object=sfx_file, extract_path=extract_folder(sfx_file), padding=padding + 16)
+
+                if insyde_ifd_extract.check_format():
                     printer(message=path_name(in_path=sfx_file), padding=padding + 12)
 
-                    ifd_status: int = self.parse_format(input_object=sfx_file, extract_path=extract_folder(sfx_file),
-                                                        padding=padding + 16)
+                    ifd_status: int = insyde_ifd_extract.parse_format()
 
                     exit_codes.append(0 if ifd_status else 1)
 
         return sum(exit_codes)
-
-
-if __name__ == '__main__':
-    InsydeIfdExtract().run_utility()

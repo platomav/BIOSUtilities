@@ -8,10 +8,10 @@ Various BIOS/UEFI-related utilities which aid in modding and/or research
 
 ### Main
 
-The "main" script provides a simple way to check and parse each of the user provided files against all utilities, in succession. It is ideal for quick drag & drop operations but lacks the finer control of the BIOSUtility method. If needed, a few options can be set, by using the command line:
+The "main" script provides a simple way to check and parse each of the user provided files against all utilities, in succession. It is ideal for quick drag & drop operations but lacks the finer control of the "Package" method. If needed, a few options can be set, by using the command line:
 
 ``` bash
-usage: [-h] [-e] [-o OUTPUT_DIR] paths [paths ...]
+usage: main.py [-h] [-e] [-o OUTPUT_DIR] [paths ...]
 
 positional arguments:
   paths
@@ -26,29 +26,9 @@ options:
 python ./main.py "/path/to/input/file.bin" --output-dir "/path/to/file extractions"
 ```
 
-### BIOSUtility
+If no arguments/options are provided, the "main" script requests the input and output paths from the user. If no output path is provided, the utility will use the parent directory of the first input file or fallback to the runtime execution directory.
 
-Each utility is derived from a base template: BIOSUtility. The base BIOSUtility offers the following options, applicable to all utilities:
-
-``` bash
-usage: [-h] [-e] [-o OUTPUT_DIR] [paths ...]
-
-positional arguments:
-  paths
-
-options:
-  -h, --help                              show help and exit
-  -e, --auto-exit                         skip user action prompts
-  -o OUTPUT_DIR, --output-dir OUTPUT_DIR  output extraction directory
-```
-
-``` bash
-python -m biosutilities.ami_pfat_extract -e "/path/to/input/file1.bin" "/path/to/input/file2.bin" "/path/to/input/folder/with/files/" -o "/path/to/output_directory"
-```
-
-If no arguments are provided, the BIOSUtility.run_utility() method gets executed, which will request the input and output paths from the user. If no output path is provided, the utility will use the parent directory of the first input file or fallback to the runtime execution directory.
-
-``` bash
+``` python
 Enter input file or directory path: "C:\P5405CSA.303"
 
 Enter output directory path: "C:\P5405CSA.303_output"
@@ -56,7 +36,7 @@ Enter output directory path: "C:\P5405CSA.303_output"
 
 ### Package
 
-All utilities form the "biosutilities" python package, which can be installed from PyPi:
+Each utility is derived from a base "BIOSUtility" template and all utilities form the "biosutilities" python package, which can be installed from PyPi:
 
 ``` bash
 python -m pip install --upgrade biosutilities[pefile,lznt1]
@@ -67,72 +47,67 @@ Installing the python package is the recommended way to call one or more utiliti
 ``` python
 from biosutilities.ami_pfat_extract import AmiPfatExtract
 
-ami_pfat_extractor = AmiPfatExtract()
+ami_pfat_extractor = AmiPfatExtract(input_object='/path/to/input/file.bin', extract_path='/path/to/output/folder/')
 
-ami_pfat_extractor.check_format(input_object='/path/to/input/file.bin')
-ami_pfat_extractor.parse_format(input_object='/path/to/input/file.bin', extract_path='/path/to/output/folder/')
+is_supported = ami_pfat_extractor.check_format()
+is_extracted = ami_pfat_extractor.parse_format()
 ```
 
 ``` python
 from biosutilities.dell_pfs_extract import DellPfsExtract
 
-dell_pfs_extractor = DellPfsExtract()
+with open('/path/to/input/file.bin', 'rb') as pfs_file:
+    pfs_data = pfs_file.read()
 
-with open(file='/path/to/input/file.bin', mode='rb') as pfs_file:
-    pfs_buffer = pfs_file.read()
+dell_pfs_extractor = DellPfsExtract(input_object=pfs_data, extract_path='/path/to/output/directory/', padding=8)
 
-dell_pfs_extractor.check_format(input_object=pfs_buffer)
-dell_pfs_extractor.parse_format(input_object=pfs_buffer, extract_path='/path/to/output/directory/', padding=8)
+is_supported = dell_pfs_extractor.check_format()
+is_extracted = dell_pfs_extractor.parse_format()
 ```
+
+#### Arguments
+
+Each BIOSUtility expects the following required and optional arguments to check and/or parse a given file format:
+
+##### input_object (required)
 
 ``` python
-from biosutilities.phoenix_tdk_extract import PhoenixTdkExtract
-
-phoenix_tdk_extractor = PhoenixTdkExtract(arguments=['-e', '/path/to/input/file.bin', '-o', '/path/to/output/folder/'])
-
-phoenix_tdk_extractor.run_utility(padding=4)
+input_object: str | bytes | bytearray = b''
 ```
+
+##### extract_path (required)
 
 ``` python
-from biosutilities.apple_efi_pbzx import AppleEfiPbzxExtract
-
-apple_efi_pbzx_extractor = AppleEfiPbzxExtract()
-
-apple_efi_pbzx_extractor.show_version(is_boxed=False, padding=12)
+extract_path: str = ''
 ```
 
-It also allows to use directly the four public methods which are inherited by every utility from the base BIOSUtility class.
-
-#### run_utility
-
-Run utility after checking for supported format
+##### padding (optional)
 
 ``` python
-run_utility(padding: int = 0) -> bool
+padding: int = 0
 ```
 
-#### check_format
+If the required arguments are not provided, it is still possible to use the BIOSUtility-inherited instance to access 
+auxiliary public methods and class constants. However, checking and/or parsing of file formats will not yield results.
+
+#### Methods
+
+Once the BIOSUtility-inherited object is initialized with arguments, its two public methods can be called:
+
+##### check_format
 
 Check if input object is of specific supported format
 
 ``` python
-check_format(input_object: str | bytes | bytearray) -> bool
+is_supported: bool = check_format()
 ```
 
-#### parse_format
+##### parse_format
 
 Process input object as a specific supported format
 
 ``` python
-parse_format(input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool
-```
-
-#### show_version
-
-Show title and version of utility
-
-``` python
-show_version(is_boxed: bool = True, padding: int = 0) -> None
+is_extracted: bool = parse_format()
 ```
 
 ## Compatibility
@@ -208,7 +183,7 @@ Parses AMI BIOS Guard (a.k.a. PFAT, Platform Firmware Armoring Technology) image
 
 Note that the AMI PFAT structure may not have an explicit component order. AMI's BIOS Guard Firmware Update Tool (AFUBGT) updates components based on the user/OEM provided Parameters and Options or Index Information table, when applicable. Thus, merging all the components together does not usually yield a proper SPI/BIOS/UEFI image. The utility does generate such a merged file with the name "00 -- \<filename\>\_ALL.bin" but it is up to the end user to determine its usefulness. Additionally, any custom OEM data, after the AMI PFAT structure, is stored in the last file with the name "\<n+1\> -- \_OOB.bin" and it is once again up to the end user to determine its usefulness. In cases where the trailing custom OEM data includes a nested AMI PFAT structure, the utility will process and extract it automatically as well.
 
-#### Usage
+#### Arguments
 
 No additional optional arguments are provided for this utility.
 
@@ -224,11 +199,11 @@ Optionally, to decompile the AMI PFAT \> Intel BIOS Guard Scripts, you must have
 
 Parses AMI UCP (Utility Configuration Program) Update executables, extracts their firmware components (e.g. SPI/BIOS/UEFI, EC, ME etc) and shows all relevant info. It supports all AMI UCP revisions and formats, including those with nested AMI PFAT, AMI UCP or Insyde iFlash/iFdPacker structures. The output comprises only final firmware components and utilities which are directly usable by end users.
 
-#### Usage
+#### Arguments
 
 Additional optional arguments are provided for this utility:
 
-* -c or --checksum : verify AMI UCP Checksums (slow)
+* checksum -> bool : verify AMI UCP Checksums (slow)
 
 #### Prerequisites
 
@@ -249,7 +224,7 @@ Note: On Linux and macOS, you'll need to compile TianoCompress from sources as n
 
 Parses Apple IM4P multi-EFI files and splits all detected EFI firmware into separate Intel SPI/BIOS images. The output comprises only final firmware components and utilities which are directly usable by end users.
 
-#### Usage
+#### Arguments
 
 No additional optional arguments are provided for this utility.
 
@@ -263,17 +238,17 @@ To run the utility, you do not need any prerequisites.
 
 Parses Apple EFI images and identifies them based on Intel's official "IBIOSI" tag, which contains info such as Model, Version, Build, Date and Time. Additionally, the utility can provide both "IBIOSI" and "Apple ROM Version" structure info, when available, as well as a suggested EFI image filename, while also making sure to differentiate any EFI images with the same "IBIOSI" tag (e.g. Production, Pre-Production) by appending a checksum of their data.
 
-#### Usage
+#### Arguments
 
 Additional optional arguments are provided for this utility:
 
-* -q or --silent : suppress structure display
+* silent -> bool : suppress structure display
 
 The utility exposes certain public class attributes, once parse_format() method has been successfully executed:
 
-* _efi_file_name_ -> str : Suggested image filename, based on Intel "IBIOSI" information
-* _intel_bios_info_ -> dict[str, str] : Information contained at Intel "IBIOSI" structure
-* _apple_rom_version_ -> defaultdict[str, set] : Information contained at "Apple ROM Version" structure
+* efi_file_name -> str : Suggested image filename, based on Intel "IBIOSI" information
+* intel_bios_info -> dict[str, str] : Information contained at Intel "IBIOSI" structure
+* apple_rom_version -> defaultdict[str, set] : Information contained at "Apple ROM Version" structure
 
 #### Prerequisites
 
@@ -288,7 +263,7 @@ To run the utility, you must have the following 3rd party tools at PATH or "exte
 
 Parses Apple EFI PKG firmware packages (e.g. FirmwareUpdate.pkg, BridgeOSUpdateCustomer.pkg, InstallAssistant.pkg, iMacEFIUpdate.pkg, iMacFirmwareUpdate.tar), extracts their EFI images, splits those in IM4P format and identifies/renames the final Intel SPI/BIOS images accordingly. The output comprises only final firmware components which are directly usable by end users.
 
-#### Usage
+#### Arguments
 
 No additional optional arguments are provided for this utility.
 
@@ -304,7 +279,7 @@ To run the utility, you must have the following 3rd party tools at PATH or "exte
 
 Parses Apple EFI PBZX images, re-assembles their CPIO payload and extracts its firmware components (e.g. IM4P, EFI, Utilities, Scripts etc). It supports CPIO re-assembly from both Raw and XZ compressed PBZX Chunks. The output comprises only final firmware components and utilities which are directly usable by end users.
 
-#### Usage
+#### Arguments
 
 No additional optional arguments are provided for this utility.
 
@@ -320,7 +295,7 @@ To run the utility, you must have the following 3rd party tools at PATH or "exte
 
 Parses Award BIOS images and extracts their modules (e.g. RAID, MEMINIT, \_EN_CODE, awardext etc). It supports all Award BIOS image revisions and formats, including those which contain LZH compressed files. The output comprises only final firmware components which are directly usable by end users.
 
-#### Usage
+#### Arguments
 
 No additional optional arguments are provided for this utility.
 
@@ -336,12 +311,12 @@ To run the utility, you must have the following 3rd party tool at PATH or "exter
 
 Parses Dell PFS Update images and extracts their Firmware (e.g. SPI, BIOS/UEFI, EC, ME etc) and Utilities (e.g. Flasher etc) component sections. It supports all Dell PFS revisions and formats, including those which are originally LZMA compressed in ThinOS packages (PKG), ZLIB compressed or Intel BIOS Guard (PFAT) protected. The output comprises only final firmware components which are directly usable by end users.
 
-#### Usage
+#### Arguments
 
 Additional optional arguments are provided for this utility:
 
-* -a or --advanced : extract signatures and metadata
-* -s or --structure : show PFS structure information
+* advanced -> bool : extract signatures and metadata
+* structure -> bool : show PFS structure information
 
 #### Prerequisites
 
@@ -355,7 +330,7 @@ Optionally, to decompile the Intel BIOS Guard (PFAT) Scripts, you must have the 
 
 Parses Fujitsu SFX BIOS images and extracts their obfuscated Microsoft CAB archived firmware (e.g. SPI, BIOS/UEFI, EC, ME etc) and utilities (e.g. WinPhlash, PHLASH.INI etc) components. The output comprises only final firmware components which are directly usable by end users.
 
-#### Usage
+#### Arguments
 
 No additional optional arguments are provided for this utility.
 
@@ -371,7 +346,7 @@ To run the utility, you must have the following 3rd party tool at PATH or "exter
 
 Parses Fujitsu UPC BIOS images and extracts their EFI compressed SPI/BIOS/UEFI firmware component. The output comprises only a final firmware component which is directly usable by end users.
 
-#### Usage
+#### Arguments
 
 No additional optional arguments are provided for this utility.
 
@@ -389,7 +364,7 @@ Note: On Linux and macOS, you'll need to compile TianoCompress from sources as n
 
 Parses Insyde iFlash/iFdPacker Update images and extracts their firmware (e.g. SPI, BIOS/UEFI, EC, ME etc) and utilities (e.g. InsydeFlash, H2OFFT, FlsHook, iscflash, platform.ini etc) components. It supports all Insyde iFlash/iFdPacker revisions and formats, including those which are 7-Zip SFX 7z compressed in raw, obfuscated or password-protected form. The output comprises only final firmware components which are directly usable by end users.
 
-#### Usage
+#### Arguments
 
 No additional optional arguments are provided for this utility.
 
@@ -403,7 +378,7 @@ To run the utility, you do not need any prerequisites.
 
 Parses Panasonic BIOS Package executables and extracts their firmware (e.g. SPI, BIOS/UEFI, EC etc) and utilities (e.g. winprom, configuration etc) components. It supports all Panasonic BIOS Package revisions and formats, including those which contain LZNT1 compressed files and/or AMI PFAT payloads. The output comprises only final firmware components which are directly usable by end users.
 
-#### Usage
+#### Arguments
 
 No additional optional arguments are provided for this utility.
 
@@ -424,7 +399,7 @@ Moreover, you must have the following 3rd party tool at PATH or "external":
 
 Parses Phoenix Tools Development Kit (TDK) Packer executables and extracts their firmware (e.g. SPI, BIOS/UEFI, EC etc) and utilities (e.g. WinFlash etc) components. It supports all Phoenix TDK Packer revisions and formats, including those which contain LZMA compressed files. The output comprises only final firmware components which are directly usable by end users.
 
-#### Usage
+#### Arguments
 
 No additional optional arguments are provided for this utility.
 
@@ -440,7 +415,7 @@ To run the utility, you must have the following 3rd party Python module installe
 
 Parses Portwell UEFI Unpacker EFI executables (usually named "Update.efi") and extracts their firmware (e.g. SPI, BIOS/UEFI, EC etc) and utilities (e.g. Flasher etc) components. It supports all known Portwell UEFI Unpacker revisions (v1.1, v1.2, v2.0) and formats (used, empty, null), including those which contain EFI compressed files. The output comprises only final firmware components and utilities which are directly usable by end users.
 
-#### Usage
+#### Arguments
 
 No additional optional arguments are provided for this utility.
 
@@ -462,7 +437,7 @@ Note: On Linux and macOS, you'll need to compile TianoCompress from sources as n
 
 Parses Toshiba BIOS COM images and extracts their raw or compressed SPI/BIOS/UEFI firmware component. This utility is effectively a python wrapper around [ToshibaComExtractor by LongSoft](https://github.com/LongSoft/ToshibaComExtractor). The output comprises only a final firmware component which is directly usable by end users.
 
-#### Usage
+#### Arguments
 
 No additional optional arguments are provided for this utility.
 
@@ -480,7 +455,7 @@ Note: On Linux, you'll need to compile comextract from sources as no pre-built b
 
 Parses VAIO Packaging Manager executables and extracts their firmware (e.g. SPI, BIOS/UEFI, EC, ME etc), utilities (e.g. WBFLASH etc) and driver (audio, video etc) components. If direct extraction fails, it attempts to unlock the executable in order to run at all non-VAIO systems and allow the user to choose the extraction location. It supports all VAIO Packaging Manager revisions and formats, including those which contain obfuscated Microsoft CAB archives or obfuscated unlock values. The output comprises only final firmware components which are directly usable by end users.
 
-#### Usage
+#### Arguments
 
 No additional optional arguments are provided for this utility.
 

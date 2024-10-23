@@ -24,28 +24,30 @@ class VaioPackageExtract(BIOSUtility):
 
     TITLE: str = 'VAIO Packaging Manager Extractor'
 
-    def check_format(self, input_object: str | bytes | bytearray) -> bool:
+    def check_format(self) -> bool:
         """ Check if input is VAIO Packaging Manager """
 
-        input_buffer: bytes = file_to_bytes(in_object=input_object)
+        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
 
         return bool(PAT_VAIO_CFG.search(input_buffer))
 
-    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool:
+    def parse_format(self) -> bool:
         """ Parse & Extract or Unlock VAIO Packaging Manager """
 
-        input_buffer: bytes = file_to_bytes(input_object)
+        input_buffer: bytes = file_to_bytes(self.input_object)
 
-        input_name: str = os.path.basename(input_object) if isinstance(input_buffer, str) else 'VAIO_Package'
+        input_name: str = os.path.basename(self.input_object) if isinstance(input_buffer, str) else 'VAIO_Package'
 
-        make_dirs(in_path=extract_path, delete=True)
+        make_dirs(in_path=self.extract_path, delete=True)
 
-        if self._vaio_cabinet(name=input_name, buffer=input_buffer, extract_path=extract_path, padding=padding) == 0:
-            printer(message='Successfully Extracted!', padding=padding)
-        elif self._vaio_unlock(name=input_name, buffer=input_buffer, extract_path=extract_path, padding=padding) == 0:
-            printer(message='Successfully Unlocked!', padding=padding)
+        if self._vaio_cabinet(name=input_name, buffer=input_buffer, extract_path=self.extract_path,
+                              padding=self.padding) == 0:
+            printer(message='Successfully Extracted!', padding=self.padding)
+        elif self._vaio_unlock(name=input_name, buffer=input_buffer, extract_path=self.extract_path,
+                               padding=self.padding) == 0:
+            printer(message='Successfully Unlocked!', padding=self.padding)
         else:
-            printer(message='Error: Failed to Extract or Unlock executable!', padding=padding)
+            printer(message='Error: Failed to Extract or Unlock executable!', padding=self.padding)
 
             return False
 
@@ -174,7 +176,3 @@ class VaioPackageExtract(BIOSUtility):
                 unl_file.write(input_buffer)
 
         return 0
-
-
-if __name__ == '__main__':
-    VaioPackageExtract().run_utility()

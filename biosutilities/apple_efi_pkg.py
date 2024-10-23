@@ -26,15 +26,15 @@ class AppleEfiPkgExtract(BIOSUtility):
 
     TITLE: str = 'Apple EFI Package Extractor'
 
-    def check_format(self, input_object: str | bytes | bytearray) -> bool:
+    def check_format(self) -> bool:
         """ Check if input is Apple EFI PKG package """
 
         is_apple_efi_pkg: bool = False
 
-        input_buffer: bytes = file_to_bytes(in_object=input_object)
+        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
 
-        if isinstance(input_object, str) and is_file(in_path=input_object):
-            input_path: str = input_object
+        if isinstance(self.input_object, str) and is_file(in_path=self.input_object):
+            input_path: str = self.input_object
         else:
             input_path = os.path.join(runtime_root(), 'APPLE_EFI_PKG_INPUT_BUFFER_CHECK.bin')
 
@@ -47,45 +47,45 @@ class AppleEfiPkgExtract(BIOSUtility):
 
                 break
 
-        if input_path != input_object:
+        if input_path != self.input_object:
             os.remove(input_path)
 
         return is_apple_efi_pkg
 
-    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool:
+    def parse_format(self) -> bool:
         """ Parse & Extract Apple EFI PKG packages """
 
-        if isinstance(input_object, str) and is_file(in_path=input_object):
-            input_path: str = input_object
+        if isinstance(self.input_object, str) and is_file(in_path=self.input_object):
+            input_path: str = self.input_object
         else:
             input_path = os.path.join(runtime_root(), 'APPLE_EFI_PKG_INPUT_BUFFER_PARSE.bin')
 
             with open(input_path, 'wb') as input_path_object:
-                input_path_object.write(file_to_bytes(in_object=input_object))
+                input_path_object.write(file_to_bytes(in_object=self.input_object))
 
-        make_dirs(in_path=extract_path, delete=True)
+        make_dirs(in_path=self.extract_path, delete=True)
 
-        working_dir: str = os.path.join(extract_path, 'temp')
+        working_dir: str = os.path.join(self.extract_path, 'temp')
 
         make_dirs(in_path=working_dir)
 
         for pkg_type in ('XAR', 'TAR', 'DMG'):
-            if is_szip_supported(in_path=input_path, padding=padding, args=[f'-t{pkg_type}']):
-                if szip_decompress(in_path=input_path, out_path=working_dir, in_name=pkg_type, padding=padding,
+            if is_szip_supported(in_path=input_path, padding=self.padding, args=[f'-t{pkg_type}']):
+                if szip_decompress(in_path=input_path, out_path=working_dir, in_name=pkg_type, padding=self.padding,
                                    args=None if pkg_type == 'DMG' else [f'-t{pkg_type}']):
                     break
         else:
             return False
 
-        if input_path != input_object:
+        if input_path != self.input_object:
             os.remove(input_path)
 
         for work_file in path_files(in_path=working_dir):
             if is_file(in_path=work_file) and is_access(in_path=work_file):
-                self._pbzx_zip(input_path=work_file, extract_path=extract_path, padding=padding + 4)
-                self._gzip_cpio(input_path=work_file, extract_path=extract_path, padding=padding + 4)
-                self._dmg_zip(input_path=work_file, extract_path=extract_path, padding=padding + 4)
-                self._xar_gzip(input_path=work_file, extract_path=extract_path, padding=padding + 4)
+                self._pbzx_zip(input_path=work_file, extract_path=self.extract_path, padding=self.padding + 4)
+                self._gzip_cpio(input_path=work_file, extract_path=self.extract_path, padding=self.padding + 4)
+                self._dmg_zip(input_path=work_file, extract_path=self.extract_path, padding=self.padding + 4)
+                self._xar_gzip(input_path=work_file, extract_path=self.extract_path, padding=self.padding + 4)
 
         delete_dirs(in_path=working_dir)
 
@@ -126,15 +126,16 @@ class AppleEfiPkgExtract(BIOSUtility):
     def _pbzx_zip(self, input_path: str, extract_path: str, padding: int = 0) -> None:
         """ PBZX > ZIP """
 
-        pbzx_module: AppleEfiPbzxExtract = AppleEfiPbzxExtract()
+        pbzx_path: str = extract_folder(in_path=input_path, suffix='_pbzx_zip')
 
-        if pbzx_module.check_format(input_object=input_path):
-            printer(message=f'Extracting PBZX via {pbzx_module.title}', padding=padding)
+        pbzx_module: AppleEfiPbzxExtract = AppleEfiPbzxExtract(
+            input_object=input_path, extract_path=pbzx_path, padding=padding + 4)
 
-            pbzx_path: str = extract_folder(in_path=input_path, suffix='_pbzx_zip')
+        if pbzx_module.check_format():
+            printer(message=f'Extracting PBZX via {pbzx_module.TITLE}', padding=padding)
 
-            if pbzx_module.parse_format(input_object=input_path, extract_path=pbzx_path, padding=padding + 4):
-                printer(message=f'Successful PBZX extraction via {pbzx_module.title}!', padding=padding)
+            if pbzx_module.parse_format():
+                printer(message=f'Successful PBZX extraction via {pbzx_module.TITLE}!', padding=padding)
 
                 for pbzx_file in path_files(in_path=pbzx_path):
                     if is_file(in_path=pbzx_file) and is_access(in_path=pbzx_file):
@@ -174,7 +175,7 @@ class AppleEfiPkgExtract(BIOSUtility):
         if path_suffixes(in_path=input_path)[-1].lower() not in ('.fd', '.scap', '.im4p'):
             return None
 
-        if not AppleEfiIdentify().check_format(input_object=input_path):
+        if not AppleEfiIdentify(input_object=input_path).check_format():
             return None
 
         input_name: str = path_name(in_path=input_path)
@@ -183,12 +184,13 @@ class AppleEfiPkgExtract(BIOSUtility):
 
         working_dir: str = extract_folder(in_path=input_path)
 
-        im4p_module: AppleEfiIm4pSplit = AppleEfiIm4pSplit()
+        im4p_module: AppleEfiIm4pSplit = AppleEfiIm4pSplit(
+            input_object=input_path, extract_path=working_dir, padding=padding + 8)
 
-        if im4p_module.check_format(input_object=input_path):
-            printer(message=f'Splitting IM4P via {im4p_module.title}', padding=padding + 4)
+        if im4p_module.check_format():
+            printer(message=f'Splitting IM4P via {im4p_module.TITLE}', padding=padding + 4)
 
-            im4p_module.parse_format(input_object=input_path, extract_path=working_dir, padding=padding + 8)
+            im4p_module.parse_format()
         else:
             make_dirs(in_path=working_dir, delete=True)
 
@@ -196,13 +198,13 @@ class AppleEfiPkgExtract(BIOSUtility):
 
         for efi_source in path_files(in_path=working_dir):
             if is_file(in_path=efi_source) and is_access(in_path=efi_source):
-                efi_id_module: AppleEfiIdentify = AppleEfiIdentify()
+                efi_id_module: AppleEfiIdentify = AppleEfiIdentify(
+                    input_object=efi_source, extract_path=extract_folder(in_path=efi_source), padding=padding + 8)
 
-                if efi_id_module.check_format(input_object=efi_source):
-                    printer(message=f'Identifying EFI via {efi_id_module.title}', padding=padding + 4)
+                if efi_id_module.check_format():
+                    printer(message=f'Identifying EFI via {efi_id_module.TITLE}', padding=padding + 4)
 
-                    if efi_id_module.parse_format(input_object=efi_source, extract_path=extract_folder(
-                            in_path=efi_source), padding=padding + 8):
+                    if efi_id_module.parse_format():
                         efi_dest: str = os.path.join(path_parent(in_path=efi_source), efi_id_module.efi_file_name)
 
                         os.replace(efi_source, efi_dest)
@@ -214,7 +216,3 @@ class AppleEfiPkgExtract(BIOSUtility):
         delete_dirs(in_path=working_dir)
 
         return None
-
-
-if __name__ == '__main__':
-    AppleEfiPkgExtract().run_utility()

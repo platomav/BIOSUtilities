@@ -30,7 +30,7 @@ def python_version() -> tuple:
 
 
 def printer(message: str | list | tuple | None = None, padding: int = 0, new_line: bool = True,
-            pause: bool = False, sep_char: str = ' ', strip: bool = False) -> None:
+            sep_char: str = ' ', strip: bool = False) -> None:
     """ Show message(s), controlling padding, newline, stripping, pausing & separating """
 
     message_string: str = to_string(in_object='' if message is None else message, sep_char=sep_char)
@@ -44,7 +44,4 @@ def printer(message: str | list | tuple | None = None, padding: int = 0, new_lin
 
         message_output += f'{line_new}{" " * padding}{line_text}'
 
-    if pause:
-        input(message_output)
-    else:
-        print(message_output)
+    print(message_output)

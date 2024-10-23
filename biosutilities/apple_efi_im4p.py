@@ -27,27 +27,27 @@ class AppleEfiIm4pSplit(BIOSUtility):
     # Intel Flash Descriptor Component Sizes (2MB, 4MB, 8MB, 16MB and 32MB)
     IFD_COMP_LEN: Final[dict[int, int]] = {2: 0x200000, 3: 0x400000, 4: 0x800000, 5: 0x1000000, 6: 0x2000000}
 
-    def check_format(self, input_object: str | bytes | bytearray) -> bool:
+    def check_format(self) -> bool:
         """ Check if input is Apple EFI IM4P image """
 
-        if isinstance(input_object, str) and not input_object.lower().endswith('.im4p'):
+        if isinstance(self.input_object, str) and not self.input_object.lower().endswith('.im4p'):
             return False
 
-        input_buffer: bytes = file_to_bytes(in_object=input_object)
+        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
 
         if PAT_APPLE_IM4P.search(input_buffer) and PAT_INTEL_FD.search(input_buffer):
             return True
 
         return False
 
-    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool:
+    def parse_format(self) -> bool:
         """ Parse & Split Apple EFI IM4P image """
 
         parse_success: bool = True
 
-        input_buffer: bytes = file_to_bytes(in_object=input_object)
+        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
 
-        make_dirs(in_path=extract_path, delete=True)
+        make_dirs(in_path=self.extract_path, delete=True)
 
         # Detect IM4P EFI pattern
         im4p_match: Match[bytes] | None = PAT_APPLE_IM4P.search(input_buffer)
@@ -138,23 +138,19 @@ class AppleEfiIm4pSplit(BIOSUtility):
 
             output_size: int = len(output_data)
 
-            output_name: str = path_stem(in_path=input_object) if isinstance(input_object, str) else 'Part'
+            output_name: str = path_stem(in_path=self.input_object) if isinstance(self.input_object, str) else 'Part'
 
-            output_path: str = os.path.join(extract_path, f'{output_name}_[{ifd_data_txt}].fd')
+            output_path: str = os.path.join(self.extract_path, f'{output_name}_[{ifd_data_txt}].fd')
 
             with open(output_path, 'wb') as output_image:
                 output_image.write(output_data)
 
-            printer(message=f'Split Apple EFI image at {ifd_data_txt}!', padding=padding)
+            printer(message=f'Split Apple EFI image at {ifd_data_txt}!', padding=self.padding)
 
             if output_size != ifd_comp_all_size:
                 printer(message=f'Error: Bad image size 0x{output_size:07X}, expected 0x{ifd_comp_all_size:07X}!',
-                        padding=padding + 4)
+                        padding=self.padding + 4)
 
                 parse_success = False
 
         return parse_success
-
-
-if __name__ == '__main__':
-    AppleEfiIm4pSplit().run_utility()

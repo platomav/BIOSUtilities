@@ -37,13 +37,11 @@ def to_ordinal(in_number: int) -> str:
 def file_to_bytes(in_object: str | bytes | bytearray) -> bytes:
     """ Get bytes from given buffer or file path """
 
-    if not isinstance(in_object, (bytes, bytearray)):
-        with open(to_string(in_object=in_object), 'rb') as object_data:
-            object_bytes: bytes = object_data.read()
-    else:
-        object_bytes = in_object
+    if isinstance(in_object, str):
+        with open(in_object, 'rb') as object_fp:
+            return object_fp.read()
 
-    return object_bytes
+    return bytes(in_object)
 
 
 def bytes_to_hex(in_buffer: bytes, order: str, data_len: int, slice_len: int | None = None) -> str:

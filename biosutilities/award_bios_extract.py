@@ -22,19 +22,19 @@ class AwardBiosExtract(BIOSUtility):
 
     TITLE: str = 'Award BIOS Module Extractor'
 
-    def check_format(self, input_object: str | bytes | bytearray) -> bool:
+    def check_format(self) -> bool:
         """ Check if input is Award BIOS image """
 
-        in_buffer: bytes = file_to_bytes(in_object=input_object)
+        in_buffer: bytes = file_to_bytes(in_object=self.input_object)
 
         return bool(PAT_AWARD_LZH.search(in_buffer))
 
-    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool:
+    def parse_format(self) -> bool:
         """ Parse & Extract Award BIOS image """
 
-        input_buffer: bytes = file_to_bytes(in_object=input_object)
+        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
 
-        make_dirs(in_path=extract_path, delete=True)
+        make_dirs(in_path=self.extract_path, delete=True)
 
         for lzh_match in PAT_AWARD_LZH.finditer(input_buffer):
             lzh_type: str = lzh_match.group(0).decode('utf-8')
@@ -52,7 +52,7 @@ class AwardBiosExtract(BIOSUtility):
 
             if len(mod_bin) != 0x2 + hdr_len + mod_len:
                 printer(message=f'Error: Skipped incomplete LZH stream at 0x{mod_bgn:X}!',
-                        padding=padding, new_line=True)
+                        padding=self.padding, new_line=True)
 
                 continue
 
@@ -61,9 +61,9 @@ class AwardBiosExtract(BIOSUtility):
             else:
                 tag_txt = f'{mod_bgn:X}_{mod_end:X}'
 
-            printer(message=f'{lzh_text} > {tag_txt} [0x{mod_bgn:06X}-0x{mod_end:06X}]', padding=padding)
+            printer(message=f'{lzh_text} > {tag_txt} [0x{mod_bgn:06X}-0x{mod_end:06X}]', padding=self.padding)
 
-            mod_path: str = os.path.join(extract_path, tag_txt)
+            mod_path: str = os.path.join(self.extract_path, tag_txt)
 
             lzh_path: str = f'{mod_path}.lzh'
 
@@ -71,8 +71,8 @@ class AwardBiosExtract(BIOSUtility):
                 lzh_file.write(mod_bin)  # Store LZH archive
 
             # 7-Zip returns critical exit code (i.e. 2) if LZH CRC is wrong, do not check result
-            szip_decompress(in_path=lzh_path, out_path=extract_path, in_name=lzh_text,
-                            padding=padding + 4)
+            szip_decompress(in_path=lzh_path, out_path=self.extract_path, in_name=lzh_text,
+                            padding=self.padding + 4)
 
             # Manually check if 7-Zip extracted LZH due to its CRC check issue
             if is_file(in_path=mod_path):
@@ -80,14 +80,11 @@ class AwardBiosExtract(BIOSUtility):
 
                 os.remove(lzh_path)  # Successful extraction, delete LZH archive
 
+                award_bios_extract: AwardBiosExtract = AwardBiosExtract(
+                    input_object=mod_path, extract_path=extract_folder(mod_path), padding=self.padding + 8)
+
                 # Extract any nested LZH archives
-                if self.check_format(input_object=mod_path):
-                    # Recursively extract nested Award BIOS modules
-                    self.parse_format(input_object=mod_path, extract_path=extract_folder(mod_path),
-                                      padding=padding + 8)
+                if award_bios_extract.check_format():
+                    award_bios_extract.parse_format()
 
         return True
-
-
-if __name__ == '__main__':
-    AwardBiosExtract().run_utility()

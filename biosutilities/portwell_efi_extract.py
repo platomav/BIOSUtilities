@@ -37,10 +37,10 @@ class PortwellEfiExtract(BIOSUtility):
         4: 'SaveDmiData.efi'
     }
 
-    def check_format(self, input_object: str | bytes | bytearray) -> bool:
+    def check_format(self) -> bool:
         """ Check if input is Portwell EFI executable """
 
-        input_buffer: bytes = file_to_bytes(in_object=input_object)
+        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
 
         try:
             pe_buffer: bytes = self._get_portwell_pe(in_buffer=input_buffer)[1]
@@ -57,21 +57,21 @@ class PortwellEfiExtract(BIOSUtility):
 
         return False
 
-    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool:
+    def parse_format(self) -> bool:
         """ Parse & Extract Portwell UEFI Unpacker """
 
         # Initialize EFI Payload file chunks
         efi_files: list[bytes] = []
 
-        input_buffer: bytes = file_to_bytes(in_object=input_object)
+        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
 
-        make_dirs(in_path=extract_path, delete=True)
+        make_dirs(in_path=self.extract_path, delete=True)
 
         pe_file, pe_data = self._get_portwell_pe(in_buffer=input_buffer)
 
         efi_title: str = self._get_unpacker_tag(input_buffer=input_buffer, pe_file=pe_file)
 
-        printer(message=efi_title, padding=padding)
+        printer(message=efi_title, padding=self.padding)
 
         # Split EFI Payload into <UU> file chunks
         efi_list: list[Match[bytes]] = list(PAT_PORTWELL_EFI.finditer(pe_data))
@@ -82,7 +82,7 @@ class PortwellEfiExtract(BIOSUtility):
 
             efi_files.append(pe_data[efi_bgn:efi_end])
 
-        self._parse_efi_files(extract_path=extract_path, efi_files=efi_files, padding=padding)
+        self._parse_efi_files(extract_path=self.extract_path, efi_files=efi_files, padding=self.padding)
 
         return True
 
@@ -145,8 +145,7 @@ class PortwellEfiExtract(BIOSUtility):
             printer(message=f'[{file_index}] {file_name}', padding=padding + 4)
 
             if file_name.startswith('Unknown_'):
-                printer(message=f'Note: Detected new Portwell EFI file ID {file_index}!',
-                        padding=padding + 8, pause=not self.arguments.auto_exit)
+                printer(message=f'Note: Detected new Portwell EFI file ID {file_index}!', padding=padding + 8)
 
             # Store EFI file output path
             file_path: str = os.path.join(extract_path, safe_name(in_name=file_name))
@@ -166,7 +165,3 @@ class PortwellEfiExtract(BIOSUtility):
                 # Successful decompression, delete compressed file
                 if efi_decompress(in_path=comp_fname, out_path=file_path, padding=padding + 8):
                     os.remove(comp_fname)
-
-
-if __name__ == '__main__':
-    PortwellEfiExtract().run_utility()

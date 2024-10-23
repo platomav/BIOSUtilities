@@ -103,23 +103,23 @@ class PhoenixTdkExtract(BIOSUtility):
 
     TDK_DUMMY_LEN: Final[int] = 0x200
 
-    def check_format(self, input_object: str | bytes | bytearray) -> bool:
+    def check_format(self) -> bool:
         """ Check if input contains valid Phoenix TDK image """
 
-        input_buffer: bytes = file_to_bytes(in_object=input_object)
+        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
 
         return bool(self._get_phoenix_tdk(in_buffer=input_buffer)[1] is not None)
 
-    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool:
+    def parse_format(self) -> bool:
         """ Parse & Extract Phoenix Tools Development Kit (TDK) Packer """
 
         exit_code: int = 0
 
-        input_buffer: bytes = file_to_bytes(in_object=input_object)
+        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
 
-        make_dirs(in_path=extract_path, delete=True)
+        make_dirs(in_path=self.extract_path, delete=True)
 
-        printer(message='Phoenix Tools Development Kit Packer', padding=padding)
+        printer(message='Phoenix Tools Development Kit Packer', padding=self.padding)
 
         base_off, pack_off = self._get_phoenix_tdk(in_buffer=input_buffer)
 
@@ -127,13 +127,13 @@ class PhoenixTdkExtract(BIOSUtility):
         tdk_hdr: Any = ctypes_struct(buffer=input_buffer, start_offset=pack_off, class_object=PhoenixTdkHeader)
 
         # Print TDK Header structure info
-        printer(message='Phoenix TDK Header:\n', padding=padding + 4)
+        printer(message='Phoenix TDK Header:\n', padding=self.padding + 4)
 
-        tdk_hdr.struct_print(padding=padding + 8)
+        tdk_hdr.struct_print(padding=self.padding + 8)
 
         # Check if reported TDK Header Size matches manual TDK Entry Count calculation
         if tdk_hdr.Size != self.TDK_HDR_LEN + self.TDK_DUMMY_LEN + tdk_hdr.Count * self.TDK_MOD_LEN:
-            printer(message='Error: Phoenix TDK Header Size & Entry Count mismatch!\n', padding=padding + 8)
+            printer(message='Error: Phoenix TDK Header Size & Entry Count mismatch!\n', padding=self.padding + 8)
 
             exit_code = 1
 
@@ -147,16 +147,16 @@ class PhoenixTdkExtract(BIOSUtility):
                                          class_object=PhoenixTdkEntry, param_list=[base_off])
 
             # Print TDK Entry structure info
-            printer(message=f'Phoenix TDK Entry ({entry_index + 1}/{tdk_hdr.Count}):\n', padding=padding + 8)
+            printer(message=f'Phoenix TDK Entry ({entry_index + 1}/{tdk_hdr.Count}):\n', padding=self.padding + 8)
 
-            tdk_mod.struct_print(padding=padding + 12)
+            tdk_mod.struct_print(padding=self.padding + 12)
 
             # Get TDK Entry raw data Offset (TDK Base + Entry Offset)
             mod_off: int = tdk_mod.get_offset()
 
             # Check if TDK Entry raw data Offset is valid
             if mod_off >= len(input_buffer):
-                printer(message='Error: Phoenix TDK Entry > Offset is out of bounds!\n', padding=padding + 12)
+                printer(message='Error: Phoenix TDK Entry > Offset is out of bounds!\n', padding=self.padding + 12)
 
                 exit_code = 2
 
@@ -165,13 +165,13 @@ class PhoenixTdkExtract(BIOSUtility):
 
             # Check if TDK Entry raw data is complete
             if len(mod_data) != tdk_mod.Size:
-                printer(message='Error: Phoenix TDK Entry > Data is truncated!\n', padding=padding + 12)
+                printer(message='Error: Phoenix TDK Entry > Data is truncated!\n', padding=self.padding + 12)
 
                 exit_code = 3
 
             # Check if TDK Entry Reserved is present
             if tdk_mod.Reserved:
-                printer(message='Error: Phoenix TDK Entry > Reserved is not empty!\n', padding=padding + 12)
+                printer(message='Error: Phoenix TDK Entry > Reserved is not empty!\n', padding=self.padding + 12)
 
                 exit_code = 4
 
@@ -181,7 +181,7 @@ class PhoenixTdkExtract(BIOSUtility):
                     mod_data = lzma.LZMADecompressor().decompress(data=mod_data)
                 except Exception as error:  # pylint: disable=broad-except
                     printer(message=f'Error: Phoenix TDK Entry > LZMA decompression failed: {error}!\n',
-                            padding=padding + 12)
+                            padding=self.padding + 12)
 
                     exit_code = 5
 
@@ -189,7 +189,7 @@ class PhoenixTdkExtract(BIOSUtility):
             mod_name: str = tdk_mod.get_name() or f'Unknown_{entry_index + 1:02d}.bin'
 
             # Generate TDK Entry file data output path
-            mod_file: str = os.path.join(extract_path, safe_name(mod_name))
+            mod_file: str = os.path.join(self.extract_path, safe_name(mod_name))
 
             # Account for potential duplicate file names
             if is_file(in_path=mod_file):
@@ -280,7 +280,3 @@ class PhoenixTdkExtract(BIOSUtility):
         tdk_base_off: int | None = self._get_tdk_base(in_buffer, tdk_pack_off)
 
         return tdk_base_off, tdk_pack_off
-
-
-if __name__ == '__main__':
-    PhoenixTdkExtract().run_utility()

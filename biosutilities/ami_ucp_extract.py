@@ -183,10 +183,6 @@ class AmiUcpExtract(BIOSUtility):
 
     TITLE: str = 'AMI UCP Update Extractor'
 
-    ARGUMENTS: list[tuple[list[str], dict[str, str]]] = [
-        (['-c', '--checksum'], {'help': 'verify AMI UCP Checksums (slow)', 'action': 'store_true'})
-    ]
-
     # Get common ctypes Structure Sizes
     UAF_HDR_LEN: Final[int] = ctypes.sizeof(UafHeader)
     UAF_MOD_LEN: Final[int] = ctypes.sizeof(UafModule)
@@ -254,23 +250,29 @@ class AmiUcpExtract(BIOSUtility):
         '@W64': ['amifldrv64.sys', 'amifldrv64.sys', '']
     }
 
-    def check_format(self, input_object: str | bytes | bytearray) -> bool:
+    def __init__(self, input_object: str | bytes | bytearray = b'', extract_path: str = '', padding: int = 0,
+                 checksum: bool = False) -> None:
+        super().__init__(input_object=input_object, extract_path=extract_path, padding=padding)
+
+        self.checksum: bool = checksum
+
+    def check_format(self) -> bool:
         """ Check if input is AMI UCP image """
 
-        buffer: bytes = file_to_bytes(in_object=input_object)
+        buffer: bytes = file_to_bytes(in_object=self.input_object)
 
         return bool(self._get_ami_ucp(input_object=buffer)[0])
 
-    def parse_format(self, input_object: str | bytes | bytearray, extract_path: str, padding: int = 0) -> bool:
+    def parse_format(self) -> bool:
         """ Parse & Extract AMI UCP structures """
 
-        input_buffer: bytes = file_to_bytes(in_object=input_object)
+        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
 
         nal_dict: dict[str, tuple[str, str]] = {}  # Initialize @NAL Dictionary per UCP
 
-        printer(message='Utility Configuration Program', padding=padding)
+        printer(message='Utility Configuration Program', padding=self.padding)
 
-        make_dirs(in_path=extract_path, delete=True)
+        make_dirs(in_path=self.extract_path, delete=True)
 
         # Get best AMI UCP Pattern match based on @UAF|@HPU Size
         ucp_buffer, ucp_tag = self._get_ami_ucp(input_object=input_buffer)
@@ -278,9 +280,9 @@ class AmiUcpExtract(BIOSUtility):
         # Parse @UAF|@HPU Header Structure
         uaf_hdr: Any = ctypes_struct(buffer=ucp_buffer, start_offset=0, class_object=UafHeader)
 
-        printer(message=f'Utility Auxiliary File > {ucp_tag}:\n', padding=padding + 4)
+        printer(message=f'Utility Auxiliary File > {ucp_tag}:\n', padding=self.padding + 4)
 
-        uaf_hdr.struct_print(padding=padding + 8)
+        uaf_hdr.struct_print(padding=self.padding + 8)
 
         fake = struct.pack('<II', len(ucp_buffer), len(ucp_buffer))  # Generate UafModule Structure
 
@@ -292,16 +294,16 @@ class AmiUcpExtract(BIOSUtility):
         uaf_desc = self.UAF_TAG_DICT[ucp_tag][1]  # Get @UAF|@HPU Module Description
 
         # Print @UAF|@HPU Module EFI Info
-        uaf_mod.struct_print(filename=uaf_name, description=uaf_desc, padding=padding + 8)
+        uaf_mod.struct_print(filename=uaf_name, description=uaf_desc, padding=self.padding + 8)
 
-        if self.arguments.checksum:
-            self._chk16_validate(data=ucp_buffer, tag=ucp_tag, padding=padding + 8)
+        if self.checksum:
+            self._chk16_validate(data=ucp_buffer, tag=ucp_tag, padding=self.padding + 8)
 
         uaf_all = self._get_uaf_mod(buffer=ucp_buffer, uaf_off=self.UAF_HDR_LEN)
 
         for mod_info in uaf_all:
-            nal_dict = self._uaf_extract(buffer=ucp_buffer, extract_path=extract_path, mod_info=mod_info,
-                                         nal_dict=nal_dict, padding=padding + 8)
+            nal_dict = self._uaf_extract(buffer=ucp_buffer, extract_path=self.extract_path, mod_info=mod_info,
+                                         nal_dict=nal_dict, padding=self.padding + 8)
 
         return True
 
@@ -421,7 +423,7 @@ class AmiUcpExtract(BIOSUtility):
                 not uaf_tag.startswith(('@ROM', '@R0', '@S0', '@DR', '@DS')):
 
             printer(message=f'Note: Detected new AMI UCP Module {uaf_tag} ({nal_dict[uaf_tag][1]}) in @NAL!',
-                    padding=padding + 4, pause=not self.arguments.auto_exit)
+                    padding=padding + 4)
 
         # Generate @UAF|@HPU Module File name, depending on whether decompression will be required
         uaf_sname: str = safe_name(in_name=uaf_name + ('.temp' if is_comp else uaf_fext))
@@ -435,7 +437,7 @@ class AmiUcpExtract(BIOSUtility):
         else:
             uaf_fname = safe_path(base_path=extract_path, user_paths=uaf_sname)
 
-        if self.arguments.checksum:
+        if self.checksum:
             self._chk16_validate(data=uaf_data_all, tag=uaf_tag, padding=padding + 4)
 
         # Parse Utility Identification Information @UAF|@HPU Module (@UII)
@@ -453,7 +455,7 @@ class AmiUcpExtract(BIOSUtility):
 
             info_hdr.struct_print(description=info_desc, padding=padding + 8)  # Print @UII Module Info
 
-            if self.arguments.checksum:
+            if self.checksum:
                 self._chk16_validate(data=uaf_data_raw, tag='@UII > Info', padding=padding + 8)
 
             # Store/Save @UII Module Info in file
@@ -562,25 +564,25 @@ class AmiUcpExtract(BIOSUtility):
                 # Assign a file path & name to each Tag
                 nal_dict[info_tag] = (info_path, info_name)
 
-        insyde_ifd_extract: InsydeIfdExtract = InsydeIfdExtract()
-
         # Parse Insyde BIOS @UAF|@HPU Module (@INS)
-        if uaf_tag == '@INS' and insyde_ifd_extract.check_format(input_object=uaf_fname):
-            # Generate extraction directory
+        if uaf_tag == '@INS':
             ins_dir: str = os.path.join(extract_path, safe_name(in_name=f'{uaf_tag}_nested-IFD'))
 
-            if insyde_ifd_extract.parse_format(input_object=uaf_fname, extract_path=extract_folder(ins_dir),
-                                               padding=padding + 4):
-                os.remove(uaf_fname)  # Delete raw nested Insyde IFD image after successful extraction
+            insyde_ifd_extract: InsydeIfdExtract = InsydeIfdExtract(
+                input_object=uaf_fname, extract_path=extract_folder(ins_dir), padding=padding + 4)
 
-        ami_pfat_extract: AmiPfatExtract = AmiPfatExtract()
+            if insyde_ifd_extract.check_format():
+                if insyde_ifd_extract.parse_format():
+                    os.remove(uaf_fname)  # Delete raw nested Insyde IFD image after successful extraction
+
+        pfat_dir: str = os.path.join(extract_path, safe_name(in_name=uaf_name))
+
+        ami_pfat_extract: AmiPfatExtract = AmiPfatExtract(
+            input_object=uaf_data_raw, extract_path=extract_folder(pfat_dir), padding=padding + 4)
 
         # Detect & Unpack AMI BIOS Guard (PFAT) BIOS image
-        if ami_pfat_extract.check_format(input_object=uaf_data_raw):
-            pfat_dir: str = os.path.join(extract_path, safe_name(in_name=uaf_name))
-
-            ami_pfat_extract.parse_format(input_object=uaf_data_raw, extract_path=extract_folder(pfat_dir),
-                                          padding=padding + 4)
+        if ami_pfat_extract.check_format():
+            ami_pfat_extract.parse_format()
 
             os.remove(uaf_fname)  # Delete raw PFAT BIOS image after successful extraction
 
@@ -590,18 +592,15 @@ class AmiUcpExtract(BIOSUtility):
             printer(message='Use "ME Analyzer" from https://github.com/platomav/MEAnalyzer',
                     padding=padding + 8, new_line=False)
 
-        # Parse Nested AMI UCP image
-        if self.check_format(input_object=uaf_data_raw):
-            # Generate extraction directory
-            uaf_dir: str = os.path.join(extract_path, safe_name(in_name=f'{uaf_tag}_nested-UCP'))
+        uaf_dir: str = extract_folder(os.path.join(extract_path, safe_name(in_name=f'{uaf_tag}_nested-UCP')))
 
-            self.parse_format(input_object=uaf_data_raw, extract_path=extract_folder(uaf_dir),
-                              padding=padding + 4)  # Call recursively
+        ami_ucp_extract: AmiUcpExtract = AmiUcpExtract(
+            input_object=uaf_data_raw, extract_path=uaf_dir, padding=padding + 4, checksum=self.checksum)
+
+        # Parse Nested AMI UCP image
+        if ami_ucp_extract.check_format():
+            ami_ucp_extract.parse_format()
 
             os.remove(uaf_fname)  # Delete raw nested AMI UCP image after successful extraction
 
         return nal_dict
-
-
-if __name__ == '__main__':
-    AmiUcpExtract().run_utility()

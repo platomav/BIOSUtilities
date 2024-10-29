@@ -17,12 +17,12 @@ from typing import Any, Final
 
 from biosutilities.common.checksums import checksum_16
 from biosutilities.common.compression import efi_decompress, is_efi_compressed
-from biosutilities.common.paths import agnostic_path, extract_folder, make_dirs, safe_name, safe_path
+from biosutilities.common.paths import agnostic_path, delete_file, extract_folder, make_dirs, safe_name, safe_path
 from biosutilities.common.patterns import PAT_AMI_UCP, PAT_INTEL_ENGINE
 from biosutilities.common.structs import CHAR, ctypes_struct, UINT8, UINT16, UINT32
 from biosutilities.common.system import printer
 from biosutilities.common.templates import BIOSUtility
-from biosutilities.common.texts import file_to_bytes, to_string
+from biosutilities.common.texts import to_string
 
 from biosutilities.ami_pfat_extract import AmiPfatExtract
 from biosutilities.insyde_ifd_extract import InsydeIfdExtract
@@ -259,23 +259,19 @@ class AmiUcpExtract(BIOSUtility):
     def check_format(self) -> bool:
         """ Check if input is AMI UCP image """
 
-        buffer: bytes = file_to_bytes(in_object=self.input_object)
-
-        return bool(self._get_ami_ucp(input_object=buffer)[0])
+        return bool(self._get_ami_ucp()[0])
 
     def parse_format(self) -> bool:
         """ Parse & Extract AMI UCP structures """
-
-        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
 
         nal_dict: dict[str, tuple[str, str]] = {}  # Initialize @NAL Dictionary per UCP
 
         printer(message='Utility Configuration Program', padding=self.padding)
 
-        make_dirs(in_path=self.extract_path, delete=True)
+        make_dirs(in_path=self.extract_path)
 
         # Get best AMI UCP Pattern match based on @UAF|@HPU Size
-        ucp_buffer, ucp_tag = self._get_ami_ucp(input_object=input_buffer)
+        ucp_buffer, ucp_tag = self._get_ami_ucp()
 
         # Parse @UAF|@HPU Header Structure
         uaf_hdr: Any = ctypes_struct(buffer=ucp_buffer, start_offset=0, class_object=UafHeader)
@@ -284,14 +280,17 @@ class AmiUcpExtract(BIOSUtility):
 
         uaf_hdr.struct_print(padding=self.padding + 8)
 
-        fake = struct.pack('<II', len(ucp_buffer), len(ucp_buffer))  # Generate UafModule Structure
+        # Generate UafModule Structure
+        fake: bytes = struct.pack('<II', len(ucp_buffer), len(ucp_buffer))
 
         # Parse @UAF|@HPU Module EFI Structure
         uaf_mod: Any = ctypes_struct(buffer=fake, start_offset=0, class_object=UafModule)
 
-        uaf_name = self.UAF_TAG_DICT[ucp_tag][0]  # Get @UAF|@HPU Module Filename
+        # Get @UAF|@HPU Module Filename
+        uaf_name = self.UAF_TAG_DICT[ucp_tag][0]
 
-        uaf_desc = self.UAF_TAG_DICT[ucp_tag][1]  # Get @UAF|@HPU Module Description
+        # Get @UAF|@HPU Module Description
+        uaf_desc = self.UAF_TAG_DICT[ucp_tag][1]
 
         # Print @UAF|@HPU Module EFI Info
         uaf_mod.struct_print(filename=uaf_name, description=uaf_desc, padding=self.padding + 8)
@@ -316,23 +315,21 @@ class AmiUcpExtract(BIOSUtility):
         else:
             printer(message=f'Checksum of UCP Module {tag} is valid!', padding=padding)
 
-    @staticmethod
-    def _get_ami_ucp(input_object: str | bytes | bytearray) -> tuple[bytes, str]:
+    def _get_ami_ucp(self) -> tuple[bytes, str]:
         """ Get all input file AMI UCP patterns """
-
-        buffer: bytes = file_to_bytes(in_object=input_object)
 
         uaf_len_max: int = 0x0  # Length of largest detected @UAF|@HPU
         uaf_buf_bin: bytes = b''  # Buffer of largest detected @UAF|@HPU
         uaf_buf_tag: str = '@UAF'  # Tag of largest detected @UAF|@HPU
 
-        for uaf in PAT_AMI_UCP.finditer(buffer):
-            uaf_len_cur: int = int.from_bytes(buffer[uaf.start() + 0x4:uaf.start() + 0x8], byteorder='little')
+        for uaf in PAT_AMI_UCP.finditer(self.input_buffer):
+            uaf_len_cur: int = int.from_bytes(
+                self.input_buffer[uaf.start() + 0x4:uaf.start() + 0x8], byteorder='little')
 
             if uaf_len_cur > uaf_len_max:
                 uaf_len_max = uaf_len_cur
 
-                uaf_buf_bin = buffer[uaf.start():uaf.start() + uaf_len_max]
+                uaf_buf_bin = self.input_buffer[uaf.start():uaf.start() + uaf_len_max]
 
                 uaf_buf_tag = uaf.group(0)[:4].decode('utf-8', 'ignore')
 
@@ -431,7 +428,7 @@ class AmiUcpExtract(BIOSUtility):
         if uaf_tag in nal_dict:
             uaf_npath: str = safe_path(base_path=extract_path, user_paths=nal_dict[uaf_tag][0])
 
-            make_dirs(in_path=uaf_npath, exist_ok=True)
+            make_dirs(in_path=uaf_npath)
 
             uaf_fname: str = safe_path(base_path=uaf_npath, user_paths=uaf_sname)
         else:
@@ -484,7 +481,7 @@ class AmiUcpExtract(BIOSUtility):
                 uaf_out.write(uaf_data_raw)
 
         # @UAF|@HPU Module EFI/Tiano Decompression
-        if is_comp and is_efi_compressed(data=uaf_data_raw, strict=False):
+        if is_comp and is_efi_compressed(in_object=uaf_data_raw, strict=False):
             # Decompressed @UAF|@HPU Module file path
             dec_fname: str = uaf_fname.replace('.temp', uaf_fext)
 
@@ -492,7 +489,7 @@ class AmiUcpExtract(BIOSUtility):
                 with open(dec_fname, 'rb') as dec:
                     uaf_data_raw = dec.read()  # Read back the @UAF|@HPU Module decompressed Raw data
 
-                os.remove(uaf_fname)  # Successful decompression, delete compressed @UAF|@HPU Module file
+                delete_file(in_path=uaf_fname)  # Successful decompression, delete compressed @UAF|@HPU Module file
 
                 uaf_fname = dec_fname  # Adjust @UAF|@HPU Module file path to the decompressed one
 
@@ -536,7 +533,7 @@ class AmiUcpExtract(BIOSUtility):
 
                         dis_mod.struct_print(padding=4)  # Store @DIS Module Entry Info
 
-            os.remove(uaf_fname)  # Delete @DIS Module binary, info exported as text
+            delete_file(in_path=uaf_fname)  # Delete @DIS Module binary, info exported as text
 
         # Parse Name List @UAF|@HPU Module (@NAL)
         if len(uaf_data_raw) >= 5 and (uaf_tag, uaf_data_raw[0], uaf_data_raw[4]) == ('@NAL', 0x40, 0x3A):
@@ -573,7 +570,7 @@ class AmiUcpExtract(BIOSUtility):
 
             if insyde_ifd_extract.check_format():
                 if insyde_ifd_extract.parse_format():
-                    os.remove(uaf_fname)  # Delete raw nested Insyde IFD image after successful extraction
+                    delete_file(in_path=uaf_fname)  # Delete raw nested Insyde IFD image after successful extraction
 
         pfat_dir: str = os.path.join(extract_path, safe_name(in_name=uaf_name))
 
@@ -584,7 +581,7 @@ class AmiUcpExtract(BIOSUtility):
         if ami_pfat_extract.check_format():
             ami_pfat_extract.parse_format()
 
-            os.remove(uaf_fname)  # Delete raw PFAT BIOS image after successful extraction
+            delete_file(in_path=uaf_fname)  # Delete raw PFAT BIOS image after successful extraction
 
         # Detect Intel Engine firmware image and show ME Analyzer advice
         if uaf_tag.startswith('@ME') and PAT_INTEL_ENGINE.search(uaf_data_raw):
@@ -601,6 +598,6 @@ class AmiUcpExtract(BIOSUtility):
         if ami_ucp_extract.check_format():
             ami_ucp_extract.parse_format()
 
-            os.remove(uaf_fname)  # Delete raw nested AMI UCP image after successful extraction
+            delete_file(in_path=uaf_fname)  # Delete raw nested AMI UCP image after successful extraction
 
         return nal_dict

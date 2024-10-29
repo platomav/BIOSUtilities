@@ -16,7 +16,6 @@ from biosutilities.common.paths import make_dirs, path_stem
 from biosutilities.common.patterns import PAT_APPLE_IM4P, PAT_INTEL_FD
 from biosutilities.common.system import printer
 from biosutilities.common.templates import BIOSUtility
-from biosutilities.common.texts import file_to_bytes
 
 
 class AppleEfiIm4pSplit(BIOSUtility):
@@ -33,9 +32,7 @@ class AppleEfiIm4pSplit(BIOSUtility):
         if isinstance(self.input_object, str) and not self.input_object.lower().endswith('.im4p'):
             return False
 
-        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
-
-        if PAT_APPLE_IM4P.search(input_buffer) and PAT_INTEL_FD.search(input_buffer):
+        if PAT_APPLE_IM4P.search(self.input_buffer) and PAT_INTEL_FD.search(self.input_buffer):
             return True
 
         return False
@@ -45,12 +42,10 @@ class AppleEfiIm4pSplit(BIOSUtility):
 
         parse_success: bool = True
 
-        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
-
-        make_dirs(in_path=self.extract_path, delete=True)
+        make_dirs(in_path=self.extract_path)
 
         # Detect IM4P EFI pattern
-        im4p_match: Match[bytes] | None = PAT_APPLE_IM4P.search(input_buffer)
+        im4p_match: Match[bytes] | None = PAT_APPLE_IM4P.search(self.input_buffer)
 
         if not im4p_match:
             return False
@@ -59,14 +54,14 @@ class AppleEfiIm4pSplit(BIOSUtility):
         # However, _MEFIBIN is not required for splitting SPI images due to Intel Flash Descriptor Components Density.
 
         # IM4P mefi payload start offset
-        mefi_data_bgn: int = im4p_match.start() + input_buffer[im4p_match.start() - 0x1]
+        mefi_data_bgn: int = im4p_match.start() + self.input_buffer[im4p_match.start() - 0x1]
 
         # IM4P mefi payload size
-        mefi_data_len: int = int.from_bytes(input_buffer[im4p_match.end() + 0x5:im4p_match.end() + 0x9],
+        mefi_data_len: int = int.from_bytes(self.input_buffer[im4p_match.end() + 0x5:im4p_match.end() + 0x9],
                                             byteorder='big')
 
         # Check if mefi is followed by _MEFIBIN
-        mefibin_exist: bool = input_buffer[mefi_data_bgn:mefi_data_bgn + 0x8] == b'_MEFIBIN'
+        mefibin_exist: bool = self.input_buffer[mefi_data_bgn:mefi_data_bgn + 0x8] == b'_MEFIBIN'
 
         # Actual multi EFI payloads start after _MEFIBIN
         efi_data_bgn: int = mefi_data_bgn + 0x100 if mefibin_exist else mefi_data_bgn
@@ -75,7 +70,7 @@ class AppleEfiIm4pSplit(BIOSUtility):
         efi_data_len: int = mefi_data_len - 0x100 if mefibin_exist else mefi_data_len
 
         # Adjust input file buffer to actual multi EFI payloads data
-        input_buffer = input_buffer[efi_data_bgn:efi_data_bgn + efi_data_len]
+        input_buffer = self.input_buffer[efi_data_bgn:efi_data_bgn + efi_data_len]
 
         # Parse Intel Flash Descriptor pattern matches
         for ifd in PAT_INTEL_FD.finditer(input_buffer):

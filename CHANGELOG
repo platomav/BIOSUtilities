@@ -1,3 +1,11 @@
+24.10.29
+
+Added graceful exception hanlding during "main" flow
+Improved and cleaned 7-Zip and EFI compression logic
+Improved too aggressive extraction directory handling
+Fixed input name detection at VAIO Package Extractor
+Fixed Intel IBIOSI detection at Apple EFI Identifier
+
 24.10.23
 
 New "package" flow, arguments now provided during utility call (README)

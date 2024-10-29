@@ -19,7 +19,7 @@ from typing import Any, Final
 
 from biosutilities.common.checksums import checksum_8_xor
 from biosutilities.common.compression import is_szip_supported, szip_decompress
-from biosutilities.common.paths import (delete_dirs, path_files, is_access, is_file, make_dirs,
+from biosutilities.common.paths import (delete_dirs, delete_file, path_files, is_access, is_file, make_dirs,
                                         path_name, path_parent, path_stem, safe_name)
 from biosutilities.common.patterns import PAT_DELL_FTR, PAT_DELL_HDR, PAT_DELL_PKG
 from biosutilities.common.structs import CHAR, ctypes_struct, UINT8, UINT16, UINT32, UINT64
@@ -244,12 +244,10 @@ class DellPfsExtract(BIOSUtility):
     def check_format(self) -> bool:
         """ Check if input is Dell PFS/PKG image """
 
-        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
-
-        if self._is_pfs_pkg(input_object=input_buffer):
+        if self._is_pfs_pkg(input_object=self.input_buffer):
             return True
 
-        if self._is_pfs_hdr(input_object=input_buffer) and self._is_pfs_ftr(input_object=input_buffer):
+        if self._is_pfs_hdr(input_object=self.input_buffer) and self._is_pfs_ftr(input_object=self.input_buffer):
             return True
 
         return False
@@ -257,18 +255,16 @@ class DellPfsExtract(BIOSUtility):
     def parse_format(self) -> bool:
         """ Parse & Extract Dell PFS Update image """
 
-        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
+        make_dirs(in_path=self.extract_path)
 
-        make_dirs(in_path=self.extract_path, delete=True)
-
-        is_dell_pkg: bool = self._is_pfs_pkg(input_object=input_buffer)
+        is_dell_pkg: bool = self._is_pfs_pkg(input_object=self.input_buffer)
 
         if is_dell_pkg:
             pfs_results: dict[str, bytes] = self._thinos_pkg_extract(
-                input_object=input_buffer, extract_path=self.extract_path)
+                input_object=self.input_buffer, extract_path=self.extract_path)
         else:
             pfs_results = {path_stem(in_path=self.input_object) if isinstance(self.input_object, str) and is_file(
-                in_path=self.input_object) else 'Image': input_buffer}
+                in_path=self.input_object) else 'Image': self.input_buffer}
 
         # Parse each Dell PFS image contained in the input file
         for pfs_index, (pfs_name, pfs_buffer) in enumerate(pfs_results.items(), start=1):
@@ -356,10 +352,10 @@ class DellPfsExtract(BIOSUtility):
         with open(pkg_tar_path, 'wb') as pkg_payload:
             pkg_payload.write(lzma.decompress(lzma_bin_dat))
 
-        if is_szip_supported(in_path=pkg_tar_path, padding=0, args=['-tTAR']):
+        if is_szip_supported(in_path=pkg_tar_path, args=['-tTAR']):
             if szip_decompress(in_path=pkg_tar_path, out_path=working_path, in_name='TAR', padding=0,
                                args=['-tTAR'], check=True, silent=True):
-                os.remove(pkg_tar_path)
+                delete_file(in_path=pkg_tar_path)
             else:
                 return pfs_results
         else:
@@ -423,7 +419,7 @@ class DellPfsExtract(BIOSUtility):
         section_path: str = os.path.join(extract_path, safe_name(in_name=section_name))
 
         # Create extraction subdirectory and delete old (if present, not in recursions)
-        make_dirs(in_path=section_path, delete=(not is_rec), parents=True, exist_ok=True)
+        make_dirs(in_path=section_path, delete=not is_rec)
 
         # Store the compressed zlib stream start offset
         compressed_start: int = zlib_start + 0xB

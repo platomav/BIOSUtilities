@@ -216,16 +216,12 @@ class AmiPfatExtract(BIOSUtility):
     def check_format(self) -> bool:
         """ Check if input is AMI BIOS Guard """
 
-        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
-
-        return bool(self._get_ami_pfat(input_object=input_buffer))
+        return bool(self._get_ami_pfat(input_object=self.input_buffer))
 
     def parse_format(self) -> bool:
         """ Process and store AMI BIOS Guard output file """
 
-        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
-
-        pfat_buffer: bytes = self._get_ami_pfat(input_object=input_buffer)
+        pfat_buffer: bytes = self._get_ami_pfat(input_object=self.input_buffer)
 
         file_path: str = ''
 
@@ -235,7 +231,7 @@ class AmiPfatExtract(BIOSUtility):
 
         extract_name: str = path_name(in_path=self.extract_path).removesuffix(extract_suffix())
 
-        make_dirs(in_path=self.extract_path, delete=True)
+        make_dirs(in_path=self.extract_path)
 
         block_all, block_off, file_count = self._parse_pfat_hdr(buffer=pfat_buffer, padding=self.padding)
 

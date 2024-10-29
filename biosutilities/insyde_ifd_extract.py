@@ -14,13 +14,12 @@ import re
 from typing import Any, Final
 
 from biosutilities.common.compression import is_szip_supported, szip_decompress
-from biosutilities.common.paths import (extract_folder, is_access, is_file, path_files,
+from biosutilities.common.paths import (delete_file, extract_folder, is_access, is_file, path_files,
                                         make_dirs, path_name, safe_name)
 from biosutilities.common.patterns import PAT_INSYDE_IFL, PAT_INSYDE_SFX
 from biosutilities.common.structs import CHAR, ctypes_struct, UINT32
 from biosutilities.common.system import printer
 from biosutilities.common.templates import BIOSUtility
-from biosutilities.common.texts import file_to_bytes
 
 
 class IflashHeader(ctypes.LittleEndianStructure):
@@ -83,12 +82,10 @@ class InsydeIfdExtract(BIOSUtility):
     def check_format(self) -> bool:
         """ Check if input is Insyde iFlash/iFdPacker Update image """
 
-        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
-
-        if bool(self._insyde_iflash_detect(input_buffer=input_buffer)):
+        if bool(self._insyde_iflash_detect(input_buffer=self.input_buffer)):
             return True
 
-        if bool(PAT_INSYDE_SFX.search(input_buffer)):
+        if bool(PAT_INSYDE_SFX.search(self.input_buffer)):
             return True
 
         return False
@@ -96,14 +93,12 @@ class InsydeIfdExtract(BIOSUtility):
     def parse_format(self) -> bool:
         """ Parse & Extract Insyde iFlash/iFdPacker Update images """
 
-        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
-
-        iflash_code: int = self._insyde_iflash_extract(input_buffer=input_buffer, extract_path=self.extract_path,
+        iflash_code: int = self._insyde_iflash_extract(input_buffer=self.input_buffer, extract_path=self.extract_path,
                                                        padding=self.padding)
 
         ifdpack_path: str = os.path.join(self.extract_path, 'Insyde iFdPacker SFX')
 
-        ifdpack_code: int = self._insyde_packer_extract(input_buffer=input_buffer, extract_path=ifdpack_path,
+        ifdpack_code: int = self._insyde_packer_extract(input_buffer=self.input_buffer, extract_path=ifdpack_path,
                                                         padding=self.padding)
 
         return (iflash_code and ifdpack_code) == 0
@@ -142,7 +137,7 @@ class InsydeIfdExtract(BIOSUtility):
 
         printer(message='Detected Insyde iFlash Update image!', padding=padding)
 
-        make_dirs(in_path=extract_path, delete=True)
+        make_dirs(in_path=extract_path)
 
         exit_codes: list = []
 
@@ -217,10 +212,10 @@ class InsydeIfdExtract(BIOSUtility):
         with open(sfx_path, 'wb') as sfx_file_object:
             sfx_file_object.write(sfx_buffer)
 
-        if is_szip_supported(in_path=sfx_path, padding=padding + 8, args=[f'-p{self.INS_SFX_PWD}'], silent=False):
+        if is_szip_supported(in_path=sfx_path, args=[f'-p{self.INS_SFX_PWD}']):
             if szip_decompress(in_path=sfx_path, out_path=extract_path, in_name='Insyde iFdPacker > 7-Zip SFX',
                                padding=padding + 8, args=[f'-p{self.INS_SFX_PWD}'], check=True):
-                os.remove(sfx_path)
+                delete_file(in_path=sfx_path)
             else:
                 return 125
         else:

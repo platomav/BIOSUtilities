@@ -10,11 +10,10 @@ Copyright (C) 2018-2024 Plato Mavropoulos
 import os
 
 from biosutilities.common.compression import szip_decompress
-from biosutilities.common.paths import clear_readonly, extract_folder, is_file, make_dirs, safe_name
+from biosutilities.common.paths import clear_readonly, delete_file, extract_folder, is_file, make_dirs, safe_name
 from biosutilities.common.patterns import PAT_AWARD_LZH
 from biosutilities.common.system import printer
 from biosutilities.common.templates import BIOSUtility
-from biosutilities.common.texts import file_to_bytes
 
 
 class AwardBiosExtract(BIOSUtility):
@@ -25,18 +24,14 @@ class AwardBiosExtract(BIOSUtility):
     def check_format(self) -> bool:
         """ Check if input is Award BIOS image """
 
-        in_buffer: bytes = file_to_bytes(in_object=self.input_object)
-
-        return bool(PAT_AWARD_LZH.search(in_buffer))
+        return bool(PAT_AWARD_LZH.search(self.input_buffer))
 
     def parse_format(self) -> bool:
         """ Parse & Extract Award BIOS image """
 
-        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
+        make_dirs(in_path=self.extract_path)
 
-        make_dirs(in_path=self.extract_path, delete=True)
-
-        for lzh_match in PAT_AWARD_LZH.finditer(input_buffer):
+        for lzh_match in PAT_AWARD_LZH.finditer(self.input_buffer):
             lzh_type: str = lzh_match.group(0).decode('utf-8')
 
             lzh_text: str = f'LZH-{lzh_type.strip("-").upper()}'
@@ -44,11 +39,11 @@ class AwardBiosExtract(BIOSUtility):
             lzh_bgn: int = lzh_match.start()
 
             mod_bgn: int = lzh_bgn - 0x2
-            hdr_len: int = input_buffer[mod_bgn]
-            mod_len: int = int.from_bytes(input_buffer[mod_bgn + 0x7:mod_bgn + 0xB], byteorder='little')
+            hdr_len: int = self.input_buffer[mod_bgn]
+            mod_len: int = int.from_bytes(self.input_buffer[mod_bgn + 0x7:mod_bgn + 0xB], byteorder='little')
             mod_end: int = lzh_bgn + hdr_len + mod_len
 
-            mod_bin: bytes = input_buffer[mod_bgn:mod_end]
+            mod_bin: bytes = self.input_buffer[mod_bgn:mod_end]
 
             if len(mod_bin) != 0x2 + hdr_len + mod_len:
                 printer(message=f'Error: Skipped incomplete LZH stream at 0x{mod_bgn:X}!',
@@ -78,7 +73,7 @@ class AwardBiosExtract(BIOSUtility):
             if is_file(in_path=mod_path):
                 clear_readonly(in_path=lzh_path)
 
-                os.remove(lzh_path)  # Successful extraction, delete LZH archive
+                delete_file(in_path=lzh_path)  # Successful extraction, delete LZH archive
 
                 award_bios_extract: AwardBiosExtract = AwardBiosExtract(
                     input_object=mod_path, extract_path=extract_folder(mod_path), padding=self.padding + 8)

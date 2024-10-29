@@ -27,7 +27,6 @@ classifiers = [
     "License :: OSI Approved :: BSD License",
     "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX :: Linux",
-    "Operating System :: POSIX :: BSD",
     "Operating System :: MacOS",
     "Topic :: Security",
     "Topic :: Scientific/Engineering :: Information Analysis"

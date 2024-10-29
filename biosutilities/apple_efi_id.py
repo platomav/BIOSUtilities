@@ -8,7 +8,6 @@ Copyright (C) 2018-2024 Plato Mavropoulos
 """
 
 import ctypes
-import logging
 import os
 import struct
 import subprocess
@@ -19,12 +18,13 @@ from re import Match
 from typing import Any, Final
 
 from biosutilities.common.externals import uefiextract_path, uefifind_path
-from biosutilities.common.paths import delete_dirs, delete_file, is_access, is_file, path_suffixes, runtime_root
+from biosutilities.common.paths import delete_dirs, delete_file, is_file, make_dirs, path_suffixes, runtime_root
 from biosutilities.common.patterns import PAT_INTEL_IBIOSI, PAT_APPLE_ROM_VER
 from biosutilities.common.structs import CHAR, ctypes_struct, UINT8
 from biosutilities.common.system import printer
 from biosutilities.common.templates import BIOSUtility
-from biosutilities.common.texts import file_to_bytes
+
+EFI_EXTENSIONS: Final[list[str]] = ['.fd', '.scap', '.im4p']
 
 
 class IntelBiosId(ctypes.LittleEndianStructure):
@@ -131,87 +131,82 @@ class AppleEfiIdentify(BIOSUtility):
     def check_format(self) -> bool:
         """ Check if input is Apple EFI image """
 
-        if isinstance(self.input_object, str) and is_file(in_path=self.input_object) and is_access(
-                in_path=self.input_object):
-            if path_suffixes(in_path=self.input_object)[-1].lower() not in ('.fd', '.scap', '.im4p'):
+        if isinstance(self.input_object, str) and is_file(in_path=self.input_object):
+            if path_suffixes(in_path=self.input_object)[-1].lower() not in EFI_EXTENSIONS:
                 return False
 
             input_path: str = self.input_object
-            input_buffer: bytes = file_to_bytes(in_object=input_path)
-        elif isinstance(self.input_object, (bytes, bytearray)):
+        else:
             input_path = os.path.join(runtime_root(), 'APPLE_EFI_ID_INPUT_BUFFER_CHECK.tmp')
-            input_buffer = self.input_object
 
             with open(input_path, 'wb') as check_out:
-                check_out.write(input_buffer)
-        else:
-            return False
+                check_out.write(self.input_buffer)
 
-        try:
-            if PAT_INTEL_IBIOSI.search(input_buffer):
-                return True
+        input_buffer: bytes = self.input_buffer
 
-            _ = subprocess.run([uefifind_path(), input_path, 'body', 'list', self.PAT_UEFIFIND],
-                               check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
+        if PAT_INTEL_IBIOSI.search(input_buffer):
             return True
-        except Exception as error:  # pylint: disable=broad-except
-            logging.debug('Error: Could not check if input is Apple EFI image: %s', error)
 
-            return False
-        finally:
-            if input_path != self.input_object:
-                delete_file(in_path=input_path)
+        uefifind_cmd: list[str] = [uefifind_path(), input_path, 'body', 'list', self.PAT_UEFIFIND]
+
+        uefifind_res: subprocess.CompletedProcess[bytes] = subprocess.run(
+            uefifind_cmd, check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+        if input_path != self.input_object:
+            delete_file(in_path=input_path)
+
+        if uefifind_res.returncode == 0:
+            return True
+
+        return False
 
     def parse_format(self) -> bool:
         """ Parse & Identify (or Rename) Apple EFI image """
 
-        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
-
         if isinstance(self.input_object, str) and is_file(in_path=self.input_object):
             input_path: str = self.input_object
         else:
-            input_path = os.path.join(runtime_root(), 'APPLE_EFI_ID_INPUT_BUFFER_PARSE.bin')
+            input_path = os.path.join(runtime_root(), 'APPLE_EFI_ID_INPUT_BUFFER_PARSE.tmp')
 
             with open(input_path, 'wb') as parse_out:
-                parse_out.write(input_buffer)
+                parse_out.write(self.input_buffer)
 
-        bios_id_match: Match[bytes] | None = PAT_INTEL_IBIOSI.search(input_buffer)
+        bios_id_match: Match[bytes] | None = PAT_INTEL_IBIOSI.search(self.input_buffer)
 
         if bios_id_match:
             bios_id_res: str = f'0x{bios_id_match.start():X}'
 
-            bios_id_hdr: Any = ctypes_struct(buffer=input_buffer, start_offset=bios_id_match.start(),
+            bios_id_hdr: Any = ctypes_struct(buffer=self.input_buffer, start_offset=bios_id_match.start(),
                                              class_object=IntelBiosId)
         else:
             # The $IBIOSI$ pattern is within EFI compressed modules so we need to use UEFIFind and UEFIExtract
-            try:
-                bios_id_res = subprocess.check_output([uefifind_path(), input_path, 'body', 'list',
-                                                       self.PAT_UEFIFIND], text=True)[:36]
 
-                # UEFIExtract must create its output folder itself
-                delete_dirs(in_path=self.extract_path)
+            bios_id_res = subprocess.check_output([uefifind_path(), input_path, 'body', 'list',
+                                                   self.PAT_UEFIFIND], text=True)[:36]
 
-                _ = subprocess.run([uefiextract_path(), input_path, bios_id_res, '-o', self.extract_path, '-m', 'body'],
-                                   check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            make_dirs(in_path=self.extract_path)
 
-                with open(os.path.join(self.extract_path, 'body.bin'), 'rb') as raw_body:
-                    body_buffer: bytes = raw_body.read()
+            uefiextract_dir: str = os.path.join(self.extract_path, 'uefiextract_temp')
 
-                # Detect decompressed $IBIOSI$ pattern
-                bios_id_match = PAT_INTEL_IBIOSI.search(body_buffer)
+            # UEFIExtract must create its output folder itself
+            delete_dirs(in_path=uefiextract_dir)
 
-                if not bios_id_match:
-                    raise RuntimeError('Failed to detect decompressed $IBIOSI$ pattern!')
+            _ = subprocess.run([uefiextract_path(), input_path, bios_id_res, '-o', uefiextract_dir, '-m', 'body'],
+                               check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
-                bios_id_hdr = ctypes_struct(buffer=body_buffer, start_offset=bios_id_match.start(),
-                                            class_object=IntelBiosId)
+            with open(os.path.join(uefiextract_dir, 'body.bin'), 'rb') as raw_body:
+                body_buffer: bytes = raw_body.read()
 
-                delete_dirs(in_path=self.extract_path)  # Successful UEFIExtract extraction, remove its output folder
-            except Exception as error:  # pylint: disable=broad-except
-                printer(message=f'Error: Failed to parse compressed $IBIOSI$ pattern: {error}!', padding=self.padding)
+            # Detect decompressed $IBIOSI$ pattern
+            bios_id_match = PAT_INTEL_IBIOSI.search(body_buffer)
 
-                return False
+            if not bios_id_match:
+                raise RuntimeError('Failed to detect decompressed $IBIOSI$ pattern!')
+
+            bios_id_hdr = ctypes_struct(buffer=body_buffer, start_offset=bios_id_match.start(),
+                                        class_object=IntelBiosId)
+
+            delete_dirs(in_path=uefiextract_dir)  # Successful UEFIExtract extraction, remove its output folder
 
         if not self.silent:
             printer(message=f'Detected Intel BIOS Info at {bios_id_res}\n', padding=self.padding)
@@ -220,10 +215,10 @@ class AppleEfiIdentify(BIOSUtility):
 
         self.intel_bios_info = bios_id_hdr.get_bios_id()
 
-        self.efi_file_name = (f'{self.intel_bios_info["efi_name_id"]}_{zlib.adler32(input_buffer):08X}'
+        self.efi_file_name = (f'{self.intel_bios_info["efi_name_id"]}_{zlib.adler32(self.input_buffer):08X}'
                               f'{path_suffixes(in_path=input_path)[-1]}')
 
-        _ = self._apple_rom_version(input_buffer=input_buffer, padding=self.padding)
+        _ = self._apple_rom_version(input_buffer=self.input_buffer, padding=self.padding)
 
         if input_path != self.input_object:
             delete_file(in_path=input_path)

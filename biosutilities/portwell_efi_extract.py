@@ -16,12 +16,11 @@ from typing import Final
 from pefile import PE
 
 from biosutilities.common.compression import efi_decompress, is_efi_compressed
-from biosutilities.common.paths import make_dirs, safe_name
+from biosutilities.common.paths import delete_file, make_dirs, rename_file, safe_name
 from biosutilities.common.executables import ms_pe
 from biosutilities.common.patterns import PAT_MICROSOFT_MZ, PAT_PORTWELL_EFI
 from biosutilities.common.system import printer
 from biosutilities.common.templates import BIOSUtility
-from biosutilities.common.texts import file_to_bytes
 
 
 class PortwellEfiExtract(BIOSUtility):
@@ -40,17 +39,15 @@ class PortwellEfiExtract(BIOSUtility):
     def check_format(self) -> bool:
         """ Check if input is Portwell EFI executable """
 
-        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
-
         try:
-            pe_buffer: bytes = self._get_portwell_pe(in_buffer=input_buffer)[1]
+            pe_buffer: bytes = self._get_portwell_pe(in_buffer=self.input_buffer)[1]
         except Exception as error:  # pylint: disable=broad-except
             logging.debug('Error: Could not check if input is Portwell EFI executable: %s', error)
 
             return False
 
         # EFI images start with PE Header MZ
-        if PAT_MICROSOFT_MZ.search(input_buffer[:0x2]):
+        if PAT_MICROSOFT_MZ.search(self.input_buffer[:0x2]):
             # Portwell EFI files start with <UU>
             if PAT_PORTWELL_EFI.search(pe_buffer[:0x4]):
                 return True
@@ -63,13 +60,11 @@ class PortwellEfiExtract(BIOSUtility):
         # Initialize EFI Payload file chunks
         efi_files: list[bytes] = []
 
-        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
+        make_dirs(in_path=self.extract_path)
 
-        make_dirs(in_path=self.extract_path, delete=True)
+        pe_file, pe_data = self._get_portwell_pe(in_buffer=self.input_buffer)
 
-        pe_file, pe_data = self._get_portwell_pe(in_buffer=input_buffer)
-
-        efi_title: str = self._get_unpacker_tag(input_buffer=input_buffer, pe_file=pe_file)
+        efi_title: str = self._get_unpacker_tag(input_buffer=self.input_buffer, pe_file=pe_file)
 
         printer(message=efi_title, padding=self.padding)
 
@@ -155,13 +150,13 @@ class PortwellEfiExtract(BIOSUtility):
                 out_file.write(file_data)
 
             # Attempt to detect EFI compression & decompress when applicable
-            if is_efi_compressed(data=file_data):
+            if is_efi_compressed(in_object=file_data):
                 # Store temporary compressed file name
-                comp_fname: str = file_path + '.temp'
+                file_path_temp: str = f'{file_path}.temp'
 
                 # Rename initial/compressed file
-                os.replace(file_path, comp_fname)
+                rename_file(in_path=file_path, in_dest=file_path_temp)
 
                 # Successful decompression, delete compressed file
-                if efi_decompress(in_path=comp_fname, out_path=file_path, padding=padding + 8):
-                    os.remove(comp_fname)
+                if efi_decompress(in_path=file_path_temp, out_path=file_path, padding=padding + 8):
+                    delete_file(in_path=file_path_temp)

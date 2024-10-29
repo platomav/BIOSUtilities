@@ -5,30 +5,23 @@
 Copyright (C) 2022-2024 Plato Mavropoulos
 """
 
-import os
 import subprocess
 
 from typing import Final
 
 from biosutilities.common.externals import szip_path, tiano_path
-from biosutilities.common.paths import is_dir, is_empty_dir
+from biosutilities.common.paths import is_access, is_dir, is_file, is_empty_dir, path_size
 from biosutilities.common.system import printer
+from biosutilities.common.texts import file_to_bytes
 
 # 7-Zip switches to auto rename, ignore passwords, ignore prompts, ignore wildcards,
 # eliminate root duplication, set UTF-8 charset, suppress stdout, suppress stderr,
-# suppress progress, disable headers, disable progress, disable output logs
+# suppress progress, disable headers, disable progress, disable output logging
 SZIP_COMMON: Final[list[str]] = ['-aou', '-p', '-y', '-spd', '-spe', '-sccUTF-8',
                                  '-bso0', '-bse0', '-bsp0', '-ba', '-bd', '-bb0']
 
 # Success exit codes (0 = OK, 1 = Warnings)
 SZIP_SUCCESS: Final[list[int]] = [0, 1]
-
-
-def szip_code_assert(exit_code: int) -> None:
-    """ Check 7-Zip bad exit codes (0 OK, 1 Warning) """
-
-    if exit_code not in SZIP_SUCCESS:
-        raise ValueError(f'Bad exit code: {exit_code}')
 
 
 def szip_switches(in_switches: list[str]) -> list[str]:
@@ -46,77 +39,73 @@ def szip_switches(in_switches: list[str]) -> list[str]:
     return [*set(common_switches + in_switches), '--']
 
 
-def is_szip_supported(in_path: str, padding: int = 0, args: list | None = None, silent: bool = True) -> bool:
+def is_szip_successful(exit_code: int) -> bool:
+    """ Check 7-Zip success exit codes """
+
+    if exit_code in SZIP_SUCCESS:
+        return True
+
+    return False
+
+
+def is_szip_supported(in_path: str, args: list | None = None) -> bool:
     """ Check if file is 7-Zip supported """
 
-    try:
-        if args is None:
-            args = []
+    szip_a: list[str] = [] if args is None else args
 
-        szip_c: list[str] = [szip_path(), 't', *szip_switches(in_switches=[*args]), in_path]
+    szip_c: list[str] = [szip_path(), 't', *szip_switches(in_switches=[*szip_a]), in_path]
 
-        szip_t: subprocess.CompletedProcess[bytes] = subprocess.run(szip_c, check=False)
+    szip_t: subprocess.CompletedProcess[bytes] = subprocess.run(szip_c, check=False, stdout=subprocess.DEVNULL)
 
-        szip_code_assert(exit_code=szip_t.returncode)
-    except Exception as error:  # pylint: disable=broad-except
-        if not silent:
-            printer(message=f'Error: 7-Zip could not check support for file {in_path}: {error}!', padding=padding)
-
-        return False
-
-    return True
+    return is_szip_successful(exit_code=szip_t.returncode)
 
 
 def szip_decompress(in_path: str, out_path: str, in_name: str = 'archive', padding: int = 0, args: list | None = None,
                     check: bool = False, silent: bool = False) -> bool:
     """ Archive decompression via 7-Zip """
 
-    try:
-        if args is None:
-            args = []
+    szip_a: list[str] = [] if args is None else args
 
-        szip_c: list[str] = [szip_path(), 'x', *szip_switches(in_switches=[*args, f'-o{out_path}']), in_path]
+    szip_c: list[str] = [szip_path(), 'x', *szip_switches(in_switches=[*szip_a, f'-o{out_path}']), in_path]
 
-        szip_x: subprocess.CompletedProcess[bytes] = subprocess.run(szip_c, check=False)
+    szip_x: subprocess.CompletedProcess[bytes] = subprocess.run(szip_c, check=False, stdout=subprocess.DEVNULL)
 
-        if check:
-            szip_code_assert(exit_code=szip_x.returncode)
+    szip_s: bool = is_szip_successful(exit_code=szip_x.returncode) if check else True
 
-        if not (is_dir(in_path=out_path) and not is_empty_dir(in_path=out_path)):
-            raise OSError(f'Extraction directory is empty or missing: {out_path}')
-    except Exception as error:  # pylint: disable=broad-except
+    if szip_s and is_dir(in_path=out_path) and not is_empty_dir(in_path=out_path):
         if not silent:
-            printer(message=f'Error: 7-Zip could not extract {in_name} file {in_path}: {error}!', padding=padding)
+            printer(message=f'Successful {in_name} decompression via 7-Zip!', padding=padding)
 
-        return False
+        return True
 
-    if not silent:
-        printer(message=f'Successful {in_name} decompression via 7-Zip!', padding=padding)
-
-    return True
+    return False
 
 
-def efi_compress_sizes(data: bytes | bytearray) -> tuple[int, int]:
-    """ Get EFI compression sizes """
+def efi_header_info(in_object: str | bytes | bytearray) -> dict[str, int]:
+    """ Get EFI compression sizes from header """
 
-    size_compress: int = int.from_bytes(data[0x0:0x4], byteorder='little')
+    efi_data: bytes = file_to_bytes(in_object=in_object)
 
-    size_original: int = int.from_bytes(data[0x4:0x8], byteorder='little')
+    size_compressed: int = int.from_bytes(efi_data[0x0:0x4], byteorder='little')
 
-    return size_compress, size_original
+    size_decompressed: int = int.from_bytes(efi_data[0x4:0x8], byteorder='little')
+
+    return {'size_compressed': size_compressed, 'size_decompressed': size_decompressed}
 
 
-def is_efi_compressed(data: bytes | bytearray, strict: bool = True) -> bool:
+def is_efi_compressed(in_object: str | bytes | bytearray, strict: bool = True) -> bool:
     """ Check if data is EFI compressed, controlling EOF padding """
 
-    size_comp, size_orig = efi_compress_sizes(data=data)
+    efi_data: bytes = file_to_bytes(in_object=in_object)
 
-    check_diff: bool = size_comp < size_orig
+    efi_sizes: dict[str, int] = efi_header_info(in_object=efi_data)
+
+    check_diff: bool = efi_sizes['size_compressed'] < efi_sizes['size_decompressed']
 
     if strict:
-        check_size: bool = size_comp + 0x8 == len(data)
+        check_size: bool = efi_sizes['size_compressed'] + 0x8 == len(efi_data)
     else:
-        check_size = size_comp + 0x8 <= len(data)
+        check_size = efi_sizes['size_compressed'] + 0x8 <= len(efi_data)
 
     return check_diff and check_size
 
@@ -125,22 +114,15 @@ def efi_decompress(in_path: str, out_path: str, padding: int = 0, silent: bool =
                    comp_type: str = '--uefi') -> bool:
     """ EFI/Tiano Decompression via TianoCompress """
 
-    try:
-        subprocess.run([tiano_path(), '-d', in_path, '-o', out_path, '-q', comp_type],
-                       check=True, stdout=subprocess.DEVNULL)
+    tiano_c: list[str] = [tiano_path(), '-d', in_path, '-o', out_path, '-q', comp_type]
 
-        with open(in_path, 'rb') as file:
-            _, size_orig = efi_compress_sizes(data=file.read())
+    tiano_x: subprocess.CompletedProcess[bytes] = subprocess.run(tiano_c, check=False, stdout=subprocess.DEVNULL)
 
-        if os.path.getsize(out_path) != size_orig:
-            raise OSError('EFI decompressed file & header size mismatch!')
-    except Exception as error:  # pylint: disable=broad-except
-        if not silent:
-            printer(message=f'Error: TianoCompress could not extract file {in_path}: {error}!', padding=padding)
+    if tiano_x.returncode == 0 and is_file(in_path=out_path) and is_access(in_path=out_path):
+        if efi_header_info(in_object=in_path)['size_decompressed'] == path_size(in_path=out_path):
+            if not silent:
+                printer(message='Successful EFI decompression via TianoCompress!', padding=padding)
 
-        return False
+            return True
 
-    if not silent:
-        printer(message='Successful EFI decompression via TianoCompress!', padding=padding)
-
-    return True
+    return False

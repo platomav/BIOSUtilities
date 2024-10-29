@@ -113,13 +113,19 @@ def path_stem(in_path: str) -> str:
     return PurePath(in_path).stem
 
 
+def path_size(in_path: str) -> int:
+    """ Get path size (bytes) """
+
+    return os.stat(in_path).st_size
+
+
 def path_suffixes(in_path: str) -> list[str]:
     """ Get list of path file extensions """
 
     return PurePath(in_path).suffixes or ['']
 
 
-def make_dirs(in_path: str, parents: bool = True, exist_ok: bool = False, delete: bool = False):
+def make_dirs(in_path: str, parents: bool = True, exist_ok: bool = True, delete: bool = False):
     """ Create folder(s), controlling parents, existence and prior deletion """
 
     if delete:
@@ -138,10 +144,26 @@ def delete_dirs(in_path: str) -> None:
 def delete_file(in_path: str) -> None:
     """ Delete file, if present """
 
-    if Path(in_path).is_file():
+    if is_file(in_path=in_path):
         clear_readonly(in_path=in_path)
 
         os.remove(in_path)
+
+
+def rename_file(in_path: str, in_dest: str) -> None:
+    """ Rename file with path or name destination, if present """
+
+    if is_file(in_path=in_path):
+        clear_readonly(in_path=in_path)
+
+        if is_file(in_path=in_dest, allow_broken_links=True):
+            clear_readonly(in_path=in_dest)
+
+            out_path: str = in_dest
+        else:
+            out_path = os.path.join(path_parent(in_path=in_path), in_dest)
+
+        os.replace(in_path, out_path)
 
 
 def copy_file(in_path: str, out_path: str, metadata: bool = False) -> None:

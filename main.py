@@ -6,6 +6,8 @@ Copyright (C) 2018-2024 Plato Mavropoulos
 """
 
 import os
+import sys
+import traceback
 
 from argparse import ArgumentParser, Namespace
 from typing import Any, Final
@@ -89,8 +91,8 @@ class BIOSUtilities:
         else:
             self._output_path = runtime_root()
 
-    def _check_sys_py(self) -> None:
-        """ Check Python Version """
+    def _check_system_support(self) -> None:
+        """ Check Python Version and OS Platform """
 
         sys_py: tuple = python_version()
 
@@ -100,21 +102,33 @@ class BIOSUtilities:
 
             raise RuntimeError(f'Python >= {min_py_str} required, not {sys_py_str}')
 
-    @staticmethod
-    def _check_sys_os() -> None:
-        """ Check OS Platform """
-
         os_tag, is_win, is_lnx = system_platform()
 
         if not (is_win or is_lnx):
             raise OSError(f'Unsupported operating system: {os_tag}')
 
-    def run_main(self, padding: int = 0) -> bool:
-        """ Run main """
+    def _exit_main(self, exit_code: int = 0) -> None:
+        if not self.main_arguments.auto_exit:
+            input('\nPress any key to exit...')
 
-        self._check_sys_py()
+        sys.exit(exit_code)
 
-        self._check_sys_os()
+    def _show_exception_and_exit(self, exc_type, exc_value, tb) -> None:
+        if exc_type is KeyboardInterrupt:
+            print('\n')
+        else:
+            print(f'\nError: BIOSUtilities v{__version__} crashed:\n')
+
+            traceback.print_exception(exc_type, exc_value, tb)
+
+        self._exit_main(exit_code=1)
+
+    def run_main(self, padding: int = 0) -> None:
+        """ Run main flow """
+
+        sys.excepthook = self._show_exception_and_exit
+
+        self._check_system_support()
 
         self._setup_input_files(padding=padding)
 
@@ -131,7 +145,7 @@ class BIOSUtilities:
         for input_file in self._input_files:
             input_name: str = path_name(in_path=input_file, limit=True)
 
-            printer(message=f'{input_name}\n', padding=padding)
+            printer(message=f'{to_boxed(in_text=input_name)}\n', padding=padding)
 
             for utility_class in utilities_classes:
                 extract_path: str = os.path.join(self._output_path, extract_folder(in_path=input_name))
@@ -167,10 +181,7 @@ class BIOSUtilities:
 
         printer(message=None, new_line=False)
 
-        if not self.main_arguments.auto_exit:
-            input('Press any key to exit...')
-
-        return exit_code == 0
+        self._exit_main(exit_code=exit_code)
 
 
 if __name__ == '__main__':

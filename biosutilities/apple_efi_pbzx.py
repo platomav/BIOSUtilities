@@ -15,12 +15,11 @@ import os
 from typing import Any, Final
 
 from biosutilities.common.compression import is_szip_supported, szip_decompress
-from biosutilities.common.paths import make_dirs, path_stem
+from biosutilities.common.paths import delete_file, make_dirs, path_stem
 from biosutilities.common.patterns import PAT_APPLE_PBZX
 from biosutilities.common.structs import ctypes_struct, UINT32
 from biosutilities.common.system import printer
 from biosutilities.common.templates import BIOSUtility
-from biosutilities.common.texts import file_to_bytes
 
 
 class PbzxChunk(ctypes.BigEndianStructure):
@@ -54,16 +53,12 @@ class AppleEfiPbzxExtract(BIOSUtility):
     def check_format(self) -> bool:
         """ Check if input is Apple PBZX image """
 
-        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
-
-        return bool(PAT_APPLE_PBZX.search(input_buffer, 0, 4))
+        return bool(PAT_APPLE_PBZX.search(self.input_buffer, 0, 4))
 
     def parse_format(self) -> bool:
         """ Parse & Extract Apple PBZX image """
 
-        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
-
-        make_dirs(in_path=self.extract_path, delete=True)
+        make_dirs(in_path=self.extract_path)
 
         cpio_bin: bytes = b''  # Initialize PBZX > CPIO Buffer
 
@@ -71,8 +66,8 @@ class AppleEfiPbzxExtract(BIOSUtility):
 
         chunk_off: int = 0xC  # First PBZX Chunk starts at 0xC
 
-        while chunk_off < len(input_buffer):
-            chunk_hdr: Any = ctypes_struct(buffer=input_buffer, start_offset=chunk_off, class_object=PbzxChunk)
+        while chunk_off < len(self.input_buffer):
+            chunk_hdr: Any = ctypes_struct(buffer=self.input_buffer, start_offset=chunk_off, class_object=PbzxChunk)
 
             printer(message=f'PBZX Chunk at 0x{chunk_off:08X}\n', padding=self.padding)
 
@@ -84,7 +79,7 @@ class AppleEfiPbzxExtract(BIOSUtility):
             # To avoid a potential infinite loop, double-check Compressed Size
             comp_end: int = comp_bgn + max(chunk_hdr.CompSize, self.PBZX_CHUNK_HDR_LEN)
 
-            comp_bin: bytes = input_buffer[comp_bgn:comp_end]
+            comp_bin: bytes = self.input_buffer[comp_bgn:comp_end]
 
             try:
                 # Attempt XZ decompression, if applicable to Chunk data
@@ -117,10 +112,10 @@ class AppleEfiPbzxExtract(BIOSUtility):
             cpio_object.write(cpio_bin)
 
         # Decompress PBZX > CPIO archive with 7-Zip
-        if is_szip_supported(in_path=cpio_path, padding=self.padding, args=['-tCPIO'], silent=False):
+        if is_szip_supported(in_path=cpio_path, args=['-tCPIO']):
             if szip_decompress(in_path=cpio_path, out_path=self.extract_path, in_name='CPIO',
                                padding=self.padding, args=['-tCPIO']):
-                os.remove(cpio_path)  # Successful extraction, delete PBZX > CPIO archive
+                delete_file(in_path=cpio_path)  # Successful extraction, delete PBZX > CPIO archive
             else:
                 return False
         else:

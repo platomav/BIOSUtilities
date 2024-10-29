@@ -23,7 +23,6 @@ from biosutilities.common.patterns import PAT_MICROSOFT_MZ, PAT_MICROSOFT_PE, PA
 from biosutilities.common.structs import CHAR, ctypes_struct, UINT32
 from biosutilities.common.system import printer
 from biosutilities.common.templates import BIOSUtility
-from biosutilities.common.texts import file_to_bytes
 
 
 class PhoenixTdkHeader(ctypes.LittleEndianStructure):
@@ -106,25 +105,21 @@ class PhoenixTdkExtract(BIOSUtility):
     def check_format(self) -> bool:
         """ Check if input contains valid Phoenix TDK image """
 
-        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
-
-        return bool(self._get_phoenix_tdk(in_buffer=input_buffer)[1] is not None)
+        return bool(self._get_phoenix_tdk(in_buffer=self.input_buffer)[1] is not None)
 
     def parse_format(self) -> bool:
         """ Parse & Extract Phoenix Tools Development Kit (TDK) Packer """
 
         exit_code: int = 0
 
-        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
-
-        make_dirs(in_path=self.extract_path, delete=True)
+        make_dirs(in_path=self.extract_path)
 
         printer(message='Phoenix Tools Development Kit Packer', padding=self.padding)
 
-        base_off, pack_off = self._get_phoenix_tdk(in_buffer=input_buffer)
+        base_off, pack_off = self._get_phoenix_tdk(in_buffer=self.input_buffer)
 
         # Parse TDK Header structure
-        tdk_hdr: Any = ctypes_struct(buffer=input_buffer, start_offset=pack_off, class_object=PhoenixTdkHeader)
+        tdk_hdr: Any = ctypes_struct(buffer=self.input_buffer, start_offset=pack_off, class_object=PhoenixTdkHeader)
 
         # Print TDK Header structure info
         printer(message='Phoenix TDK Header:\n', padding=self.padding + 4)
@@ -143,8 +138,10 @@ class PhoenixTdkExtract(BIOSUtility):
         # Parse and extract each TDK Header Entry
         for entry_index in range(tdk_hdr.Count):
             # Parse TDK Entry structure
-            tdk_mod: Any = ctypes_struct(buffer=input_buffer, start_offset=entries_off + entry_index * self.TDK_MOD_LEN,
-                                         class_object=PhoenixTdkEntry, param_list=[base_off])
+            tdk_mod: Any = ctypes_struct(
+                buffer=self.input_buffer, start_offset=entries_off + entry_index * self.TDK_MOD_LEN,
+                class_object=PhoenixTdkEntry, param_list=[base_off]
+            )
 
             # Print TDK Entry structure info
             printer(message=f'Phoenix TDK Entry ({entry_index + 1}/{tdk_hdr.Count}):\n', padding=self.padding + 8)
@@ -155,13 +152,13 @@ class PhoenixTdkExtract(BIOSUtility):
             mod_off: int = tdk_mod.get_offset()
 
             # Check if TDK Entry raw data Offset is valid
-            if mod_off >= len(input_buffer):
+            if mod_off >= len(self.input_buffer):
                 printer(message='Error: Phoenix TDK Entry > Offset is out of bounds!\n', padding=self.padding + 12)
 
                 exit_code = 2
 
             # Store TDK Entry raw data (relative to TDK Base, not TDK Header)
-            mod_data: bytes = input_buffer[mod_off:mod_off + tdk_mod.Size]
+            mod_data: bytes = self.input_buffer[mod_off:mod_off + tdk_mod.Size]
 
             # Check if TDK Entry raw data is complete
             if len(mod_data) != tdk_mod.Size:

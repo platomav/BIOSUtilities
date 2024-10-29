@@ -272,6 +272,8 @@ No additional optional arguments are provided for this utility.
 To run the utility, you must have the following 3rd party tools at PATH or "external":
 
 * [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zz for macOS or 7zz, 7zzs for Linux)
+* [UEFIFind](https://github.com/LongSoft/UEFITool/) (i.e. [UEFIFind.exe for Windows or UEFIFind for Linux/macOS](https://github.com/LongSoft/UEFITool/releases))
+* [UEFIExtract](https://github.com/LongSoft/UEFITool/) (i.e. [UEFIExtract.exe for Windows or UEFIExtract for Linux/macOS](https://github.com/LongSoft/UEFITool/releases))
 
 ### Apple EFI PBZX Extractor
 

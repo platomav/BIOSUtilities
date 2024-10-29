@@ -12,11 +12,10 @@ import os
 from re import Match
 
 from biosutilities.common.compression import is_szip_supported, szip_decompress
-from biosutilities.common.paths import make_dirs
+from biosutilities.common.paths import delete_file, make_dirs, path_name
 from biosutilities.common.patterns import PAT_VAIO_CAB, PAT_VAIO_CFG, PAT_VAIO_CHK, PAT_VAIO_EXT
 from biosutilities.common.system import printer
 from biosutilities.common.templates import BIOSUtility
-from biosutilities.common.texts import file_to_bytes
 
 
 class VaioPackageExtract(BIOSUtility):
@@ -27,23 +26,19 @@ class VaioPackageExtract(BIOSUtility):
     def check_format(self) -> bool:
         """ Check if input is VAIO Packaging Manager """
 
-        input_buffer: bytes = file_to_bytes(in_object=self.input_object)
-
-        return bool(PAT_VAIO_CFG.search(input_buffer))
+        return bool(PAT_VAIO_CFG.search(self.input_buffer))
 
     def parse_format(self) -> bool:
         """ Parse & Extract or Unlock VAIO Packaging Manager """
 
-        input_buffer: bytes = file_to_bytes(self.input_object)
+        input_name: str = path_name(self.input_object) if isinstance(self.input_object, str) else 'VAIO_Package'
 
-        input_name: str = os.path.basename(self.input_object) if isinstance(input_buffer, str) else 'VAIO_Package'
+        make_dirs(in_path=self.extract_path)
 
-        make_dirs(in_path=self.extract_path, delete=True)
-
-        if self._vaio_cabinet(name=input_name, buffer=input_buffer, extract_path=self.extract_path,
+        if self._vaio_cabinet(name=input_name, buffer=self.input_buffer, extract_path=self.extract_path,
                               padding=self.padding) == 0:
             printer(message='Successfully Extracted!', padding=self.padding)
-        elif self._vaio_unlock(name=input_name, buffer=input_buffer, extract_path=self.extract_path,
+        elif self._vaio_unlock(name=input_name, buffer=self.input_buffer, extract_path=self.extract_path,
                                padding=self.padding) == 0:
             printer(message='Successfully Unlocked!', padding=self.padding)
         else:
@@ -93,10 +88,10 @@ class VaioPackageExtract(BIOSUtility):
         with open(cab_path, 'wb') as cab_file:
             cab_file.write(raw_data)
 
-        if is_szip_supported(in_path=cab_path, padding=padding + 8, silent=False):
+        if is_szip_supported(in_path=cab_path):
             if szip_decompress(in_path=cab_path, out_path=extract_path, in_name='VAIO CAB',
                                padding=padding + 8, check=True):
-                os.remove(cab_path)
+                delete_file(in_path=cab_path)
             else:
                 return 3
         else:

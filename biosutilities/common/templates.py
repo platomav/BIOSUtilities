@@ -5,9 +5,11 @@
 Copyright (C) 2022-2024 Plato Mavropoulos
 """
 
+from biosutilities.common.texts import file_to_bytes
+
 
 class BIOSUtility:
-    """ Base utility class for BIOSUtilities """
+    """ Base class for BIOSUtilities """
 
     TITLE: str = 'BIOS Utility'
 
@@ -15,6 +17,8 @@ class BIOSUtility:
         self.input_object: str | bytes | bytearray = input_object
         self.extract_path: str = extract_path
         self.padding: int = padding
+
+        self.input_buffer: bytes = file_to_bytes(in_object=self.input_object)
 
     def check_format(self) -> bool:
         """ Check if input object is of specific supported format """

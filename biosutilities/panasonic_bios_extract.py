@@ -20,7 +20,7 @@ import pefile
 from dissect.util.compression import lznt1
 
 from biosutilities.common.compression import is_szip_supported, szip_decompress
-from biosutilities.common.paths import is_access, is_file, path_files, make_dirs, path_stem, safe_name
+from biosutilities.common.paths import delete_file, is_access, is_file, path_files, make_dirs, path_stem, safe_name
 from biosutilities.common.executables import ms_pe_desc, ms_pe, is_ms_pe, ms_pe_info_show
 from biosutilities.common.patterns import PAT_MICROSOFT_CAB
 from biosutilities.common.system import printer
@@ -64,7 +64,7 @@ class PanasonicBiosExtract(BIOSUtility):
 
         ms_pe_info_show(pe_file=upd_pe_file, padding=self.padding + 4)
 
-        make_dirs(in_path=self.extract_path, delete=True)
+        make_dirs(in_path=self.extract_path)
 
         upd_pe_path: str = self._panasonic_cab_extract(input_object=self.input_object,
                                                        extract_path=self.extract_path, padding=self.padding + 8)
@@ -82,7 +82,7 @@ class PanasonicBiosExtract(BIOSUtility):
 
             ms_pe_info_show(pe_file=upd_pe_file, padding=upd_padding + 4)
 
-            os.remove(upd_pe_path)
+            delete_file(in_path=upd_pe_path)
 
         is_upd_extracted: bool = self._panasonic_res_extract(pe_file=upd_pe_file, extract_path=self.extract_path,
                                                              pe_name=upd_pe_name, padding=upd_padding + 8)
@@ -121,12 +121,12 @@ class PanasonicBiosExtract(BIOSUtility):
             with open(cab_path, 'wb') as cab_file_object:
                 cab_file_object.write(input_data[cab_bgn:cab_end])
 
-            if is_szip_supported(in_path=cab_path, padding=padding, silent=False):
+            if is_szip_supported(in_path=cab_path):
                 printer(message=f'Panasonic BIOS Package > PE > CAB {cab_tag}', padding=padding)
 
                 if szip_decompress(in_path=cab_path, out_path=extract_path, in_name='CAB',
                                    padding=padding + 4, check=True):
-                    os.remove(cab_path)  # Successful extraction, delete CAB archive
+                    delete_file(in_path=cab_path)  # Successful extraction, delete CAB archive
 
                     for extracted_file_path in path_files(in_path=extract_path):
                         if is_file(in_path=extracted_file_path) and is_access(in_path=extracted_file_path):

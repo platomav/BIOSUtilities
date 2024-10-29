@@ -10,9 +10,8 @@ Copyright (C) 2021-2024 Plato Mavropoulos
 import os
 
 from biosutilities.common.compression import efi_decompress, is_efi_compressed
-from biosutilities.common.paths import make_dirs, is_file, path_name, path_suffixes
+from biosutilities.common.paths import delete_file, make_dirs, is_file, path_name, path_suffixes
 from biosutilities.common.templates import BIOSUtility
-from biosutilities.common.texts import file_to_bytes
 
 
 class FujitsuUpcExtract(BIOSUtility):
@@ -30,14 +29,14 @@ class FujitsuUpcExtract(BIOSUtility):
             is_upc = True
 
         if is_upc:
-            is_upc = is_efi_compressed(data=file_to_bytes(in_object=self.input_object))
+            is_upc = is_efi_compressed(in_object=self.input_object)
 
         return is_upc
 
     def parse_format(self) -> bool:
         """ Parse & Extract Fujitsu UPC image """
 
-        make_dirs(in_path=self.extract_path, delete=True)
+        make_dirs(in_path=self.extract_path)
 
         if isinstance(self.input_object, str) and is_file(in_path=self.input_object):
             input_name: str = path_name(in_path=self.input_object)
@@ -52,13 +51,13 @@ class FujitsuUpcExtract(BIOSUtility):
             input_path = os.path.join(self.extract_path, f'{input_name}.UPC')
 
             with open(input_path, 'wb') as input_path_object:
-                input_path_object.write(file_to_bytes(in_object=self.input_object))
+                input_path_object.write(self.input_buffer)
 
         output_path: str = os.path.join(self.extract_path, f'{input_name}.bin')
 
         efi_status: bool = efi_decompress(in_path=input_path, out_path=output_path, padding=self.padding)
 
         if input_path != self.input_object:
-            os.remove(input_path)
+            delete_file(in_path=input_path)
 
         return efi_status

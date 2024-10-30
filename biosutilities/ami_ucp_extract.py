@@ -53,10 +53,15 @@ class UafHeader(ctypes.LittleEndianStructure):
 
         return f'{res_hex}{res_txt}'
 
+    def get_tag(self) -> str:
+        """ Get UAF Module Tag """
+
+        return self.ModuleTag.decode('utf-8')
+
     def struct_print(self, padding: int = 0) -> None:
         """ Display structure information """
 
-        printer(message=['Tag          :', self.ModuleTag.decode('utf-8')], padding=padding, new_line=False)
+        printer(message=['Tag          :', self.get_tag()], padding=padding, new_line=False)
         printer(message=['Size         :', f'0x{self.ModuleSize:X}'], padding=padding, new_line=False)
         printer(message=['Checksum     :', f'0x{self.Checksum:04X}'], padding=padding, new_line=False)
         printer(message=['Unknown 0    :', f'0x{self.Unknown0:02X}'], padding=padding, new_line=False)
@@ -259,7 +264,7 @@ class AmiUcpExtract(BIOSUtility):
     def check_format(self) -> bool:
         """ Check if input is AMI UCP image """
 
-        return bool(self._get_ami_ucp()[0])
+        return bool(self._get_ami_ucp())
 
     def parse_format(self) -> bool:
         """ Parse & Extract AMI UCP structures """
@@ -271,10 +276,12 @@ class AmiUcpExtract(BIOSUtility):
         make_dirs(in_path=self.extract_path)
 
         # Get best AMI UCP Pattern match based on @UAF|@HPU Size
-        ucp_buffer, ucp_tag = self._get_ami_ucp()
+        ucp_buffer: bytes = self._get_ami_ucp()
 
         # Parse @UAF|@HPU Header Structure
         uaf_hdr: Any = ctypes_struct(buffer=ucp_buffer, start_offset=0, class_object=UafHeader)
+
+        ucp_tag: str = uaf_hdr.get_tag()
 
         printer(message=f'Utility Auxiliary File > {ucp_tag}:\n', padding=self.padding + 4)
 
@@ -287,10 +294,10 @@ class AmiUcpExtract(BIOSUtility):
         uaf_mod: Any = ctypes_struct(buffer=fake, start_offset=0, class_object=UafModule)
 
         # Get @UAF|@HPU Module Filename
-        uaf_name = self.UAF_TAG_DICT[ucp_tag][0]
+        uaf_name: str = self.UAF_TAG_DICT[ucp_tag][0]
 
         # Get @UAF|@HPU Module Description
-        uaf_desc = self.UAF_TAG_DICT[ucp_tag][1]
+        uaf_desc: str = self.UAF_TAG_DICT[ucp_tag][1]
 
         # Print @UAF|@HPU Module EFI Info
         uaf_mod.struct_print(filename=uaf_name, description=uaf_desc, padding=self.padding + 8)
@@ -298,7 +305,7 @@ class AmiUcpExtract(BIOSUtility):
         if self.checksum:
             self._chk16_validate(data=ucp_buffer, tag=ucp_tag, padding=self.padding + 8)
 
-        uaf_all = self._get_uaf_mod(buffer=ucp_buffer, uaf_off=self.UAF_HDR_LEN)
+        uaf_all: list[list] = self._get_uaf_mod(buffer=ucp_buffer, uaf_off=self.UAF_HDR_LEN)
 
         for mod_info in uaf_all:
             nal_dict = self._uaf_extract(buffer=ucp_buffer, extract_path=self.extract_path, mod_info=mod_info,
@@ -315,25 +322,39 @@ class AmiUcpExtract(BIOSUtility):
         else:
             printer(message=f'Checksum of UCP Module {tag} is valid!', padding=padding)
 
-    def _get_ami_ucp(self) -> tuple[bytes, str]:
+    def _get_ami_ucp(self) -> bytes:
         """ Get all input file AMI UCP patterns """
 
-        uaf_len_max: int = 0x0  # Length of largest detected @UAF|@HPU
-        uaf_buf_bin: bytes = b''  # Buffer of largest detected @UAF|@HPU
-        uaf_buf_tag: str = '@UAF'  # Tag of largest detected @UAF|@HPU
+        uaf_mod_dat_max: bytes = b''
 
-        for uaf in PAT_AMI_UCP.finditer(self.input_buffer):
-            uaf_len_cur: int = int.from_bytes(
-                self.input_buffer[uaf.start() + 0x4:uaf.start() + 0x8], byteorder='little')
+        uaf_mod_len_max: int = 0
 
-            if uaf_len_cur > uaf_len_max:
-                uaf_len_max = uaf_len_cur
+        for uaf_match in PAT_AMI_UCP.finditer(self.input_buffer):
+            uaf_mod_off: int = uaf_match.start()
 
-                uaf_buf_bin = self.input_buffer[uaf.start():uaf.start() + uaf_len_max]
+            uaf_mod_buf: bytes = self.input_buffer[uaf_mod_off:]
 
-                uaf_buf_tag = uaf.group(0)[:4].decode('utf-8', 'ignore')
+            if len(uaf_mod_buf) <= self.UAF_HDR_LEN:
+                continue
 
-        return uaf_buf_bin, uaf_buf_tag
+            uaf_hdr: Any = ctypes_struct(buffer=uaf_mod_buf, start_offset=0, class_object=UafHeader)
+
+            uaf_mod_len: int = uaf_hdr.ModuleSize
+
+            uaf_mod_dat: bytes = uaf_mod_buf[:uaf_mod_len]
+
+            if uaf_mod_len != len(uaf_mod_dat):
+                continue
+
+            if checksum_16(data=uaf_mod_dat) != 0:
+                continue
+
+            if uaf_mod_len > uaf_mod_len_max:
+                uaf_mod_len_max = uaf_mod_len
+
+                uaf_mod_dat_max = uaf_mod_dat
+
+        return uaf_mod_dat_max
 
     @staticmethod
     def _get_uaf_mod(buffer: bytes | bytearray, uaf_off: int = 0x0) -> list[list]:
@@ -345,7 +366,7 @@ class AmiUcpExtract(BIOSUtility):
             # Parse @UAF|@HPU Module Structure
             uaf_hdr: Any = ctypes_struct(buffer=buffer, start_offset=uaf_off, class_object=UafHeader)
 
-            uaf_tag: str = uaf_hdr.ModuleTag.decode('utf-8')  # Get unique @UAF|@HPU Module Tag
+            uaf_tag: str = uaf_hdr.get_tag()  # Get unique @UAF|@HPU Module Tag
 
             uaf_all.append([uaf_tag, uaf_off, uaf_hdr])  # Store @UAF|@HPU Module Info
 

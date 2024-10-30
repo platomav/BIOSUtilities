@@ -1,3 +1,7 @@
+24.10.30
+
+Improved UAF module detection at AMI UCP Extract
+
 24.10.29
 
 Added graceful exception hanlding during "main" flow

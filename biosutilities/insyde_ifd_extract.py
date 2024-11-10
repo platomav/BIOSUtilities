@@ -14,7 +14,7 @@ import re
 from typing import Any, Final
 
 from biosutilities.common.compression import is_szip_supported, szip_decompress
-from biosutilities.common.paths import (delete_file, extract_folder, is_access, is_file, path_files,
+from biosutilities.common.paths import (delete_file, extract_folder, is_file_read, path_files,
                                         make_dirs, path_name, safe_name)
 from biosutilities.common.patterns import PAT_INSYDE_IFL, PAT_INSYDE_SFX
 from biosutilities.common.structs import CHAR, ctypes_struct, UINT32
@@ -224,7 +224,7 @@ class InsydeIfdExtract(BIOSUtility):
         exit_codes: list[int] = []
 
         for sfx_file in path_files(in_path=extract_path):
-            if is_file(in_path=sfx_file) and is_access(in_path=sfx_file):
+            if is_file_read(in_path=sfx_file):
                 insyde_ifd_extract: InsydeIfdExtract = InsydeIfdExtract(
                     input_object=sfx_file, extract_path=extract_folder(sfx_file), padding=padding + 16)
 

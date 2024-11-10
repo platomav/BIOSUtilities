@@ -16,7 +16,7 @@ from importlib.util import module_from_spec, spec_from_file_location
 from types import ModuleType
 from typing import Type
 
-from biosutilities.common.paths import is_dir, is_file, project_root
+from biosutilities.common.paths import is_dir, is_file_read, project_root
 from biosutilities.common.texts import to_string
 
 
@@ -30,10 +30,10 @@ def get_external_path(cmd: str | list | tuple) -> str:
     for command in cmd if isinstance(cmd, (list, tuple)) else [to_string(in_object=cmd)]:
         command_path: str | None = shutil.which(command, path=external_path)
 
-        if command_path and is_file(in_path=command_path):
+        if command_path and is_file_read(in_path=command_path):
             return command_path
 
-    raise OSError(f'{to_string(in_object=cmd, sep_char=", ")} could not be found!')
+    raise OSError(f'{to_string(in_object=cmd, sep_char=", ")} requirement could not be found!')
 
 
 def big_script_tool() -> Type | None:

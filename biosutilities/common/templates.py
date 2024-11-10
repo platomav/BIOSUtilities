@@ -5,6 +5,7 @@
 Copyright (C) 2022-2024 Plato Mavropoulos
 """
 
+from biosutilities.common.paths import runtime_root
 from biosutilities.common.texts import file_to_bytes
 
 
@@ -13,12 +14,22 @@ class BIOSUtility:
 
     TITLE: str = 'BIOS Utility'
 
-    def __init__(self, input_object: str | bytes | bytearray = b'', extract_path: str = '', padding: int = 0) -> None:
+    def __init__(self, input_object: str | bytes | bytearray = b'', extract_path: str = runtime_root(),
+                 padding: int = 0) -> None:
         self.input_object: str | bytes | bytearray = input_object
         self.extract_path: str = extract_path
         self.padding: int = padding
 
-        self.input_buffer: bytes = file_to_bytes(in_object=self.input_object)
+        self.__input_buffer: bytes = b''
+
+    @property
+    def input_buffer(self) -> bytes:
+        """ Get input object buffer """
+
+        if not self.__input_buffer:
+            self.__input_buffer = file_to_bytes(in_object=self.input_object)
+
+        return self.__input_buffer
 
     def check_format(self) -> bool:
         """ Check if input object is of specific supported format """

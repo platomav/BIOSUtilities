@@ -10,8 +10,9 @@ Copyright (C) 2019-2024 Plato Mavropoulos
 import os
 
 from biosutilities.common.compression import is_szip_supported, szip_decompress
-from biosutilities.common.paths import (copy_file, delete_dirs, delete_file, extract_folder, is_access, is_dir,
-                                        is_file, make_dirs, path_files, path_name, path_suffixes, runtime_root)
+from biosutilities.common.paths import (copy_file, delete_dirs, delete_file, extract_folder, is_dir,
+                                        is_file_read, make_dirs, path_files, path_name, path_stem,
+                                        path_suffixes, runtime_root)
 from biosutilities.common.system import printer
 from biosutilities.common.templates import BIOSUtility
 
@@ -30,7 +31,7 @@ class AppleEfiPkgExtract(BIOSUtility):
 
         is_apple_efi_pkg: bool = False
 
-        if isinstance(self.input_object, str) and is_file(in_path=self.input_object):
+        if isinstance(self.input_object, str) and self._is_file_processable(input_path=self.input_object):
             input_path: str = self.input_object
         else:
             input_path = os.path.join(runtime_root(), 'APPLE_EFI_PKG_INPUT_BUFFER_CHECK.bin')
@@ -52,7 +53,7 @@ class AppleEfiPkgExtract(BIOSUtility):
     def parse_format(self) -> bool:
         """ Parse & Extract Apple EFI PKG packages """
 
-        if isinstance(self.input_object, str) and is_file(in_path=self.input_object):
+        if isinstance(self.input_object, str) and self._is_file_processable(input_path=self.input_object):
             input_path: str = self.input_object
         else:
             input_path = os.path.join(runtime_root(), 'APPLE_EFI_PKG_INPUT_BUFFER_PARSE.bin')
@@ -76,7 +77,7 @@ class AppleEfiPkgExtract(BIOSUtility):
             delete_file(in_path=input_path)
 
         for work_file in path_files(in_path=working_dir):
-            if is_file(in_path=work_file) and is_access(in_path=work_file):
+            if self._is_file_processable(input_path=work_file):
                 self._pbzx_zip(input_path=work_file, padding=self.padding + 4)
                 self._gzip_cpio(input_path=work_file, padding=self.padding + 4)
                 self._dmg_zip(input_path=work_file, padding=self.padding + 4)
@@ -85,6 +86,10 @@ class AppleEfiPkgExtract(BIOSUtility):
         delete_dirs(in_path=working_dir)
 
         return True
+
+    @staticmethod
+    def _is_file_processable(input_path: str) -> bool:
+        return is_file_read(in_path=input_path) and path_stem(in_path=input_path) != '.aea'
 
     def _xar_gzip(self, input_path: str, padding: int = 0) -> None:
         """ XAR/TAR > GZIP """
@@ -96,7 +101,7 @@ class AppleEfiPkgExtract(BIOSUtility):
                 if szip_decompress(in_path=input_path, out_path=pkg_path, in_name=pkg_type,
                                    padding=padding, args=[f'-t{pkg_type}']):
                     for pkg_file in path_files(in_path=pkg_path):
-                        if is_file(in_path=pkg_file) and is_access(in_path=pkg_file):
+                        if self._is_file_processable(input_path=pkg_file):
                             self._gzip_cpio(input_path=pkg_file, padding=padding + 4)
 
                 break
@@ -109,14 +114,15 @@ class AppleEfiPkgExtract(BIOSUtility):
 
             if szip_decompress(in_path=input_path, out_path=dmg_path, in_name='DMG', padding=padding, args=None):
                 for dmg_file in path_files(in_path=dmg_path):
-                    if is_file(in_path=dmg_file) and is_access(in_path=dmg_file):
+                    if self._is_file_processable(input_path=dmg_file):
                         if is_szip_supported(in_path=dmg_file, args=['-tZIP']):
                             zip_path: str = extract_folder(in_path=dmg_file)
 
                             if szip_decompress(in_path=dmg_file, out_path=zip_path, in_name='ZIP',
                                                padding=padding + 4, args=['-tZIP']):
                                 for zip_file in path_files(in_path=zip_path):
-                                    self._im4p_id(input_path=zip_file, padding=padding + 8)
+                                    if self._is_file_processable(input_path=zip_file):
+                                        self._im4p_id(input_path=zip_file, padding=padding + 8)
 
     def _pbzx_zip(self, input_path: str, padding: int = 0) -> None:
         """ PBZX > ZIP """
@@ -133,14 +139,15 @@ class AppleEfiPkgExtract(BIOSUtility):
                 printer(message=f'Successful PBZX extraction via {pbzx_module.TITLE}!', padding=padding)
 
                 for pbzx_file in path_files(in_path=pbzx_path):
-                    if is_file(in_path=pbzx_file) and is_access(in_path=pbzx_file):
+                    if self._is_file_processable(input_path=pbzx_file):
                         if is_szip_supported(in_path=pbzx_file, args=['-tZIP']):
                             zip_path: str = extract_folder(in_path=pbzx_file)
 
                             if szip_decompress(in_path=pbzx_file, out_path=zip_path, in_name='ZIP',
                                                padding=padding + 4, args=['-tZIP']):
                                 for zip_file in path_files(in_path=zip_path):
-                                    self._im4p_id(input_path=zip_file, padding=padding + 8)
+                                    if self._is_file_processable(input_path=zip_file):
+                                        self._im4p_id(input_path=zip_file, padding=padding + 8)
 
     def _gzip_cpio(self, input_path: str, padding: int = 0) -> None:
         """ GZIP > CPIO """
@@ -151,14 +158,15 @@ class AppleEfiPkgExtract(BIOSUtility):
             if szip_decompress(in_path=input_path, out_path=gzip_path, in_name='GZIP',
                                padding=padding, args=['-tGZIP']):
                 for gzip_file in path_files(in_path=gzip_path):
-                    if is_file(in_path=gzip_file) and is_access(in_path=gzip_file):
+                    if self._is_file_processable(input_path=gzip_file):
                         if is_szip_supported(in_path=gzip_file, args=['-tCPIO']):
                             cpio_path: str = extract_folder(in_path=gzip_file)
 
                             if szip_decompress(in_path=gzip_file, out_path=cpio_path, in_name='CPIO',
                                                padding=padding + 4, args=['-tCPIO']):
                                 for cpio_file in path_files(in_path=cpio_path):
-                                    self._im4p_id(input_path=cpio_file, padding=padding + 8)
+                                    if self._is_file_processable(input_path=cpio_file):
+                                        self._im4p_id(input_path=cpio_file, padding=padding + 8)
 
     def _im4p_id(self, input_path: str, padding: int = 0) -> None:
         """ Split IM4P (if applicable), identify and copy EFI """
@@ -166,7 +174,7 @@ class AppleEfiPkgExtract(BIOSUtility):
         if path_suffixes(in_path=input_path)[-1].lower() not in EFI_EXTENSIONS:
             return None
 
-        if not (is_file(in_path=input_path) and is_access(in_path=input_path)):
+        if not self._is_file_processable(input_path=input_path):
             return None
 
         working_dir: str = extract_folder(in_path=input_path)
@@ -185,7 +193,7 @@ class AppleEfiPkgExtract(BIOSUtility):
             im4p_module.parse_format()
 
         for efi_path in path_files(in_path=working_dir) if is_dir(in_path=working_dir) else [input_path]:
-            if is_file(in_path=efi_path) and is_access(in_path=efi_path):
+            if self._is_file_processable(input_path=efi_path):
                 efi_id_module: AppleEfiIdentify = AppleEfiIdentify(
                     input_object=efi_path, extract_path=extract_folder(in_path=efi_path), padding=padding + 8)
 

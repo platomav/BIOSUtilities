@@ -15,7 +15,7 @@ import os
 from typing import Any, Final
 
 from biosutilities.common.compression import is_szip_supported, szip_decompress
-from biosutilities.common.paths import delete_file, make_dirs, path_stem
+from biosutilities.common.paths import delete_file, is_file_read, make_dirs, path_stem
 from biosutilities.common.patterns import PAT_APPLE_PBZX
 from biosutilities.common.structs import ctypes_struct, UINT32
 from biosutilities.common.system import printer
@@ -53,7 +53,13 @@ class AppleEfiPbzxExtract(BIOSUtility):
     def check_format(self) -> bool:
         """ Check if input is Apple PBZX image """
 
-        return bool(PAT_APPLE_PBZX.search(self.input_buffer, 0, 4))
+        if isinstance(self.input_object, str) and is_file_read(in_path=self.input_object):
+            with open(self.input_object, 'rb') as input_object:
+                check_buffer: bytes = input_object.read(4)
+        else:
+            check_buffer = self.input_buffer[:4]
+
+        return bool(PAT_APPLE_PBZX.search(check_buffer, 0, 4))
 
     def parse_format(self) -> bool:
         """ Parse & Extract Apple PBZX image """

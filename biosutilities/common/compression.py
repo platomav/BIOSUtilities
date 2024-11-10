@@ -10,7 +10,7 @@ import subprocess
 from typing import Final
 
 from biosutilities.common.externals import szip_path, tiano_path
-from biosutilities.common.paths import is_access, is_dir, is_file, is_empty_dir, path_size
+from biosutilities.common.paths import is_dir, is_file_read, is_empty_dir, path_size
 from biosutilities.common.system import printer
 from biosutilities.common.texts import file_to_bytes
 
@@ -118,7 +118,7 @@ def efi_decompress(in_path: str, out_path: str, padding: int = 0, silent: bool =
 
     tiano_x: subprocess.CompletedProcess[bytes] = subprocess.run(tiano_c, check=False, stdout=subprocess.DEVNULL)
 
-    if tiano_x.returncode == 0 and is_file(in_path=out_path) and is_access(in_path=out_path):
+    if tiano_x.returncode == 0 and is_file_read(in_path=out_path):
         if efi_header_info(in_object=in_path)['size_decompressed'] == path_size(in_path=out_path):
             if not silent:
                 printer(message='Successful EFI decompression via TianoCompress!', padding=padding)

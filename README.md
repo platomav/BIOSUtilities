@@ -2,7 +2,7 @@
 
 ## About
 
-Various BIOS/UEFI-related utilities which aid in modding and/or research
+Various BIOS/UEFI-related utilities which aid in research and/or modding
 
 ## Usage
 
@@ -10,7 +10,7 @@ Various BIOS/UEFI-related utilities which aid in modding and/or research
 
 The "main" script provides a simple way to check and parse each of the user provided files against all utilities, in succession. It is ideal for quick drag & drop operations but lacks the finer control of the "Package" method. If needed, a few options can be set, by using the command line:
 
-``` bash
+``` text
 usage: main.py [-h] [-e] [-o OUTPUT_DIR] [paths ...]
 
 positional arguments:
@@ -22,13 +22,13 @@ options:
   -o OUTPUT_DIR, --output-dir OUTPUT_DIR  extraction directory
 ```
 
-``` bash
+``` text
 python ./main.py "/path/to/input/file.bin" --output-dir "/path/to/file extractions"
 ```
 
 If no arguments/options are provided, the "main" script requests the input and output paths from the user. If no output path is provided, the utility will use the parent directory of the first input file or fallback to the runtime execution directory.
 
-``` python
+``` text
 Enter input file or directory path: "C:\P5405CSA.303"
 
 Enter output directory path: "C:\P5405CSA.303_output"
@@ -78,7 +78,7 @@ input_object: str | bytes | bytearray = b''
 ##### extract_path (required)
 
 ``` python
-extract_path: str = ''
+extract_path: str = runtime_root()
 ```
 
 ##### padding (optional)
@@ -87,8 +87,7 @@ extract_path: str = ''
 padding: int = 0
 ```
 
-If the required arguments are not provided, it is still possible to use the BIOSUtility-inherited instance to access 
-auxiliary public methods and class constants. However, checking and/or parsing of file formats will not yield results.
+If the required arguments are not provided, placeholder values are set so that it is possible to use the BIOSUtility-inherited instance to access auxiliary public methods and class constants. However, checking and/or parsing of file formats will not yield results.
 
 #### Methods
 
@@ -120,17 +119,37 @@ There are two main types of requirements, depending on the utility.
 
 ### Python Packages
 
+* [pefile](https://pypi.org/project/pefile/2023.2.7/)
+* [dissect.util](https://pypi.org/project/dissect.util/3.18/)
+
 Python packages can be installed via Pypi (e.g. pip)
 
 ``` bash
 python -m pip install --upgrade -r requirements.txt
 ```
 
+or
+
 ``` bash
 python -m pip install pefile==2023.2.7 dissect.util==3.18
 ```
 
 ### External Executables / Scripts
+
+To run the utilities, you must have the following 3rd party tools at PATH or "external":
+
+* [7-Zip](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zz for macOS or 7zz, 7zzs for Linux)
+* [UEFIFind](https://github.com/LongSoft/UEFITool/) (i.e. [UEFIFind.exe for Windows or UEFIFind for Linux/macOS](https://github.com/LongSoft/UEFITool/releases))
+* [UEFIExtract](https://github.com/LongSoft/UEFITool/) (i.e. [UEFIExtract.exe for Windows or UEFIExtract for Linux/macOS](https://github.com/LongSoft/UEFITool/releases))
+* [TianoCompress](https://github.com/tianocore/edk2/tree/master/BaseTools/Source/C/TianoCompress/) (i.e. [TianoCompress.exe for Windows](https://github.com/tianocore/edk2-BaseTools-win32/) or TianoCompress for Linux/macOS)
+* [ToshibaComExtractor](https://github.com/LongSoft/ToshibaComExtractor) (i.e. [comextract.exe for Windows or comextract for Linux/macOS](https://github.com/LongSoft/ToshibaComExtractor/releases))
+
+Note: On Linux, you need to compile "comextract" from sources as no pre-built binary exists.
+Note: On Linux and macOS, you need to compile "TianoCompress" from sources as no pre-built binary exists.
+
+Optionally, to decompile the Intel BIOS Guard Scripts (when applicable), you must have the following 3rd party python script at PATH or "external":
+
+* [BIOS Guard Script Tool](https://github.com/platomav/BGScriptTool) (i.e. big_script_tool.py)
 
 External executables and/or scripts (e.g. TianoCompress.exe, big_script_tool.py, 7z.exe) need to be found via the "PATH" environment variable, which is configured differently depending on the operating system.
 
@@ -143,14 +162,14 @@ Alternatively, if neither modifying PATH environment variable nor copying the ex
 or
 
 ``` bash
-sudo install "/path/to/downloaded/external/executable/to/install" /usr/local/bin
+sudo install "/path/to/downloaded/executable" /usr/local/bin
 ```
 
 #### Windows
 
 [Windows Path](https://www.computerhope.com/issues/ch000549.htm)
 
-Note: In the "Environment Variables" window, you can modify the "Path" variable under "User variables" instead of "System variables", as many guides suggest.
+Note: In the "Environment Variables" window, you can modify the "Path" variable under "User variables" instead of "System variables", contrary to what many guides suggest.
 
 #### MacOS
 
@@ -187,11 +206,9 @@ Note that the AMI PFAT structure may not have an explicit component order. AMI's
 
 No additional optional arguments are provided for this utility.
 
-#### Prerequisites
+#### Requirements
 
-Optionally, to decompile the AMI PFAT \> Intel BIOS Guard Scripts, you must have the following 3rd party python script at PATH or "external":
-
-* [BIOS Guard Script Tool](https://github.com/platomav/BGScriptTool) (i.e. big_script_tool.py)
+* BIOS Guard Script Tool (optional)
 
 ### AMI UCP Update Extractor
 
@@ -205,18 +222,11 @@ Additional optional arguments are provided for this utility:
 
 * checksum -> bool : verify AMI UCP Checksums (slow)
 
-#### Prerequisites
+#### Requirements
 
-To run the utility, you must have the following 3rd party tools at PATH or "external":
-
-* [TianoCompress](https://github.com/tianocore/edk2/tree/master/BaseTools/Source/C/TianoCompress/) (i.e. [TianoCompress.exe for Windows](https://github.com/tianocore/edk2-BaseTools-win32/) or TianoCompress for Linux/macOS)
-* [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zz for macOS or 7zz, 7zzs for Linux)
-
-Optionally, to decompile the AMI UCP \> AMI PFAT \> Intel BIOS Guard Scripts (when applicable), you must have the following 3rd party python script at PATH or "external":
-
-* [BIOS Guard Script Tool](https://github.com/platomav/BGScriptTool) (i.e. big_script_tool.py)
-
-Note: On Linux and macOS, you'll need to compile TianoCompress from sources as no pre-built binary exists.
+* 7-Zip (required)
+* TianoCompress (required)
+* BIOS Guard Script Tool (optional)
 
 ### Apple EFI IM4P Splitter
 
@@ -228,9 +238,9 @@ Parses Apple IM4P multi-EFI files and splits all detected EFI firmware into sepa
 
 No additional optional arguments are provided for this utility.
 
-#### Prerequisites
+#### Requirements
 
-To run the utility, you do not need any prerequisites.
+No additional requirements are needed for this utility.
 
 ### Apple EFI Image Identifier
 
@@ -248,14 +258,12 @@ The utility exposes certain public class attributes, once parse_format() method 
 
 * efi_file_name -> str : Suggested image filename, based on Intel "IBIOSI" information
 * intel_bios_info -> dict[str, str] : Information contained at Intel "IBIOSI" structure
-* apple_rom_version -> defaultdict[str, set] : Information contained at "Apple ROM Version" structure
+* apple_rom_version -> dict[str, str] : Information contained at "Apple ROM Version" structure
 
-#### Prerequisites
+#### Requirements
 
-To run the utility, you must have the following 3rd party tools at PATH or "external":
-
-* [UEFIFind](https://github.com/LongSoft/UEFITool/) (i.e. [UEFIFind.exe for Windows or UEFIFind for Linux/macOS](https://github.com/LongSoft/UEFITool/releases))
-* [UEFIExtract](https://github.com/LongSoft/UEFITool/) (i.e. [UEFIExtract.exe for Windows or UEFIExtract for Linux/macOS](https://github.com/LongSoft/UEFITool/releases))
+* UEFIFind (required)
+* UEFIExtract (required)
 
 ### Apple EFI Package Extractor
 
@@ -267,13 +275,11 @@ Parses Apple EFI PKG firmware packages (e.g. FirmwareUpdate.pkg, BridgeOSUpdateC
 
 No additional optional arguments are provided for this utility.
 
-#### Prerequisites
+#### Requirements
 
-To run the utility, you must have the following 3rd party tools at PATH or "external":
-
-* [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zz for macOS or 7zz, 7zzs for Linux)
-* [UEFIFind](https://github.com/LongSoft/UEFITool/) (i.e. [UEFIFind.exe for Windows or UEFIFind for Linux/macOS](https://github.com/LongSoft/UEFITool/releases))
-* [UEFIExtract](https://github.com/LongSoft/UEFITool/) (i.e. [UEFIExtract.exe for Windows or UEFIExtract for Linux/macOS](https://github.com/LongSoft/UEFITool/releases))
+* 7-Zip (required)
+* UEFIFind (required)
+* UEFIExtract (required)
 
 ### Apple EFI PBZX Extractor
 
@@ -285,11 +291,9 @@ Parses Apple EFI PBZX images, re-assembles their CPIO payload and extracts its f
 
 No additional optional arguments are provided for this utility.
 
-#### Prerequisites
+#### Requirements
 
-To run the utility, you must have the following 3rd party tools at PATH or "external":
-
-* [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zz for macOS or 7zz, 7zzs for Linux)
+* 7-Zip (required)
 
 ### Award BIOS Module Extractor
 
@@ -301,11 +305,9 @@ Parses Award BIOS images and extracts their modules (e.g. RAID, MEMINIT, \_EN_CO
 
 No additional optional arguments are provided for this utility.
 
-#### Prerequisites
+#### Requirements
 
-To run the utility, you must have the following 3rd party tool at PATH or "external":
-
-* [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zz for macOS or 7zz, 7zzs for Linux)
+* 7-Zip (required)
 
 ### Dell PFS Update Extractor
 
@@ -320,11 +322,9 @@ Additional optional arguments are provided for this utility:
 * advanced -> bool : extract signatures and metadata
 * structure -> bool : show PFS structure information
 
-#### Prerequisites
+#### Requirements
 
-Optionally, to decompile the Intel BIOS Guard (PFAT) Scripts, you must have the following 3rd party utility at PATH or "external":
-
-* [BIOS Guard Script Tool](https://github.com/platomav/BGScriptTool) (i.e. big_script_tool.py)
+* BIOS Guard Script Tool (optional)
 
 ### Fujitsu SFX BIOS Extractor
 
@@ -336,11 +336,9 @@ Parses Fujitsu SFX BIOS images and extracts their obfuscated Microsoft CAB archi
 
 No additional optional arguments are provided for this utility.
 
-#### Prerequisites
+#### Requirements
 
-To run the utility, you must have the following 3rd party tool at PATH or "external":
-
-* [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zz for macOS or 7zz, 7zzs for Linux)
+* 7-Zip (required)
 
 ### Fujitsu UPC BIOS Extractor
 
@@ -352,13 +350,9 @@ Parses Fujitsu UPC BIOS images and extracts their EFI compressed SPI/BIOS/UEFI f
 
 No additional optional arguments are provided for this utility.
 
-#### Prerequisites
+#### Requirements
 
-To run the utility, you must have the following 3rd party tool at PATH or "external":
-
-* [TianoCompress](https://github.com/tianocore/edk2/tree/master/BaseTools/Source/C/TianoCompress/) (i.e. [TianoCompress.exe for Windows](https://github.com/tianocore/edk2-BaseTools-win32/) or TianoCompress for Linux/macOS)
-
-Note: On Linux and macOS, you'll need to compile TianoCompress from sources as no pre-built binary exists.
+* TianoCompress (required)
 
 ### Insyde iFlash/iFdPacker Extractor
 
@@ -370,9 +364,9 @@ Parses Insyde iFlash/iFdPacker Update images and extracts their firmware (e.g. S
 
 No additional optional arguments are provided for this utility.
 
-#### Prerequisites
+#### Requirements
 
-To run the utility, you do not need any prerequisites.
+No additional requirements are needed for this utility.
 
 ### Panasonic BIOS Package Extractor
 
@@ -384,16 +378,11 @@ Parses Panasonic BIOS Package executables and extracts their firmware (e.g. SPI,
 
 No additional optional arguments are provided for this utility.
 
-#### Prerequisites
+#### Requirements
 
-To run the utility, you must have the following 3rd party Python modules installed:
-
-* [pefile](https://pypi.org/project/pefile/2023.2.7/)
-* [dissect.util](https://pypi.org/project/dissect.util/3.18/)
-
-Moreover, you must have the following 3rd party tool at PATH or "external":
-
-* [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zz for macOS or 7zz, 7zzs for Linux)
+* 7-Zip (required)
+* pefile (required)
+* dissect.util (required)
 
 ### Phoenix TDK Packer Extractor
 
@@ -405,11 +394,9 @@ Parses Phoenix Tools Development Kit (TDK) Packer executables and extracts their
 
 No additional optional arguments are provided for this utility.
 
-#### Prerequisites
+#### Requirements
 
-To run the utility, you must have the following 3rd party Python module installed:
-
-* [pefile](https://pypi.org/project/pefile/2023.2.7/)
+* pefile (required)
 
 ### Portwell EFI Update Extractor
 
@@ -421,17 +408,10 @@ Parses Portwell UEFI Unpacker EFI executables (usually named "Update.efi") and e
 
 No additional optional arguments are provided for this utility.
 
-#### Prerequisites
+#### Requirements
 
-To run the utility, you must have the following 3rd party Python module installed:
-
-* [pefile](https://pypi.org/project/pefile/2023.2.7/)
-
-Moreover, you must have the following 3rd party tool at PATH or "external":
-
-* [TianoCompress](https://github.com/tianocore/edk2/tree/master/BaseTools/Source/C/TianoCompress/) (i.e. [TianoCompress.exe for Windows](https://github.com/tianocore/edk2-BaseTools-win32/) or TianoCompress for Linux/macOS)
-
-Note: On Linux and macOS, you'll need to compile TianoCompress from sources as no pre-built binary exists.
+* pefile (required)
+* TianoCompress (required)
 
 ### Toshiba BIOS COM Extractor
 
@@ -443,13 +423,9 @@ Parses Toshiba BIOS COM images and extracts their raw or compressed SPI/BIOS/UEF
 
 No additional optional arguments are provided for this utility.
 
-#### Prerequisites
+#### Requirements
 
-To run the utility, you must have the following 3rd party tool at PATH or "external":
-
-* [ToshibaComExtractor](https://github.com/LongSoft/ToshibaComExtractor) (i.e. [comextract.exe for Windows or comextract for Linux/macOS](https://github.com/LongSoft/ToshibaComExtractor/releases))
-
-Note: On Linux, you'll need to compile comextract from sources as no pre-built binary exists.
+* ToshibaComExtractor (required)
 
 ### VAIO Packaging Manager Extractor
 
@@ -461,8 +437,6 @@ Parses VAIO Packaging Manager executables and extracts their firmware (e.g. SPI,
 
 No additional optional arguments are provided for this utility.
 
-#### Prerequisites
+#### Requirements
 
-To run the utility, you must have the following 3rd party tool at PATH or "external":
-
-* [7-Zip Console](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zz for macOS or 7zz, 7zzs for Linux)
+* 7-Zip (required)

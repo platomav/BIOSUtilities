@@ -1,3 +1,9 @@
+24.11.10
+
+Re-written public attributes of Apple EFI ID
+Improved memory consumption for all utilities
+Adjusted README with consolidated requirements
+
 24.10.30
 
 Improved UAF module detection at AMI UCP Extract

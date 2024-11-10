@@ -19,7 +19,7 @@ from typing import Any, Final
 
 from biosutilities.common.checksums import checksum_8_xor
 from biosutilities.common.compression import is_szip_supported, szip_decompress
-from biosutilities.common.paths import (delete_dirs, delete_file, path_files, is_access, is_file, make_dirs,
+from biosutilities.common.paths import (delete_dirs, delete_file, path_files, is_file_read, make_dirs,
                                         path_name, path_parent, path_stem, safe_name)
 from biosutilities.common.patterns import PAT_DELL_FTR, PAT_DELL_HDR, PAT_DELL_PKG
 from biosutilities.common.structs import CHAR, ctypes_struct, UINT8, UINT16, UINT32, UINT64
@@ -263,7 +263,7 @@ class DellPfsExtract(BIOSUtility):
             pfs_results: dict[str, bytes] = self._thinos_pkg_extract(
                 input_object=self.input_buffer, extract_path=self.extract_path)
         else:
-            pfs_results = {path_stem(in_path=self.input_object) if isinstance(self.input_object, str) and is_file(
+            pfs_results = {path_stem(in_path=self.input_object) if isinstance(self.input_object, str) and is_file_read(
                 in_path=self.input_object) else 'Image': self.input_buffer}
 
         # Parse each Dell PFS image contained in the input file
@@ -362,7 +362,7 @@ class DellPfsExtract(BIOSUtility):
             return pfs_results
 
         for pkg_file in path_files(in_path=working_path):
-            if is_file(in_path=pkg_file) and is_access(in_path=pkg_file):
+            if is_file_read(in_path=pkg_file):
                 if self._is_pfs_hdr(input_object=pkg_file):
                     pfs_name: str = path_name(in_path=str(path_parent(in_path=pkg_file)))
 

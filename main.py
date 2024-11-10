@@ -31,7 +31,7 @@ from biosutilities.portwell_efi_extract import PortwellEfiExtract
 from biosutilities.toshiba_com_extract import ToshibaComExtract
 from biosutilities.vaio_package_extract import VaioPackageExtract
 
-from biosutilities.common.paths import (delete_dirs, extract_folder, is_access, is_dir, is_empty_dir, is_file,
+from biosutilities.common.paths import (delete_dirs, extract_folder, is_dir_read, is_empty_dir, is_file_read,
                                         path_files, path_name, path_parent, real_path, runtime_root)
 from biosutilities.common.system import python_version, printer, system_platform
 from biosutilities.common.texts import remove_quotes, to_boxed, to_ordinal
@@ -68,11 +68,11 @@ class BIOSUtilities:
         for input_path in [input_path for input_path in input_paths if input_path]:
             input_path_real: str = real_path(in_path=input_path)
 
-            if is_dir(in_path=input_path_real):
+            if is_dir_read(in_path=input_path_real):
                 for input_file in path_files(in_path=input_path_real):
-                    if is_file(in_path=input_file) and is_access(in_path=input_file):
+                    if is_file_read(in_path=input_file):
                         self._input_files.append(input_file)
-            elif is_file(in_path=input_path_real) and is_access(in_path=input_path_real):
+            elif is_file_read(in_path=input_path_real):
                 self._input_files.append(input_path_real)
 
     def _setup_output_dir(self, padding: int = 0) -> None:
@@ -86,7 +86,7 @@ class BIOSUtilities:
             if not output_path and self._input_files:
                 output_path = str(path_parent(in_path=self._input_files[0]))
 
-        if output_path and is_dir(in_path=output_path) and is_access(in_path=output_path):
+        if output_path and is_dir_read(in_path=output_path):
             self._output_path = output_path
         else:
             self._output_path = runtime_root()
@@ -137,9 +137,9 @@ class BIOSUtilities:
         exit_code: int = len(self._input_files)
 
         utilities_classes: list[Any] = [
-            AmiUcpExtract, AmiPfatExtract, InsydeIfdExtract, DellPfsExtract, PhoenixTdkExtract, PanasonicBiosExtract,
-            VaioPackageExtract, PortwellEfiExtract, ToshibaComExtract, FujitsuSfxExtract, FujitsuUpcExtract,
-            AwardBiosExtract, AppleEfiPkgExtract, AppleEfiPbzxExtract, AppleEfiIm4pSplit, AppleEfiIdentify
+            AppleEfiPkgExtract, AmiUcpExtract, AmiPfatExtract, InsydeIfdExtract, DellPfsExtract, PhoenixTdkExtract,
+            PanasonicBiosExtract, VaioPackageExtract, PortwellEfiExtract, ToshibaComExtract, FujitsuSfxExtract,
+            FujitsuUpcExtract, AwardBiosExtract, AppleEfiPbzxExtract, AppleEfiIm4pSplit, AppleEfiIdentify
         ]
 
         for input_file in self._input_files:
@@ -150,11 +150,11 @@ class BIOSUtilities:
             for utility_class in utilities_classes:
                 extract_path: str = os.path.join(self._output_path, extract_folder(in_path=input_name))
 
-                if is_dir(in_path=extract_path):
+                if is_dir_read(in_path=extract_path):
                     for suffix in range(2, self.MAX_FAT32_ITEMS):
                         renamed_path: str = f'{os.path.normpath(extract_path)}_{to_ordinal(in_number=suffix)}'
 
-                        if not is_dir(in_path=renamed_path):
+                        if not is_dir_read(in_path=renamed_path):
                             extract_path = renamed_path
 
                             break

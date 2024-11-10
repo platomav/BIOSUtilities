@@ -12,10 +12,12 @@ import os
 from re import Match
 from typing import Final
 
-from biosutilities.common.paths import make_dirs, path_stem
+from biosutilities.common.paths import is_file_read, make_dirs, path_size, path_stem
 from biosutilities.common.patterns import PAT_APPLE_IM4P, PAT_INTEL_FD
 from biosutilities.common.system import printer
 from biosutilities.common.templates import BIOSUtility
+
+from biosutilities.apple_efi_id import EFI_MAX_SIZE
 
 
 class AppleEfiIm4pSplit(BIOSUtility):
@@ -29,8 +31,12 @@ class AppleEfiIm4pSplit(BIOSUtility):
     def check_format(self) -> bool:
         """ Check if input is Apple EFI IM4P image """
 
-        if isinstance(self.input_object, str) and not self.input_object.lower().endswith('.im4p'):
-            return False
+        if isinstance(self.input_object, str) and is_file_read(in_path=self.input_object):
+            if not self.input_object.lower().endswith('.im4p'):
+                return False
+
+            if path_size(in_path=self.input_object) > EFI_MAX_SIZE:
+                return False
 
         if PAT_APPLE_IM4P.search(self.input_buffer) and PAT_INTEL_FD.search(self.input_buffer):
             return True

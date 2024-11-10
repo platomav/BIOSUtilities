@@ -237,6 +237,18 @@ def is_access(in_path: str, access_mode: int = os.R_OK, follow_links: bool = Fal
     return os.access(in_path, access_mode, follow_symlinks=follow_links)
 
 
+def is_file_read(in_path: str) -> bool:
+    """ Check if path is a readable file """
+
+    return isinstance(in_path, str) and is_file(in_path=in_path) and is_access(in_path=in_path)
+
+
+def is_dir_read(in_path: str) -> bool:
+    """ Check if path is a readable directory """
+
+    return isinstance(in_path, str) and is_dir(in_path=in_path) and is_access(in_path=in_path)
+
+
 def is_empty_dir(in_path: str, follow_links: bool = False) -> bool:
     """ Check if directory is empty (file-wise) """
 

@@ -1,14 +1,107 @@
 # BIOSUtilities
 
-## About
+## Description
 
-Various BIOS/UEFI-related utilities which aid in research and/or modding
+BIOSUtilities is a collection of various BIOS/UEFI-related utilities which aid in research and/or modding purposes.
+
+## Installation
+
+BIOSUtilities is a Python 3 project at its core, but also relies on various external utilities and/or dependencies.
+
+### Python
+
+First, you must make sure that a compatible Python version (i.e. 3.10.x - 3.12.x) is installed:
+
+1. Download the latest official [Python 3.12.x installer](https://www.python.org/downloads/)
+2. During installation, make sure that the Optional Features "pip" and "py launcher" are both selected
+3. In the Advanced Options, make sure to "associate files with Python" and add to "environment variables"
+4. Once installation is complete, make sure you install all "Python Packages" and "External Dependencies"
+
+Note: On Windows, avoid installing Python from the Microsoft Store and prefer the ["installer"](https://www.python.org/downloads/) from the official website instead.
+
+### Requirements
+
+There are two main types of requirements, depending on the utility: "Python Packages" and "External Executables / Scripts".
+
+#### Python Packages
+
+* [pefile](https://pypi.org/project/pefile/2023.2.7/)
+* [dissect.util](https://pypi.org/project/dissect.util/3.18/)
+
+Python packages can be installed via Pypi (e.g. pip)
+
+``` bash
+python -m pip install --upgrade -r requirements.txt
+```
+
+or
+
+``` bash
+python -m pip install pefile==2023.2.7 dissect.util==3.18
+```
+
+#### External Executables / Scripts
+
+External executables and/or scripts (e.g. TianoCompress.exe, big_script_tool.py, 7z.exe) are expected to be found via the "PATH" local environment variable, by default, which is configured differently depending on the operating system.
+
+##### Setup "PATH" on Linux
+
+[Linux Path](https://www.digitalocean.com/community/tutorials/how-to-view-and-update-the-linux-path-environment-variable)
+
+or
+
+``` bash
+sudo install "/path/to/downloaded/executable" /usr/local/bin
+```
+
+##### Setup "PATH" on Windows
+
+[Windows Path](https://www.computerhope.com/issues/ch000549.htm)
+
+Note: In the "Environment Variables" window, you can modify the "Path" variable under "User variables" instead of "System variables", contrary to what many guides suggest.
+
+##### Setup "PATH" on MacOS
+
+[Mac Path](https://mac.install.guide/terminal/path)
+
+Alternatively, you can create a folder named "external" at the root of the "biosutilities" project (i.e. next to "main.py") and place all external dependencies there.
+
+* [7-Zip](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zz for macOS or 7zz, 7zzs for Linux)
+* [UEFIFind](https://github.com/LongSoft/UEFITool/) (i.e. [UEFIFind.exe for Windows or UEFIFind for Linux/macOS](https://github.com/LongSoft/UEFITool/releases))
+* [UEFIExtract](https://github.com/LongSoft/UEFITool/) (i.e. [UEFIExtract.exe for Windows or UEFIExtract for Linux/macOS](https://github.com/LongSoft/UEFITool/releases))
+* [TianoCompress](https://github.com/tianocore/edk2/tree/master/BaseTools/Source/C/TianoCompress/) (i.e. [TianoCompress.exe for Windows](https://github.com/tianocore/edk2-BaseTools-win32/) or TianoCompress for Linux/macOS)
+* [ToshibaComExtractor](https://github.com/LongSoft/ToshibaComExtractor) (i.e. [comextract.exe for Windows or comextract for Linux/macOS](https://github.com/LongSoft/ToshibaComExtractor/releases))
+
+Note: On Linux, you need to compile "comextract" from sources as no pre-built binary exists.
+
+Note: On Linux and macOS, you need to compile "TianoCompress" from sources as no pre-built binary exists.
+
+Optionally, to decompile the Intel BIOS Guard Scripts (when applicable), you must have the following 3rd party python script at PATH or "external":
+
+* [BIOS Guard Script Tool](https://github.com/platomav/BGScriptTool) (i.e. big_script_tool.py)
+
+## Compatibility
+
+Unless explicitely noted, all utilities should work under Windows, Linux or macOS operating systems which have Python 3.10 - 3.12 support.
 
 ## Usage
 
+There are two different possible flows when using the BIOSUtilities project:
+
+* Main (simple)
+* Package (advanced)
+
+You can use either one or the other, depending on your needs. Most end-users should probably choose the "Main" flow, which is very simple to use and automatically attempts to process one or more input files against all available utilities in one run. The "Package" flow is for those who are more familiar with python and/or need to use the project programmatically as a library/dependency.
+
 ### Main
 
-The "main" script provides a simple way to check and parse each of the user provided files against all utilities, in succession. It is ideal for quick drag & drop operations but lacks the finer control of the "Package" method. If needed, a few options can be set, by using the command line:
+The "main" script provides a simple way to check and parse each of the user provided files against all utilities, in succession. It is ideal for quick drag & drop operations but lacks the finer control of the "Package" method.
+
+1. Download or clone the repository to a local directory
+2. Install the requirements ($PATH or "external" directory)
+3. Drag and drop one or more files to the "main.py" script
+
+If you use Linux, macOS, or the Windows command prompt/terminal, you may also call "main.py" via arguments and options, as such:
 
 ``` text
 usage: main.py [-h] [-e] [-o OUTPUT_DIR] [paths ...]
@@ -108,72 +201,6 @@ Process input object as a specific supported format
 ``` python
 is_extracted: bool = parse_format()
 ```
-
-## Compatibility
-
-Unless explicitely noted, all utilities should work under Windows, Linux or macOS operating systems which have Python 3.10 - 3.12 support.
-
-## Requirements
-
-There are two main types of requirements, depending on the utility.
-
-### Python Packages
-
-* [pefile](https://pypi.org/project/pefile/2023.2.7/)
-* [dissect.util](https://pypi.org/project/dissect.util/3.18/)
-
-Python packages can be installed via Pypi (e.g. pip)
-
-``` bash
-python -m pip install --upgrade -r requirements.txt
-```
-
-or
-
-``` bash
-python -m pip install pefile==2023.2.7 dissect.util==3.18
-```
-
-### External Executables / Scripts
-
-To run the utilities, you must have the following 3rd party tools at PATH or "external":
-
-* [7-Zip](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zz for macOS or 7zz, 7zzs for Linux)
-* [UEFIFind](https://github.com/LongSoft/UEFITool/) (i.e. [UEFIFind.exe for Windows or UEFIFind for Linux/macOS](https://github.com/LongSoft/UEFITool/releases))
-* [UEFIExtract](https://github.com/LongSoft/UEFITool/) (i.e. [UEFIExtract.exe for Windows or UEFIExtract for Linux/macOS](https://github.com/LongSoft/UEFITool/releases))
-* [TianoCompress](https://github.com/tianocore/edk2/tree/master/BaseTools/Source/C/TianoCompress/) (i.e. [TianoCompress.exe for Windows](https://github.com/tianocore/edk2-BaseTools-win32/) or TianoCompress for Linux/macOS)
-* [ToshibaComExtractor](https://github.com/LongSoft/ToshibaComExtractor) (i.e. [comextract.exe for Windows or comextract for Linux/macOS](https://github.com/LongSoft/ToshibaComExtractor/releases))
-
-Note: On Linux, you need to compile "comextract" from sources as no pre-built binary exists.
-Note: On Linux and macOS, you need to compile "TianoCompress" from sources as no pre-built binary exists.
-
-Optionally, to decompile the Intel BIOS Guard Scripts (when applicable), you must have the following 3rd party python script at PATH or "external":
-
-* [BIOS Guard Script Tool](https://github.com/platomav/BGScriptTool) (i.e. big_script_tool.py)
-
-External executables and/or scripts (e.g. TianoCompress.exe, big_script_tool.py, 7z.exe) need to be found via the "PATH" environment variable, which is configured differently depending on the operating system.
-
-Alternatively, if neither modifying PATH environment variable nor copying the executables in standard OS PATH directories is an option, you can create a folder "external" at the root of the "biosutilities" project.
-
-#### Linux
-
-[Linux Path](https://www.digitalocean.com/community/tutorials/how-to-view-and-update-the-linux-path-environment-variable)
-
-or
-
-``` bash
-sudo install "/path/to/downloaded/executable" /usr/local/bin
-```
-
-#### Windows
-
-[Windows Path](https://www.computerhope.com/issues/ch000549.htm)
-
-Note: In the "Environment Variables" window, you can modify the "Path" variable under "User variables" instead of "System variables", contrary to what many guides suggest.
-
-#### MacOS
-
-[Mac Path](https://mac.install.guide/terminal/path)
 
 ## Utilities
 

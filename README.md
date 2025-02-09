@@ -10,9 +10,9 @@ BIOSUtilities is a Python 3 project at its core, but also relies on various exte
 
 ### Python
 
-First, you must make sure that a compatible Python version (i.e. 3.10.x - 3.12.x) is installed:
+First, you must make sure that a compatible Python version (i.e. 3.10.x - 3.13.x) is installed:
 
-1. Download the latest official [Python 3.12.x installer](https://www.python.org/downloads/)
+1. Download the latest official [Python 3.13.x installer](https://www.python.org/downloads/)
 2. During installation, make sure that the Optional Features "pip" and "py launcher" are both selected
 3. In the Advanced Options, make sure to "associate files with Python" and add to "environment variables"
 4. Once installation is complete, make sure you install all "Python Packages" and "External Dependencies"
@@ -64,7 +64,7 @@ Note: In the "Environment Variables" window, you can modify the "Path" variable 
 
 [Mac Path](https://mac.install.guide/terminal/path)
 
-Alternatively, you can create a folder named "external" at the root of the "biosutilities" project (i.e. next to "main.py") and place all external dependencies there.
+Alternatively, you can create a folder named "external" at the root of the "biosutilities" project (i.e. next to "common" directory) and place all external dependencies there.
 
 * [7-Zip](https://www.7-zip.org/) (i.e. 7z.exe for Windows or 7zz for macOS or 7zz, 7zzs for Linux)
 * [UEFIFind](https://github.com/LongSoft/UEFITool/) (i.e. [UEFIFind.exe for Windows or UEFIFind for Linux/macOS](https://github.com/LongSoft/UEFITool/releases))
@@ -82,7 +82,7 @@ Optionally, to decompile the Intel BIOS Guard Scripts (when applicable), you mus
 
 ## Compatibility
 
-Unless explicitely noted, all utilities should work under Windows, Linux or macOS operating systems which have Python 3.10 - 3.12 support.
+Unless explicitely noted, all utilities should work under Windows, Linux or macOS operating systems which have Python 3.10 - 3.13 support.
 
 ## Usage
 

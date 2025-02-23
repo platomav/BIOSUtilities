@@ -26,7 +26,7 @@ There are two main types of requirements, depending on the utility: "Python Pack
 #### Python Packages
 
 * [pefile](https://pypi.org/project/pefile/2023.2.7/)
-* [dissect.util](https://pypi.org/project/dissect.util/3.18/)
+* [dissect.util](https://pypi.org/project/dissect.util/3.19/)
 
 Python packages can be installed via Pypi (e.g. pip)
 
@@ -37,7 +37,7 @@ python -m pip install --upgrade -r requirements.txt
 or
 
 ``` bash
-python -m pip install pefile==2023.2.7 dissect.util==3.18
+python -m pip install pefile==2023.2.7 dissect.util==3.19
 ```
 
 #### External Executables / Scripts
@@ -227,7 +227,7 @@ is_extracted: bool = parse_format()
 
 Parses AMI BIOS Guard (a.k.a. PFAT, Platform Firmware Armoring Technology) images, extracts their SPI/BIOS/UEFI firmware components and optionally decompiles the Intel BIOS Guard Scripts. It supports all AMI PFAT revisions and formats, including those with Index Information tables or nested AMI PFAT structures. The output comprises only final firmware components which are directly usable by end users.
 
-Note that the AMI PFAT structure may not have an explicit component order. AMI's BIOS Guard Firmware Update Tool (AFUBGT) updates components based on the user/OEM provided Parameters and Options or Index Information table, when applicable. Thus, merging all the components together does not usually yield a proper SPI/BIOS/UEFI image. The utility does generate such a merged file with the name "00 -- \<filename\>\_ALL.bin" but it is up to the end user to determine its usefulness. Additionally, any custom OEM data, after the AMI PFAT structure, is stored in the last file with the name "\<n+1\> -- \_OOB.bin" and it is once again up to the end user to determine its usefulness. In cases where the trailing custom OEM data includes a nested AMI PFAT structure, the utility will process and extract it automatically as well.
+Note that the AMI PFAT structure may not have an explicit component order. AMI's BIOS Guard Firmware Update Tool (AFUBGT) updates components based on the user/OEM provided Parameters and Options or Index Information table, when applicable. Thus, merging all the components together does not usually yield a proper SPI/BIOS/UEFI image. The utility does generate such a merged file with the name "00 -- ALL" but it is up to the end user to determine its usefulness. Additionally, any custom OEM data, after the AMI PFAT structure of "n" components, is stored in the last file with the name "\<n + 1\> -- OOB" and it is once again up to the end user to determine its usefulness. In cases where the data of a component includes a nested AMI PFAT structure, the utility will process and extract it automatically as well.
 
 #### Arguments
 

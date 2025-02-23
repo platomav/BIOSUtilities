@@ -34,7 +34,7 @@ classifiers = [
 ]
 
 [project.optional-dependencies]
-lznt1 = ["dissect.util == 3.18"]
+lznt1 = ["dissect.util == 3.19"]
 pefile = ["pefile == 2023.2.7"]
 
 [project.urls]

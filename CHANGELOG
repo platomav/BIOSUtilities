@@ -1,3 +1,8 @@
+25.02.23
+
+Fixed AMI PFAT Extract file naming of "ALL" and "OOB"
+Upgraded dependency "dissect.util" from 3.18 to 3.19
+
 24.11.10
 
 Re-written public attributes of Apple EFI ID

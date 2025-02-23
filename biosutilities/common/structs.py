@@ -2,18 +2,18 @@
 # coding=utf-8
 
 """
-Copyright (C) 2022-2024 Plato Mavropoulos
+Copyright (C) 2022-2025 Plato Mavropoulos
 """
 
 import ctypes
 
 from typing import Any, Final
 
-CHAR: Final[type[ctypes.c_char] | int] = ctypes.c_char
-UINT8: Final[type[ctypes.c_ubyte] | int] = ctypes.c_ubyte
-UINT16: Final[type[ctypes.c_ushort] | int] = ctypes.c_ushort
-UINT32: Final[type[ctypes.c_uint] | int] = ctypes.c_uint
-UINT64: Final[type[ctypes.c_uint64] | int] = ctypes.c_uint64
+CHAR: Final[Any] = ctypes.c_char
+UINT8: Final[Any] = ctypes.c_ubyte
+UINT16: Final[Any] = ctypes.c_ushort
+UINT32: Final[Any] = ctypes.c_uint
+UINT64: Final[Any] = ctypes.c_uint64
 
 
 def ctypes_struct(buffer: bytes | bytearray, start_offset: int, class_object: Any,

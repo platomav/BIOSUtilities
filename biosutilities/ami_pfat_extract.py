@@ -4,7 +4,7 @@
 """
 AMI PFAT Extract
 AMI BIOS Guard Extractor
-Copyright (C) 2018-2024 Plato Mavropoulos
+Copyright (C) 2018-2025 Plato Mavropoulos
 """
 
 import ctypes
@@ -15,7 +15,7 @@ import struct
 from typing import Any, Final, Type
 
 from biosutilities.common.externals import big_script_tool
-from biosutilities.common.paths import extract_suffix, extract_folder, make_dirs, path_name, safe_name
+from biosutilities.common.paths import extract_folder, make_dirs, safe_name
 from biosutilities.common.patterns import PAT_AMI_PFAT
 from biosutilities.common.structs import CHAR, ctypes_struct, UINT8, UINT16, UINT32
 from biosutilities.common.system import printer
@@ -229,8 +229,6 @@ class AmiPfatExtract(BIOSUtility):
 
         bg_sign_len: int = 0
 
-        extract_name: str = path_name(in_path=self.extract_path).removesuffix(extract_suffix())
-
         make_dirs(in_path=self.extract_path)
 
         block_all, block_off, file_count = self._parse_pfat_hdr(buffer=pfat_buffer, padding=self.padding)
@@ -297,7 +295,7 @@ class AmiPfatExtract(BIOSUtility):
 
         pfat_oob_data: bytes = pfat_buffer[block_off:]  # Store out-of-bounds data after the end of PFAT files
 
-        pfat_oob_name: str = self._get_file_name(index=file_count + 1, name=f'{extract_name}_OOB.bin')
+        pfat_oob_name: str = self._get_file_name(index=file_count + 1, name='OOB')
 
         pfat_oob_path: str = os.path.join(self.extract_path, pfat_oob_name)
 
@@ -312,7 +310,7 @@ class AmiPfatExtract(BIOSUtility):
 
         in_all_data: bytes = b''.join([block[1] for block in sorted(all_blocks_dict.items())])
 
-        in_all_name: str = self._get_file_name(index=0, name=f'{extract_name}_ALL.bin')
+        in_all_name: str = self._get_file_name(index=0, name='ALL')
 
         in_all_path: str = os.path.join(self.extract_path, in_all_name)
 

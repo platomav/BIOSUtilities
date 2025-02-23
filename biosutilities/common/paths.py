@@ -2,7 +2,7 @@
 # coding=utf-8
 
 """
-Copyright (C) 2022-2024 Plato Mavropoulos
+Copyright (C) 2022-2025 Plato Mavropoulos
 """
 
 import os
@@ -99,9 +99,7 @@ def path_name(in_path: str, limit: bool = False) -> str:
 
     comp_name: str = PurePath(in_path).name
 
-    is_win: bool = system_platform()[1]
-
-    if limit and is_win:
+    if limit and system_platform()[1]:
         comp_name = comp_name[:MAX_WIN_COMP_LEN - len(extract_suffix())]
 
     return comp_name

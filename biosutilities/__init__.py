@@ -2,7 +2,7 @@
 # coding=utf-8
 
 """
-Copyright (C) 2018-2024 Plato Mavropoulos
+Copyright (C) 2018-2025 Plato Mavropoulos
 """
 
-__version__ = '24.11.10'
+__version__ = '25.02.23'

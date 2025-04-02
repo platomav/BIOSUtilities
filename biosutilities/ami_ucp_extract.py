@@ -4,7 +4,7 @@
 """
 AMI UCP Extract
 AMI UCP Update Extractor
-Copyright (C) 2021-2024 Plato Mavropoulos
+Copyright (C) 2021-2025 Plato Mavropoulos
 """
 
 import contextlib
@@ -340,6 +340,9 @@ class AmiUcpExtract(BIOSUtility):
             uaf_hdr: Any = ctypes_struct(buffer=uaf_mod_buf, start_offset=0, class_object=UafHeader)
 
             uaf_mod_len: int = uaf_hdr.ModuleSize
+
+            if uaf_mod_len < 0x400:
+                continue
 
             uaf_mod_dat: bytes = uaf_mod_buf[:uaf_mod_len]
 

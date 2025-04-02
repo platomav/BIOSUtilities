@@ -4,7 +4,7 @@
 """
 Dell PFS Extract
 Dell PFS Update Extractor
-Copyright (C) 2018-2024 Plato Mavropoulos
+Copyright (C) 2018-2025 Plato Mavropoulos
 """
 
 import contextlib
@@ -431,7 +431,7 @@ class DellPfsExtract(BIOSUtility):
         header_data: bytes = zlib_data[header_start:compressed_start]
 
         # Check if the PFS ZLIB section header Checksum XOR 8 is valid
-        if checksum_8_xor(data=header_data[:0xF]) != header_data[0xF]:
+        if len(header_data) > 0xF and checksum_8_xor(data=header_data[:0xF]) != header_data[0xF]:
             printer(message='Error: Invalid Dell PFS ZLIB section Header Checksum!', padding=padding)
 
             is_zlib_error = True
@@ -461,7 +461,7 @@ class DellPfsExtract(BIOSUtility):
             is_zlib_error = True
 
         # Check if the PFS ZLIB section footer Checksum XOR 8 is valid
-        if checksum_8_xor(data=footer_data[:0xF]) != footer_data[0xF]:
+        if len(footer_data) > 0xF and checksum_8_xor(data=footer_data[:0xF]) != footer_data[0xF]:
             printer(message='Error: Invalid Dell PFS ZLIB section Footer Checksum!', padding=padding)
 
             is_zlib_error = True

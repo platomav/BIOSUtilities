@@ -26,7 +26,7 @@ There are two main types of requirements, depending on the utility: "Python Pack
 #### Python Packages
 
 * [pefile](https://pypi.org/project/pefile/2023.2.7/)
-* [dissect.util](https://pypi.org/project/dissect.util/3.19/)
+* [dissect.util](https://pypi.org/project/dissect.util/3.20/)
 
 Python packages can be installed via Pypi (e.g. pip)
 
@@ -37,7 +37,7 @@ python -m pip install --upgrade -r requirements.txt
 or
 
 ``` bash
-python -m pip install pefile==2023.2.7 dissect.util==3.19
+python -m pip install pefile==2023.2.7 dissect.util==3.20
 ```
 
 #### External Executables / Scripts

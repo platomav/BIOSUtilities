@@ -1,2 +1,2 @@
-dissect.util==3.19
+dissect.util==3.20
 pefile==2023.2.7

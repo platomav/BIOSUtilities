@@ -4,7 +4,7 @@
 """
 Award BIOS Extract
 Award BIOS Module Extractor
-Copyright (C) 2018-2024 Plato Mavropoulos
+Copyright (C) 2018-2025 Plato Mavropoulos
 """
 
 import os
@@ -52,7 +52,7 @@ class AwardBiosExtract(BIOSUtility):
 
                 continue
 
-            if len(mod_bin) >= 0x16:
+            if len(mod_bin) > 0x16:
                 tag_txt: str = safe_name(in_name=mod_bin[0x16:0x16 + mod_bin[0x15]].decode('utf-8', 'ignore').strip())
             else:
                 tag_txt = f'{mod_bgn:X}_{mod_end:X}'

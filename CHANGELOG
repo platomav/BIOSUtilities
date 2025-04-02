@@ -1,3 +1,9 @@
+25.04.02
+
+Improved UAF module detection at AMI UCP Extract
+Fixed crashes at Dell PFS and Award BIOS Extract
+Upgraded dependency "dissect.util" to 3.20
+
 25.02.23
 
 Fixed AMI PFAT Extract file naming of "ALL" and "OOB"

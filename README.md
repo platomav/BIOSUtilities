@@ -80,6 +80,8 @@ Optionally, to decompile the Intel BIOS Guard Scripts (when applicable), you mus
 
 * [BIOS Guard Script Tool](https://github.com/platomav/BGScriptTool) (i.e. big_script_tool.py)
 
+Note: On Windows, in the "Environment Variables" window, you need to add ".PY" to the PATHEX system variable, as it may not have been added when installing Python.
+
 ## Compatibility
 
 Unless explicitely noted, all utilities should work under Windows, Linux or macOS operating systems which have Python 3.10 - 3.13 support.

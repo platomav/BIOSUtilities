@@ -5,4 +5,4 @@
 Copyright (C) 2018-2025 Plato Mavropoulos
 """
 
-__version__ = '25.04.02'
+__version__ = '25.06.09'

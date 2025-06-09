@@ -45,7 +45,7 @@ PAT_DELL_HDR: Final[re.Pattern[bytes]] = re.compile(
 )
 
 PAT_DELL_PKG: Final[re.Pattern[bytes]] = re.compile(
-    br'\x72\x13\x55\x00.{45}7zXZ',
+    br'[\x72\x73]\x13\x55\x00.{45}7zXZ',
     flags=re.DOTALL
 )
 

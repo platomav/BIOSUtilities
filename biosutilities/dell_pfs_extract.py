@@ -362,9 +362,20 @@ class DellPfsExtract(BIOSUtility):
             return pfs_results
 
         for pkg_file in path_files(in_path=working_path):
+            if is_szip_supported(in_path=pkg_file, args=['-tCAB']):
+                pkg_file_out: str = os.path.join(str(path_parent(in_path=pkg_file)), path_stem(in_path=pkg_file))
+
+                if szip_decompress(in_path=pkg_file, out_path=pkg_file_out, in_name='CAB',
+                                   padding=0, args=['-tCAB'], check=True, silent=True):
+                    delete_file(in_path=pkg_file)
+
+        for pkg_file in path_files(in_path=working_path):
             if is_file_read(in_path=pkg_file):
                 if self._is_pfs_hdr(input_object=pkg_file):
-                    pfs_name: str = path_name(in_path=str(path_parent(in_path=pkg_file)))
+                    pkg_name_parent: str = path_name(in_path=str(path_parent(in_path=pkg_file)))
+                    pkg_name_binary: str = path_stem(in_path=pkg_file)
+
+                    pfs_name: str = safe_name(in_name=f'{pkg_name_parent}_{pkg_name_binary}')
 
                     pfs_results.update({pfs_name: file_to_bytes(in_object=pkg_file)})
 

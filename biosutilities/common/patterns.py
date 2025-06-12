@@ -2,7 +2,7 @@
 # coding=utf-8
 
 """
-Copyright (C) 2022-2024 Plato Mavropoulos
+Copyright (C) 2022-2025 Plato Mavropoulos
 """
 
 import re
@@ -45,7 +45,7 @@ PAT_DELL_HDR: Final[re.Pattern[bytes]] = re.compile(
 )
 
 PAT_DELL_PKG: Final[re.Pattern[bytes]] = re.compile(
-    br'[\x72\x73]\x13\x55\x00.{45}7zXZ',
+    br'\x13\x55\x00.{45}7zXZ',
     flags=re.DOTALL
 )
 

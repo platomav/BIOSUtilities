@@ -282,25 +282,43 @@ class DellPfsExtract(BIOSUtility):
         return True
 
     @staticmethod
-    def _is_pfs_pkg(input_object: str | bytes | bytearray) -> bool:
+    def _re_pfs_pkg(input_buffer: bytes) -> int | None:
+        """ Detect possible Dell ThinOS PKG pattern variations, quickly """
+
+        for pfs_pkg_match in PAT_DELL_PKG.finditer(input_buffer):
+            pfs_pkg_start: int = pfs_pkg_match.start() - 1
+
+            if pfs_pkg_start >= 0 and input_buffer[pfs_pkg_start] in {0x72, 0x73}:
+                return pfs_pkg_start
+
+        return None
+
+    def _is_pfs_pkg(self, input_object: str | bytes | bytearray) -> bool:
         """
         The Dell ThinOS PKG update images usually contain multiple sections.
-        Each section starts with a 0x30 header, which begins with pattern 72135500.
+
+        Each section starts with a 0x30 header, which begins with pattern **135500,
+        where ** is either 72 (Classic RAW) or 73 (LVFS/FWUPD CAB).
+
         The section length is found at 0x10-0x14 and its (optional) MD5 hash at 0x20-0x30.
+
         Section data can be raw or LZMA2 (7zXZ) compressed. The latter contains the PFS update image.
         """
 
         input_buffer: bytes = file_to_bytes(in_object=input_object)
 
-        return bool(PAT_DELL_PKG.search(input_buffer))
+        return self._re_pfs_pkg(input_buffer=input_buffer) is not None
 
     @staticmethod
     def _is_pfs_hdr(input_object: str | bytes | bytearray) -> bool:
         """
         The Dell PFS update images usually contain multiple sections.
+
         Each section is zlib-compressed with header pattern ********++EEAA761BECBB20F1E651--789C,
         where ******** is the zlib stream size, ++ is the section type and -- the header Checksum XOR 8.
+
         The "Firmware" section has type AA and its files are stored in PFS format.
+
         The "Utility" section has type BB and its files are stored in PFS, BIN or 7z formats.
         """
 
@@ -328,14 +346,14 @@ class DellPfsExtract(BIOSUtility):
         pfs_results: dict[str, bytes] = {}
 
         # Search input image for ThinOS PKG 7zXZ header
-        thinos_pkg_match: Match[bytes] | None = PAT_DELL_PKG.search(input_buffer)
+        thinos_pkg_start: int | None = self._re_pfs_pkg(input_buffer=input_buffer)
 
-        if not thinos_pkg_match:
+        if thinos_pkg_start is None:
             return pfs_results
 
-        lzma_len_off: int = thinos_pkg_match.start() + 0x10
+        lzma_len_off: int = thinos_pkg_start + 0x10
         lzma_len_int: int = int.from_bytes(input_buffer[lzma_len_off:lzma_len_off + 0x4], byteorder='little')
-        lzma_bin_off: int = thinos_pkg_match.end() - 0x5
+        lzma_bin_off: int = thinos_pkg_start + 0x30
 
         lzma_bin_dat: bytes = input_buffer[lzma_bin_off:lzma_bin_off + lzma_len_int]
 

@@ -106,19 +106,24 @@ The "main" script provides a simple way to check and parse each of the user prov
 If you use Linux, macOS, or the Windows command prompt/terminal, you may also call "main.py" via arguments and options, as such:
 
 ``` text
-usage: main.py [-h] [-e] [-o OUTPUT_DIR] [paths ...]
+usage: main.py [-h] [-e] [-o OUTPUT_DIR] [-u UTILITY] [paths ...]
 
 positional arguments:
   paths
 
 options:
-  -h, --help                              show help and exit
-  -e, --auto-exit                         do not pause on exit
-  -o OUTPUT_DIR, --output-dir OUTPUT_DIR  extraction directory
+  -h, --help                   show this help message and exit
+  -e, --auto-exit              do not pause on exit
+  -o, --output-dir OUTPUT_DIR  extraction directory
+  -u, --utility UTILITY        utility class name
 ```
 
 ``` text
-python ./main.py "/path/to/input/file.bin" --output-dir "/path/to/file extractions"
+python ./main.py "/path/to/input/file.bin" --output-dir "/path/to/output/folder"
+```
+
+``` text
+python ./main.py "/path/to/input/file.bin" -e -o "/path/to/output/folder" -u AmiUcpExtract
 ```
 
 If no arguments/options are provided, the "main" script requests the input and output paths from the user. If no output path is provided, the utility will use the parent directory of the first input file or fallback to the runtime execution directory.
@@ -137,7 +142,15 @@ Each utility is derived from a base "BIOSUtility" template and all utilities for
 python -m pip install --upgrade biosutilities[pefile,lznt1]
 ```
 
-Installing the python package is the recommended way to call one or more utilities programatically, while fully controlling arguments and options.
+Installing the python package is the recommended way to call one or more utilities either via the CLI (main.py script) or programatically (python imports, utility arguments).
+
+``` bash
+biosutilities --help
+```
+
+``` bash
+biosutilities "/path/to/input/file.bin" -o "/path/to/output/folder/" -u PhoenixTdkExtract -e
+```
 
 ``` python
 from biosutilities.ami_pfat_extract import AmiPfatExtract
@@ -225,6 +238,10 @@ is_extracted: bool = parse_format()
 
 ### AMI BIOS Guard Extractor
 
+``` text
+AmiPfatExtract
+```
+
 #### Description
 
 Parses AMI BIOS Guard (a.k.a. PFAT, Platform Firmware Armoring Technology) images, extracts their SPI/BIOS/UEFI firmware components and optionally decompiles the Intel BIOS Guard Scripts. It supports all AMI PFAT revisions and formats, including those with Index Information tables or nested AMI PFAT structures. The output comprises only final firmware components which are directly usable by end users.
@@ -240,6 +257,10 @@ No additional optional arguments are provided for this utility.
 * BIOS Guard Script Tool (optional)
 
 ### AMI UCP Update Extractor
+
+``` text
+AmiUcpExtract
+```
 
 #### Description
 
@@ -259,6 +280,10 @@ Additional optional arguments are provided for this utility:
 
 ### Apple EFI IM4P Splitter
 
+``` text
+AppleEfiIm4pSplit
+```
+
 #### Description
 
 Parses Apple IM4P multi-EFI files and splits all detected EFI firmware into separate Intel SPI/BIOS images. The output comprises only final firmware components and utilities which are directly usable by end users.
@@ -272,6 +297,10 @@ No additional optional arguments are provided for this utility.
 No additional requirements are needed for this utility.
 
 ### Apple EFI Image Identifier
+
+``` text
+AppleEfiIdentify
+```
 
 #### Description
 
@@ -296,6 +325,10 @@ The utility exposes certain public class attributes, once parse_format() method 
 
 ### Apple EFI Package Extractor
 
+``` text
+AppleEfiPkgExtract
+```
+
 #### Description
 
 Parses Apple EFI PKG firmware packages (e.g. FirmwareUpdate.pkg, BridgeOSUpdateCustomer.pkg, InstallAssistant.pkg, iMacEFIUpdate.pkg, iMacFirmwareUpdate.tar), extracts their EFI images, splits those in IM4P format and identifies/renames the final Intel SPI/BIOS images accordingly. The output comprises only final firmware components which are directly usable by end users.
@@ -312,6 +345,10 @@ No additional optional arguments are provided for this utility.
 
 ### Apple EFI PBZX Extractor
 
+``` text
+AppleEfiPbzxExtract
+```
+
 #### Description
 
 Parses Apple EFI PBZX images, re-assembles their CPIO payload and extracts its firmware components (e.g. IM4P, EFI, Utilities, Scripts etc). It supports CPIO re-assembly from both Raw and XZ compressed PBZX Chunks. The output comprises only final firmware components and utilities which are directly usable by end users.
@@ -326,6 +363,10 @@ No additional optional arguments are provided for this utility.
 
 ### Award BIOS Module Extractor
 
+``` text
+AwardBiosExtract
+```
+
 #### Description
 
 Parses Award BIOS images and extracts their modules (e.g. RAID, MEMINIT, \_EN_CODE, awardext etc). It supports all Award BIOS image revisions and formats, including those which contain LZH compressed files. The output comprises only final firmware components which are directly usable by end users.
@@ -339,6 +380,10 @@ No additional optional arguments are provided for this utility.
 * 7-Zip (required)
 
 ### Dell PFS Update Extractor
+
+``` text
+DellPfsExtract
+```
 
 #### Description
 
@@ -357,6 +402,10 @@ Additional optional arguments are provided for this utility:
 
 ### Fujitsu SFX BIOS Extractor
 
+``` text
+FujitsuSfxExtract
+```
+
 #### Description
 
 Parses Fujitsu SFX BIOS images and extracts their obfuscated Microsoft CAB archived firmware (e.g. SPI, BIOS/UEFI, EC, ME etc) and utilities (e.g. WinPhlash, PHLASH.INI etc) components. The output comprises only final firmware components which are directly usable by end users.
@@ -370,6 +419,10 @@ No additional optional arguments are provided for this utility.
 * 7-Zip (required)
 
 ### Fujitsu UPC BIOS Extractor
+
+``` text
+FujitsuUpcExtract
+```
 
 #### Description
 
@@ -385,6 +438,10 @@ No additional optional arguments are provided for this utility.
 
 ### Insyde iFlash/iFdPacker Extractor
 
+``` text
+InsydeIfdExtract
+```
+
 #### Description
 
 Parses Insyde iFlash/iFdPacker Update images and extracts their firmware (e.g. SPI, BIOS/UEFI, EC, ME etc) and utilities (e.g. InsydeFlash, H2OFFT, FlsHook, iscflash, platform.ini etc) components. It supports all Insyde iFlash/iFdPacker revisions and formats, including those which are 7-Zip SFX 7z compressed in raw, obfuscated or password-protected form. The output comprises only final firmware components which are directly usable by end users.
@@ -398,6 +455,10 @@ No additional optional arguments are provided for this utility.
 No additional requirements are needed for this utility.
 
 ### Panasonic BIOS Package Extractor
+
+``` text
+PanasonicBiosExtract
+```
 
 #### Description
 
@@ -415,6 +476,10 @@ No additional optional arguments are provided for this utility.
 
 ### Phoenix TDK Packer Extractor
 
+``` text
+PhoenixTdkExtract
+```
+
 #### Description
 
 Parses Phoenix Tools Development Kit (TDK) Packer executables and extracts their firmware (e.g. SPI, BIOS/UEFI, EC etc) and utilities (e.g. WinFlash etc) components. It supports all Phoenix TDK Packer revisions and formats, including those which contain LZMA compressed files. The output comprises only final firmware components which are directly usable by end users.
@@ -428,6 +493,10 @@ No additional optional arguments are provided for this utility.
 * pefile (required)
 
 ### Portwell EFI Update Extractor
+
+``` text
+PortwellEfiExtract
+```
 
 #### Description
 
@@ -444,6 +513,10 @@ No additional optional arguments are provided for this utility.
 
 ### Toshiba BIOS COM Extractor
 
+``` text
+ToshibaComExtract
+```
+
 #### Description
 
 Parses Toshiba BIOS COM images and extracts their raw or compressed SPI/BIOS/UEFI firmware component. This utility is effectively a python wrapper around [ToshibaComExtractor by LongSoft](https://github.com/LongSoft/ToshibaComExtractor). The output comprises only a final firmware component which is directly usable by end users.
@@ -457,6 +530,10 @@ No additional optional arguments are provided for this utility.
 * ToshibaComExtractor (required)
 
 ### VAIO Packaging Manager Extractor
+
+``` text
+VaioPackageExtract
+```
 
 #### Description
 

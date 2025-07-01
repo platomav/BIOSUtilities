@@ -1,3 +1,7 @@
+25.07.01
+
+Added package CLI script entry point (#66)
+
 25.06.12
 
 Fixed Dell PFS check performance regression

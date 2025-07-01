@@ -4,7 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "biosutilities"
-license = {text = "BSD-2-Clause-Patent"}
+license = "BSD-2-Clause-Patent"
+license-files = ["LICENSE"]
 authors = [
     {name = "Plato Mavropoulos"}
 ]
@@ -25,7 +26,6 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
-    "License :: OSI Approved :: BSD License",
     "Operating System :: Microsoft :: Windows",
     "Operating System :: POSIX :: Linux",
     "Operating System :: MacOS",
@@ -49,3 +49,6 @@ include = ["biosutilities*"]
 
 [tool.setuptools.dynamic]
 version = {attr = "biosutilities.__version__"}
+
+[project.scripts]
+biosutilities = "biosutilities.__main__:main"

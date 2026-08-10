@@ -52,3 +52,4 @@ version = {attr = "biosutilities.__version__"}
 
 [project.scripts]
 biosutilities = "biosutilities.__main__:main"
+biosutilities-gui = "biosutilities.gui:main"

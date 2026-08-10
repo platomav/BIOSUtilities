@@ -11,6 +11,7 @@ from typing import Final
 
 from biosutilities.common.externals import szip_path, tiano_path
 from biosutilities.common.paths import is_dir, is_file_read, is_empty_dir, path_size
+from biosutilities.common.processes import popen_window_hide
 from biosutilities.common.system import printer
 from biosutilities.common.texts import file_to_bytes
 
@@ -55,7 +56,8 @@ def is_szip_supported(in_path: str, args: list | None = None) -> bool:
 
     szip_c: list[str] = [szip_path(), 't', *szip_switches(in_switches=[*szip_a]), in_path]
 
-    szip_t: subprocess.CompletedProcess[bytes] = subprocess.run(szip_c, check=False, stdout=subprocess.DEVNULL)
+    szip_t: subprocess.CompletedProcess[bytes] = subprocess.run(
+        szip_c, check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, **popen_window_hide())
 
     return is_szip_successful(exit_code=szip_t.returncode)
 
@@ -68,7 +70,8 @@ def szip_decompress(in_path: str, out_path: str, in_name: str = 'archive', paddi
 
     szip_c: list[str] = [szip_path(), 'x', *szip_switches(in_switches=[*szip_a, f'-o{out_path}']), in_path]
 
-    szip_x: subprocess.CompletedProcess[bytes] = subprocess.run(szip_c, check=False, stdout=subprocess.DEVNULL)
+    szip_x: subprocess.CompletedProcess[bytes] = subprocess.run(
+        szip_c, check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, **popen_window_hide())
 
     szip_s: bool = is_szip_successful(exit_code=szip_x.returncode) if check else True
 
@@ -116,7 +119,8 @@ def efi_decompress(in_path: str, out_path: str, padding: int = 0, silent: bool =
 
     tiano_c: list[str] = [tiano_path(), '-d', in_path, '-o', out_path, '-q', comp_type]
 
-    tiano_x: subprocess.CompletedProcess[bytes] = subprocess.run(tiano_c, check=False, stdout=subprocess.DEVNULL)
+    tiano_x: subprocess.CompletedProcess[bytes] = subprocess.run(
+        tiano_c, check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, **popen_window_hide())
 
     if tiano_x.returncode == 0 and is_file_read(in_path=out_path):
         if efi_header_info(in_object=in_path)['size_decompressed'] == path_size(in_path=out_path):

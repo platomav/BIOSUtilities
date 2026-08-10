@@ -37,6 +37,16 @@ from biosutilities.common.templates import BIOSUtility
 from biosutilities.common.texts import remove_quotes, to_boxed, to_ordinal
 
 
+def get_utilities_classes() -> list[type[BIOSUtility]]:
+    """ Get supported BIOSUtilities classes in detection order """
+
+    return [
+        AppleEfiPkgExtract, AmiUcpExtract, AmiPfatExtract, InsydeIfdExtract, DellPfsExtract, PhoenixTdkExtract,
+        PanasonicBiosExtract, VaioPackageExtract, PortwellEfiExtract, ToshibaComExtract, FujitsuSfxExtract,
+        FujitsuUpcExtract, AwardBiosExtract, AppleEfiPbzxExtract, AppleEfiIm4pSplit, AppleEfiIdentify
+    ]
+
+
 class BIOSUtilities:
     """ Main BIOSUtilities class """
 
@@ -54,11 +64,7 @@ class BIOSUtilities:
 
         self.main_arguments: Namespace = main_argparser.parse_args()
 
-        self._utilities_classes: list[type[BIOSUtility]] = [
-            AppleEfiPkgExtract, AmiUcpExtract, AmiPfatExtract, InsydeIfdExtract, DellPfsExtract, PhoenixTdkExtract,
-            PanasonicBiosExtract, VaioPackageExtract, PortwellEfiExtract, ToshibaComExtract, FujitsuSfxExtract,
-            FujitsuUpcExtract, AwardBiosExtract, AppleEfiPbzxExtract, AppleEfiIm4pSplit, AppleEfiIdentify
-        ]
+        self._utilities_classes: list[type[BIOSUtility]] = get_utilities_classes()
 
         self._input_files: list[str] = []
 

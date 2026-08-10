@@ -21,6 +21,7 @@ from biosutilities.common.externals import uefiextract_path, uefifind_path
 from biosutilities.common.paths import (delete_dirs, delete_file, is_file_read, make_dirs, path_size,
                                         path_suffixes, runtime_root)
 from biosutilities.common.patterns import PAT_INTEL_IBIOSI, PAT_APPLE_ROM_VER
+from biosutilities.common.processes import popen_window_hide
 from biosutilities.common.structs import CHAR, ctypes_struct, UINT8
 from biosutilities.common.system import printer
 from biosutilities.common.templates import BIOSUtility
@@ -162,7 +163,7 @@ class AppleEfiIdentify(BIOSUtility):
         uefifind_cmd: list[str] = [uefifind_path(), input_path, 'body', 'list', self.PAT_UEFIFIND]
 
         uefifind_res: subprocess.CompletedProcess[bytes] = subprocess.run(
-            uefifind_cmd, check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+            uefifind_cmd, check=False, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, **popen_window_hide())
 
         if input_path != self.input_object:
             delete_file(in_path=input_path)
@@ -193,8 +194,11 @@ class AppleEfiIdentify(BIOSUtility):
         else:
             # The $IBIOSI$ pattern is within EFI compressed modules so we need to use UEFIFind and UEFIExtract
 
-            bios_id_res = subprocess.check_output([uefifind_path(), input_path, 'body', 'list',
-                                                   self.PAT_UEFIFIND], text=True)[:36]
+            bios_id_res = subprocess.check_output(
+                [uefifind_path(), input_path, 'body', 'list', self.PAT_UEFIFIND],
+                text=True,
+                **popen_window_hide()
+            )[:36]
 
             make_dirs(in_path=self.extract_path)
 
@@ -204,7 +208,8 @@ class AppleEfiIdentify(BIOSUtility):
             delete_dirs(in_path=uefiextract_dir)
 
             _ = subprocess.run([uefiextract_path(), input_path, bios_id_res, '-o', uefiextract_dir, '-m', 'body'],
-                               check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+                               check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                               **popen_window_hide())
 
             with open(os.path.join(uefiextract_dir, 'body.bin'), 'rb') as raw_body:
                 body_buffer: bytes = raw_body.read()

@@ -68,7 +68,21 @@ def comextract_path() -> str:
 def szip_path() -> str:
     """ Get 7-Zip path """
 
-    return get_external_path(cmd=['7zzs', '7zz', '7z'])
+    external_root: str = os.path.join(project_root(), 'external')
+
+    external_path: str | None = external_root if is_dir(in_path=external_root) else None
+
+    for command in ['7za', '7zzs', '7zz', '7z']:
+        command_path: str | None = shutil.which(command, path=external_path)
+
+        if command_path and is_file_read(in_path=command_path):
+            with open(command_path, 'rb') as szip_file:
+                szip_head = szip_file.read(0x100000)
+
+            if b'7zFM' not in szip_head and b'7-Zip File Manager' not in szip_head:
+                return command_path
+
+    raise OSError('7-Zip console requirement could not be found!')
 
 
 def tiano_path() -> str:

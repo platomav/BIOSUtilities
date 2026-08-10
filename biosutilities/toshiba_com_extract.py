@@ -13,6 +13,7 @@ import subprocess
 from biosutilities.common.externals import comextract_path
 from biosutilities.common.paths import delete_file, is_file_read, make_dirs, path_stem
 from biosutilities.common.patterns import PAT_TOSHIBA_COM
+from biosutilities.common.processes import popen_window_hide
 from biosutilities.common.system import printer
 from biosutilities.common.templates import BIOSUtility
 
@@ -49,7 +50,8 @@ class ToshibaComExtract(BIOSUtility):
         output_path: str = os.path.join(self.extract_path, f'{path_stem(in_path=input_path)}_extracted.bin')
 
         comextract_res: subprocess.CompletedProcess[bytes] = subprocess.run(
-            [comextract_path(), input_path, output_path], check=False, stdout=subprocess.DEVNULL)
+            [comextract_path(), input_path, output_path], check=False, stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL, **popen_window_hide())
 
         if input_path != self.input_object:
             delete_file(in_path=input_path)

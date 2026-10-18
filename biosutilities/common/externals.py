@@ -28,7 +28,7 @@ def get_external_path(cmd: str | list | tuple) -> str:
     external_path: str | None = external_root if is_dir(in_path=external_root) else None
 
     for command in cmd if isinstance(cmd, (list, tuple)) else [to_string(in_object=cmd)]:
-        command_path: str | None = shutil.which(command, path=external_path)
+        command_path: str | None = shutil.which(command, path=external_path) if shutil.which(command, path=external_path) else shutil.which(command)
 
         if command_path and is_file_read(in_path=command_path):
             return command_path

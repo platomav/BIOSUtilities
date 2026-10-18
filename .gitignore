@@ -3,3 +3,4 @@
 /biosutilities/external/
 /external/
 /venv/
+__pycache__
